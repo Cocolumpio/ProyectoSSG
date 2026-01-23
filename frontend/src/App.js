@@ -394,40 +394,10 @@ function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onPr
 
       {/* Visor 3D Real - Nube de Puntos */}
       {selectedProyecto && vuelosDelProyecto.length > 0 && (
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700">
-          <div className="flex items-center space-x-2 mb-4">
-            <Box className="h-5 w-5 text-blue-400" />
-            <h2 className="text-xl font-semibold text-white">Visor 3D - Nube de Puntos</h2>
-          </div>
-          
-          <div className="bg-slate-900 rounded-lg p-8 text-center">
-            <Upload className="h-16 w-16 text-blue-400 mx-auto mb-4" />
-            <h3 className="text-xl text-white mb-2">Sistema de Visualización 3D Listo</h3>
-            <p className="text-slate-400 mb-4">
-              El visor 3D con Three.js está implementado y listo para procesar tu archivo LAZ/LAS
-            </p>
-            <p className="text-slate-500 text-sm mb-6">
-              Formatos soportados: .laz, .las, .ply, .xyz
-            </p>
-            <button className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-              Adjunta tu archivo LAZ para comenzar
-            </button>
-          </div>
-          
-          <div className="mt-4 bg-green-500/10 border border-green-500/30 rounded-lg p-3">
-            <p className="text-green-400 text-sm">
-              <strong>✅ Backend Listo:</strong> El sistema puede procesar archivos LAZ/LAS de hasta 500MB.
-              Los puntos se extraen, normalizan y colorean automáticamente por altura.
-            </p>
-          </div>
-          
-          <div className="mt-3 bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
-            <p className="text-blue-400 text-sm">
-              <strong>⚙️ Procesamiento:</strong> Extracción de coordenadas, downsampling inteligente, 
-              coloreado por altura (azul→verde→amarillo→rojo) y renderizado 3D con controles interactivos.
-            </p>
-          </div>
-        </div>
+        <Visor3DReal 
+          vuelo={vuelosDelProyecto[0]} 
+          onUploadComplete={() => fetchData()}
+        />
       )}
 
       {/* Volumetría del Proyecto Seleccionado */}
