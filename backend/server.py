@@ -1,4 +1,5 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File
+from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -6,9 +7,10 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
+import shutil
 
 
 ROOT_DIR = Path(__file__).parent
@@ -19,6 +21,10 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+# Create uploads directory
+UPLOAD_DIR = ROOT_DIR / "uploads"
+UPLOAD_DIR.mkdir(exist_ok=True)
+
 # Create the main app without a prefix
 app = FastAPI()
 
@@ -26,45 +32,257 @@ app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
 
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
+# ==================== MODELS ====================
+
+class Coordinates(BaseModel):
+    lat: float
+    lng: float
+
+class Proyecto(BaseModel):
+    model_config = ConfigDict(extra="ignore")
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    nombre: str
+    ubicacion: str
+    coordenadas: Coordinates
+    fecha_inicio: str
+    fecha_fin_planeada: str
+    avance_actual: float = 0.0  # Porcentaje 0-100
+    descripcion: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
+class ProyectoCreate(BaseModel):
+    nombre: str
+    ubicacion: str
+    coordenadas: Coordinates
+    fecha_inicio: str
+    fecha_fin_planeada: str
+    descripcion: Optional[str] = None
 
-# Add your routes to the router instead of directly to app
+class Volumetria(BaseModel):
+    excavacion: float  # m³
+    relleno: float  # m³
+    materiales: float  # m³
+
+class Vuelo(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    proyecto_id: str
+    fecha_vuelo: str
+    duracion_minutos: int
+    area_cubierta: float  # m²
+    num_imagenes: int
+    volumetria: Volumetria
+    archivo_nube_puntos: Optional[str] = None
+    estado: str = "completado"  # completado, procesando, fallido
+    notas: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class VueloCreate(BaseModel):
+    proyecto_id: str
+    fecha_vuelo: str
+    duracion_minutos: int
+    area_cubierta: float
+    num_imagenes: int
+    volumetria: Volumetria
+    notas: Optional[str] = None
+
+class AvanceHito(BaseModel):
+    nombre: str
+    porcentaje_planeado: float
+    porcentaje_real: float
+    fecha_planeada: str
+    fecha_real: Optional[str] = None
+    completado: bool = False
+
+class Avance(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    proyecto_id: str
+    hitos: List[AvanceHito]
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+# ==================== ROUTES ====================
+
 @api_router.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "API de Gestión de Construcción con Drones"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
+# --- Proyectos ---
+@api_router.post("/proyectos", response_model=Proyecto)
+async def crear_proyecto(proyecto: ProyectoCreate):
+    proyecto_obj = Proyecto(**proyecto.model_dump())
+    doc = proyecto_obj.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    await db.proyectos.insert_one(doc)
+    return proyecto_obj
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
+@api_router.get("/proyectos", response_model=List[Proyecto])
+async def listar_proyectos():
+    proyectos = await db.proyectos.find({}, {"_id": 0}).to_list(1000)
+    for p in proyectos:
+        if isinstance(p.get('created_at'), str):
+            p['created_at'] = datetime.fromisoformat(p['created_at'])
+    return proyectos
+
+@api_router.get("/proyectos/{proyecto_id}", response_model=Proyecto)
+async def obtener_proyecto(proyecto_id: str):
+    proyecto = await db.proyectos.find_one({"id": proyecto_id}, {"_id": 0})
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    if isinstance(proyecto.get('created_at'), str):
+        proyecto['created_at'] = datetime.fromisoformat(proyecto['created_at'])
+    return proyecto
+
+@api_router.put("/proyectos/{proyecto_id}/avance")
+async def actualizar_avance(proyecto_id: str, avance: float):
+    result = await db.proyectos.update_one(
+        {"id": proyecto_id},
+        {"$set": {"avance_actual": avance}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    return {"message": "Avance actualizado", "avance": avance}
+
+@api_router.delete("/proyectos/{proyecto_id}")
+async def eliminar_proyecto(proyecto_id: str):
+    result = await db.proyectos.delete_one({"id": proyecto_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    # También eliminar vuelos asociados
+    await db.vuelos.delete_many({"proyecto_id": proyecto_id})
+    await db.avances.delete_many({"proyecto_id": proyecto_id})
+    return {"message": "Proyecto eliminado"}
+
+# --- Vuelos ---
+@api_router.post("/vuelos", response_model=Vuelo)
+async def crear_vuelo(vuelo: VueloCreate):
+    vuelo_obj = Vuelo(**vuelo.model_dump())
+    doc = vuelo_obj.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    await db.vuelos.insert_one(doc)
+    return vuelo_obj
+
+@api_router.get("/vuelos", response_model=List[Vuelo])
+async def listar_vuelos(proyecto_id: Optional[str] = None):
+    query = {"proyecto_id": proyecto_id} if proyecto_id else {}
+    vuelos = await db.vuelos.find(query, {"_id": 0}).to_list(1000)
+    for v in vuelos:
+        if isinstance(v.get('created_at'), str):
+            v['created_at'] = datetime.fromisoformat(v['created_at'])
+    return vuelos
+
+@api_router.get("/vuelos/{vuelo_id}", response_model=Vuelo)
+async def obtener_vuelo(vuelo_id: str):
+    vuelo = await db.vuelos.find_one({"id": vuelo_id}, {"_id": 0})
+    if not vuelo:
+        raise HTTPException(status_code=404, detail="Vuelo no encontrado")
+    if isinstance(vuelo.get('created_at'), str):
+        vuelo['created_at'] = datetime.fromisoformat(vuelo['created_at'])
+    return vuelo
+
+@api_router.delete("/vuelos/{vuelo_id}")
+async def eliminar_vuelo(vuelo_id: str):
+    result = await db.vuelos.delete_one({"id": vuelo_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Vuelo no encontrado")
+    return {"message": "Vuelo eliminado"}
+
+# --- Upload de archivos ---
+@api_router.post("/upload/nube-puntos/{vuelo_id}")
+async def upload_nube_puntos(vuelo_id: str, file: UploadFile = File(...)):
+    # Validar extensión
+    allowed_extensions = ['.las', '.laz', '.ply', '.xyz', '.txt']
+    file_ext = Path(file.filename).suffix.lower()
+    if file_ext not in allowed_extensions:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Formato no permitido. Use: {', '.join(allowed_extensions)}"
+        )
     
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
+    # Guardar archivo
+    file_path = UPLOAD_DIR / f"{vuelo_id}{file_ext}"
+    with file_path.open("wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
     
-    return status_checks
+    # Actualizar vuelo con ruta del archivo
+    result = await db.vuelos.update_one(
+        {"id": vuelo_id},
+        {"$set": {"archivo_nube_puntos": str(file_path.name)}}
+    )
+    
+    if result.matched_count == 0:
+        file_path.unlink()  # Eliminar archivo si el vuelo no existe
+        raise HTTPException(status_code=404, detail="Vuelo no encontrado")
+    
+    return {
+        "message": "Archivo subido exitosamente",
+        "filename": file_path.name,
+        "vuelo_id": vuelo_id
+    }
+
+@api_router.get("/download/nube-puntos/{filename}")
+async def download_nube_puntos(filename: str):
+    file_path = UPLOAD_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Archivo no encontrado")
+    return FileResponse(file_path)
+
+# --- Avances ---
+@api_router.post("/avances", response_model=Avance)
+async def crear_avance(avance: Avance):
+    doc = avance.model_dump()
+    doc['updated_at'] = doc['updated_at'].isoformat()
+    await db.avances.insert_one(doc)
+    return avance
+
+@api_router.get("/avances/{proyecto_id}", response_model=Avance)
+async def obtener_avance(proyecto_id: str):
+    avance = await db.avances.find_one({"proyecto_id": proyecto_id}, {"_id": 0})
+    if not avance:
+        raise HTTPException(status_code=404, detail="Avance no encontrado")
+    if isinstance(avance.get('updated_at'), str):
+        avance['updated_at'] = datetime.fromisoformat(avance['updated_at'])
+    return avance
+
+@api_router.put("/avances/{proyecto_id}", response_model=Avance)
+async def actualizar_avance_hitos(proyecto_id: str, avance: Avance):
+    doc = avance.model_dump()
+    doc['updated_at'] = datetime.now(timezone.utc).isoformat()
+    result = await db.avances.update_one(
+        {"proyecto_id": proyecto_id},
+        {"$set": doc},
+        upsert=True
+    )
+    return avance
+
+# --- Estadísticas ---
+@api_router.get("/estadisticas/resumen")
+async def obtener_estadisticas():
+    total_proyectos = await db.proyectos.count_documents({})
+    total_vuelos = await db.vuelos.count_documents({})
+    
+    # Calcular avance promedio
+    proyectos = await db.proyectos.find({}, {"avance_actual": 1, "_id": 0}).to_list(1000)
+    avance_promedio = sum(p.get('avance_actual', 0) for p in proyectos) / max(total_proyectos, 1)
+    
+    # Volumetría total
+    vuelos = await db.vuelos.find({}, {"volumetria": 1, "_id": 0}).to_list(1000)
+    vol_total = {
+        "excavacion": sum(v.get('volumetria', {}).get('excavacion', 0) for v in vuelos),
+        "relleno": sum(v.get('volumetria', {}).get('relleno', 0) for v in vuelos),
+        "materiales": sum(v.get('volumetria', {}).get('materiales', 0) for v in vuelos)
+    }
+    
+    return {
+        "total_proyectos": total_proyectos,
+        "total_vuelos": total_vuelos,
+        "avance_promedio": round(avance_promedio, 1),
+        "volumetria_total": vol_total
+    }
 
 # Include the router in the main app
 app.include_router(api_router)
