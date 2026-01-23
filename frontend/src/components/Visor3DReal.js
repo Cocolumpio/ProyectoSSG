@@ -252,18 +252,15 @@ const Visor3DReal = ({ vuelo, onUploadComplete }) => {
         data-testid="canvas-3d-viewer-real"
       >
         {pointsData ? (
-          <Canvas>
+          <Canvas gl={{ antialias: true }} dpr={[1, 2]}>
             <PerspectiveCamera makeDefault position={[5, 5, 5]} fov={60} />
             
-            {/* Iluminación */}
             <ambientLight intensity={0.5} />
             <directionalLight position={[10, 10, 5]} intensity={1} />
             <directionalLight position={[-10, -10, -5]} intensity={0.5} />
             
-            {/* Nube de puntos */}
             <PointCloud points={pointsData} />
             
-            {/* Grid de referencia */}
             <Grid
               args={[10, 10]}
               cellSize={1}
@@ -274,14 +271,12 @@ const Visor3DReal = ({ vuelo, onUploadComplete }) => {
               sectionColor="#666666"
               fadeDistance={30}
               fadeStrength={1}
-              followCamera={false}
-              infiniteGrid
+              infiniteGrid={true}
             />
             
-            {/* Controles de cámara */}
             <OrbitControls
               ref={controlsRef}
-              enableDamping
+              enableDamping={true}
               dampingFactor={0.05}
               rotateSpeed={0.5}
               zoomSpeed={0.8}
@@ -290,7 +285,6 @@ const Visor3DReal = ({ vuelo, onUploadComplete }) => {
               maxDistance={50}
             />
             
-            {/* Stats de rendimiento (FPS) */}
             <Stats />
           </Canvas>
         ) : loading ? (
