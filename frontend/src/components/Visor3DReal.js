@@ -1,23 +1,24 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Grid, Stats } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import axios from 'axios';
-import { Box, Upload, AlertCircle, CheckCircle, Loader2, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { Box, Upload, AlertCircle, CheckCircle, Loader2, RotateCcw } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 // Componente para renderizar la nube de puntos
 function PointCloud({ points }) {
-  const pointsRef = useRef();
+  const meshRef = useRef();
   
-  const { positions, colors } = useMemo(() => {
+  const geometry = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
     const positions = new Float32Array(points.length * 3);
     const colors = new Float32Array(points.length * 3);
     
     points.forEach((point, i) => {
       positions[i * 3] = point.x;
-      positions[i * 3 + 1] = point.z; // Z hacia arriba (Three.js usa Y como arriba)
+      positions[i * 3 + 1] = point.z;
       positions[i * 3 + 2] = point.y;
       
       colors[i * 3] = point.color[0];
@@ -25,44 +26,29 @@ function PointCloud({ points }) {
       colors[i * 3 + 2] = point.color[2];
     });
     
-    return { positions, colors };
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    
+    return geo;
   }, [points]);
   
-  // Animación suave de rotación opcional
-  useFrame((state) => {
-    if (pointsRef.current) {
-      // Rotación muy lenta para efecto visual
-      pointsRef.current.rotation.y += 0.0005;
+  const material = useMemo(() => {
+    return new THREE.PointsMaterial({
+      size: 0.1,
+      vertexColors: true,
+      sizeAttenuation: true,
+      transparent: true,
+      opacity: 0.8
+    });
+  }, []);
+  
+  useFrame(() => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y += 0.0005;
     }
   });
   
-  return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={positions.length / 3}
-          array={positions}
-          itemSize={3}
-          needsUpdate={true}
-        />
-        <bufferAttribute
-          attach="attributes-color"
-          count={colors.length / 3}
-          array={colors}
-          itemSize={3}
-          needsUpdate={true}
-        />
-      </bufferGeometry>
-      <pointsMaterial
-        size={0.1}
-        vertexColors={true}
-        sizeAttenuation={true}
-        transparent={true}
-        opacity={0.8}
-      />
-    </points>
-  );
+  return <points ref={meshRef} geometry={geometry} material={material} />;
 }
 
 // Componente principal del visor 3D
@@ -79,7 +65,7 @@ const Visor3DReal = ({ vuelo, onUploadComplete }) => {
     if (vuelo?.archivo_nube_puntos) {
       loadPointCloud();
     }
-  }, [vuelo]);
+  }, [vuelo?.archivo_nube_puntos]);
   
   const loadPointCloud = async () => {
     if (!vuelo) return;
@@ -147,7 +133,6 @@ const Visor3DReal = ({ vuelo, onUploadComplete }) => {
           message: `✓ Archivo ${uploadResponse.data.filename} subido. Procesando...`
         });
         
-        // Esperar un momento y cargar los puntos
         setTimeout(() => {
           loadPointCloud();
         }, 1000);
@@ -251,28 +236,20 @@ const Visor3DReal = ({ vuelo, onUploadComplete }) => {
         style={{ height: '600px' }}
         data-testid="canvas-3d-viewer-real"
       >
-        {pointsData ? (
-          <Canvas gl={{ antialias: true }} dpr={[1, 2]}>
-            <PerspectiveCamera makeDefault position={[5, 5, 5]} fov={60} />
-            
+        {pointsData && pointsData.length > 0 ? (
+          <Canvas
+            camera={{ position: [5, 5, 5], fov: 60 }}
+            gl={{ antialias: true }}
+            dpr={[1, 2]}
+          >
             <ambientLight intensity={0.5} />
             <directionalLight position={[10, 10, 5]} intensity={1} />
             <directionalLight position={[-10, -10, -5]} intensity={0.5} />
             
             <PointCloud points={pointsData} />
             
-            <Grid
-              args={[10, 10]}
-              cellSize={1}
-              cellThickness={0.5}
-              cellColor="#444444"
-              sectionSize={5}
-              sectionThickness={1}
-              sectionColor="#666666"
-              fadeDistance={30}
-              fadeStrength={1}
-              infiniteGrid={true}
-            />
+            <axesHelper args={[5]} />
+            <gridHelper args={[20, 20, '#444444', '#222222']} />
             
             <OrbitControls
               ref={controlsRef}
@@ -284,8 +261,6 @@ const Visor3DReal = ({ vuelo, onUploadComplete }) => {
               minDistance={2}
               maxDistance={50}
             />
-            
-            <Stats />
           </Canvas>
         ) : loading ? (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -314,7 +289,6 @@ const Visor3DReal = ({ vuelo, onUploadComplete }) => {
         )}
       </div>
       
-      {/* Información de la nube de puntos */}
       {metadata && (
         <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="bg-slate-700/50 rounded-lg p-3">
