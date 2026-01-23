@@ -44,19 +44,21 @@ function PointCloud({ points }) {
           count={positions.length / 3}
           array={positions}
           itemSize={3}
+          needsUpdate={true}
         />
         <bufferAttribute
           attach="attributes-color"
           count={colors.length / 3}
           array={colors}
           itemSize={3}
+          needsUpdate={true}
         />
       </bufferGeometry>
       <pointsMaterial
-        size={0.05}
-        vertexColors
-        sizeAttenuation
-        transparent
+        size={0.1}
+        vertexColors={true}
+        sizeAttenuation={true}
+        transparent={true}
         opacity={0.8}
       />
     </points>
