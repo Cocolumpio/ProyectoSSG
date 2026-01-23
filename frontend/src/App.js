@@ -6,6 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Building2, Plane, TrendingUp, Database, Upload, Plus, Map as MapIcon, Eye, Trash2 } from 'lucide-react';
+import Visor3D from './components/Visor3D';
 
 // Fix Leaflet default icon issue
 delete L.Icon.Default.prototype._getIconUrl;
