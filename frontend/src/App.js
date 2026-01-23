@@ -392,6 +392,14 @@ function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onPr
         </div>
       </div>
 
+      {/* Visor 3D - Nube de Puntos */}
+      {selectedProyecto && vuelosDelProyecto.length > 0 && (
+        <Visor3D 
+          vuelo={vuelosDelProyecto[0]} 
+          onUploadComplete={() => console.log('Archivo subido')}
+        />
+      )}
+
       {/* Volumetría del Proyecto Seleccionado */}
       {selectedProyecto && volumetriaData.length > 0 && (
         <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700">
