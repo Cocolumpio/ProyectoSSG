@@ -233,6 +233,130 @@ async def download_nube_puntos(filename: str):
         raise HTTPException(status_code=404, detail="Archivo no encontrado")
     return FileResponse(file_path)
 
+@api_router.get("/process/nube-puntos/{vuelo_id}")
+async def process_nube_puntos(vuelo_id: str, max_points: int = 100000):
+    """
+    Procesa un archivo LAZ/LAS y extrae puntos para visualización 3D
+    
+    Args:
+        vuelo_id: ID del vuelo
+        max_points: Número máximo de puntos a devolver (para optimización)
+    
+    Returns:
+        JSON con array de puntos [x, y, z, color]
+    """
+    # Obtener vuelo
+    vuelo = await db.vuelos.find_one({"id": vuelo_id}, {"_id": 0})
+    if not vuelo:
+        raise HTTPException(status_code=404, detail="Vuelo no encontrado")
+    
+    archivo_nombre = vuelo.get('archivo_nube_puntos')
+    if not archivo_nombre:
+        raise HTTPException(status_code=404, detail="No hay archivo de nube de puntos asociado")
+    
+    file_path = UPLOAD_DIR / archivo_nombre
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Archivo no encontrado en servidor")
+    
+    try:
+        # Leer archivo LAZ/LAS
+        las = laspy.read(file_path)
+        
+        # Obtener coordenadas
+        x = np.array(las.x)
+        y = np.array(las.y)
+        z = np.array(las.z)
+        
+        total_points = len(x)
+        
+        # Downsampling si hay demasiados puntos
+        if total_points > max_points:
+            # Muestreo aleatorio uniforme
+            indices = np.random.choice(total_points, max_points, replace=False)
+            x = x[indices]
+            y = y[indices]
+            z = z[indices]
+        else:
+            indices = np.arange(total_points)
+        
+        # Normalizar coordenadas (centrar en origen)
+        x_center = (x.max() + x.min()) / 2
+        y_center = (y.max() + y.min()) / 2
+        z_center = (z.max() + z.min()) / 2
+        
+        x_norm = x - x_center
+        y_norm = y - y_center
+        z_norm = z - z_center
+        
+        # Calcular colores basados en altura (z)
+        z_min = z_norm.min()
+        z_max = z_norm.max()
+        z_range = z_max - z_min if z_max != z_min else 1
+        
+        # Normalizar altura a rango 0-1
+        z_normalized = (z_norm - z_min) / z_range
+        
+        # Crear colores: gradiente de azul (bajo) a rojo (alto)
+        colors = []
+        for z_val in z_normalized:
+            if z_val < 0.33:
+                # Azul a verde
+                r = 0
+                g = z_val * 3
+                b = 1 - z_val * 3
+            elif z_val < 0.66:
+                # Verde a amarillo
+                r = (z_val - 0.33) * 3
+                g = 1
+                b = 0
+            else:
+                # Amarillo a rojo
+                r = 1
+                g = 1 - (z_val - 0.66) * 3
+                b = 0
+            
+            colors.append([r, g, b])
+        
+        # Convertir a lista de diccionarios
+        points_data = []
+        for i in range(len(x_norm)):
+            points_data.append({
+                "x": float(x_norm[i]),
+                "y": float(y_norm[i]),
+                "z": float(z_norm[i]),
+                "color": colors[i]
+            })
+        
+        # Información adicional
+        metadata = {
+            "total_points": int(total_points),
+            "displayed_points": len(points_data),
+            "bounds": {
+                "x": {"min": float(x.min()), "max": float(x.max())},
+                "y": {"min": float(y.min()), "max": float(y.max())},
+                "z": {"min": float(z.min()), "max": float(z.max())}
+            },
+            "center": {
+                "x": float(x_center),
+                "y": float(y_center),
+                "z": float(z_center)
+            }
+        }
+        
+        return JSONResponse({
+            "success": True,
+            "vuelo_id": vuelo_id,
+            "metadata": metadata,
+            "points": points_data
+        })
+        
+    except Exception as e:
+        logger.error(f"Error procesando nube de puntos: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error procesando archivo: {str(e)}"
+        )
+
 # --- Avances ---
 @api_router.post("/avances", response_model=Avance)
 async def crear_avance(avance: Avance):
