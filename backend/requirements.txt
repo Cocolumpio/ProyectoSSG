@@ -50,6 +50,8 @@ jmespath==1.0.1
 jq==1.10.0
 jsonschema==4.26.0
 jsonschema-specifications==2025.9.1
+laspy==2.7.0
+laszip==0.3.0
 librt==0.7.8
 litellm==1.80.0
 markdown-it-py==4.0.0
