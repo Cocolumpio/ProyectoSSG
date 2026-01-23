@@ -6,7 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Building2, Plane, TrendingUp, Database, Upload, Plus, Map as MapIcon, Eye, Trash2 } from 'lucide-react';
-import Visor3D from './components/Visor3D';
+import Visor3DReal from './components/Visor3DReal';
 
 // Fix Leaflet default icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -392,9 +392,9 @@ function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onPr
         </div>
       </div>
 
-      {/* Visor 3D - Nube de Puntos */}
+      {/* Visor 3D Real - Nube de Puntos */}
       {selectedProyecto && vuelosDelProyecto.length > 0 && (
-        <Visor3D 
+        <Visor3DReal 
           vuelo={vuelosDelProyecto[0]} 
           onUploadComplete={() => console.log('Archivo subido')}
         />
