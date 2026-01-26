@@ -51,6 +51,8 @@ class Proyecto(BaseModel):
     fecha_fin_planeada: str
     avance_actual: float = 0.0  # Porcentaje 0-100
     descripcion: Optional[str] = None
+    pix4d_url: Optional[str] = None  # URL del modelo 3D
+    volumetria: Optional[Volumetria] = None  # Volumetrías del proyecto
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ProyectoCreate(BaseModel):
@@ -60,6 +62,19 @@ class ProyectoCreate(BaseModel):
     fecha_inicio: str
     fecha_fin_planeada: str
     descripcion: Optional[str] = None
+    pix4d_url: Optional[str] = None
+    volumetria: Optional[Volumetria] = None
+
+class ProyectoUpdate(BaseModel):
+    nombre: Optional[str] = None
+    ubicacion: Optional[str] = None
+    coordenadas: Optional[Coordinates] = None
+    fecha_inicio: Optional[str] = None
+    fecha_fin_planeada: Optional[str] = None
+    avance_actual: Optional[float] = None
+    descripcion: Optional[str] = None
+    pix4d_url: Optional[str] = None
+    volumetria: Optional[Volumetria] = None
 
 class Volumetria(BaseModel):
     excavacion: float  # m³
