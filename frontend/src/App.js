@@ -211,6 +211,7 @@ function App() {
             onDelete={handleDeleteProyecto}
             onSelect={handleProyectoClick}
             onRefresh={fetchData}
+            onShowSuccess={showSuccessMessage}
           />
         )}
 
