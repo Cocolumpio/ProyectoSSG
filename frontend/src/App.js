@@ -762,10 +762,20 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShowSuccess
     setError(null);
 
     const projectName = formData.nombre;
+    
+    // Log detallado para debug
+    console.log('=== GUARDANDO PROYECTO ===');
+    console.log('editingProject.id:', editingProject?.id);
+    console.log('formData.pix4d_url:', formData.pix4d_url);
+    console.log('formData completo:', JSON.stringify(formData));
 
     try {
       const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
-      await axios.put(`${API}/proyectos/${editingProject.id}`, formData);
+      const response = await axios.put(`${API}/proyectos/${editingProject.id}`, formData);
+      
+      console.log('=== RESPUESTA DEL SERVIDOR ===');
+      console.log('response.data:', JSON.stringify(response.data));
+      console.log('response.data.pix4d_url:', response.data.pix4d_url);
       
       setShowEditForm(false);
       setEditingProject(null);
@@ -778,7 +788,9 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShowSuccess
       
       await onRefresh();
     } catch (err) {
-      console.error('Error al guardar:', err);
+      console.error('=== ERROR AL GUARDAR ===');
+      console.error('Error:', err);
+      console.error('Error response:', err.response?.data);
       setError(err.response?.data?.detail || 'Error al actualizar el proyecto');
     } finally {
       setSaving(false);
