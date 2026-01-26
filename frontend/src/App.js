@@ -692,25 +692,6 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
     });
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleCoordChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      coordenadas: { ...prev.coordenadas, [field]: parseFloat(value) || 0 }
-    }));
-  };
-
-  const handleVolumetriaChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      volumetria: { ...prev.volumetria, [field]: parseFloat(value) || 0 }
-    }));
-  };
-
   const handleEditClick = (proyecto) => {
     setEditingProject(proyecto);
     setFormData({
