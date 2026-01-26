@@ -694,6 +694,8 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
   };
 
   const handleEditClick = (proyecto) => {
+    console.log('handleEditClick - proyecto recibido:', proyecto);
+    console.log('handleEditClick - pix4d_url:', proyecto.pix4d_url);
     setEditingProject(proyecto);
     setFormData({
       nombre: proyecto.nombre || '',
