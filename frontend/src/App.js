@@ -823,7 +823,15 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
                 </svg>
               </button>
             </div>
-            <ProjectFormContent isEdit onSubmit={handleEditSubmit} onClose={() => { setShowEditForm(false); setEditingProject(null); }} />
+            <ProjectFormContent 
+              formData={formData}
+              setFormData={setFormData}
+              error={error}
+              saving={saving}
+              isEdit 
+              onSubmit={handleEditSubmit} 
+              onClose={() => { setShowEditForm(false); setEditingProject(null); }} 
+            />
           </div>
         </div>
       )}
