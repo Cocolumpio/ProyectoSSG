@@ -678,6 +678,7 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
 
   const resetForm = () => {
     setFormData({
