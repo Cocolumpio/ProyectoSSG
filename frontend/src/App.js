@@ -402,10 +402,10 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">Proyectos</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Proyectos</h2>
         <button
           onClick={() => alert('Función de agregar proyecto próximamente')}
-          className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          className="flex items-center space-x-2 px-4 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors"
           data-testid="add-proyecto-btn"
         >
           <Plus className="h-5 w-5" />
@@ -417,47 +417,47 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
         {proyectos.map((proyecto) => (
           <div
             key={proyecto.id}
-            className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700 hover:border-blue-500 transition-all"
+            className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:border-[#994B49] transition-all"
             data-testid={`proyecto-card-${proyecto.id}`}
           >
             <div className="flex items-start justify-between mb-4">
-              <Building2 className="h-8 w-8 text-blue-400" />
+              <Building2 className="h-8 w-8 text-[#994B49]" />
               <div className="flex space-x-2">
                 <button
                   onClick={() => onSelect(proyecto)}
-                  className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
+                  className="p-2 text-[#994B49] hover:bg-[#994B49]/10 rounded-lg transition-colors"
                   data-testid={`view-proyecto-${proyecto.id}`}
                 >
                   <Eye className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => onDelete(proyecto.id)}
-                  className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                   data-testid={`delete-proyecto-${proyecto.id}`}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
             </div>
-            <h3 className="text-xl font-semibold text-white mb-2">{proyecto.nombre}</h3>
-            <p className="text-slate-400 text-sm mb-4">{proyecto.ubicacion}</p>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{proyecto.nombre}</h3>
+            <p className="text-gray-600 text-sm mb-4">{proyecto.ubicacion}</p>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between text-slate-300">
+              <div className="flex justify-between text-gray-700">
                 <span>Inicio:</span>
                 <span>{proyecto.fecha_inicio}</span>
               </div>
-              <div className="flex justify-between text-slate-300">
+              <div className="flex justify-between text-gray-700">
                 <span>Fin Planeado:</span>
                 <span>{proyecto.fecha_fin_planeada}</span>
               </div>
               <div className="mt-4">
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-slate-400">Avance</span>
-                  <span className="text-blue-400 font-semibold">{proyecto.avance_actual}%</span>
+                  <span className="text-gray-600">Avance</span>
+                  <span className="text-[#994B49] font-semibold">{proyecto.avance_actual}%</span>
                 </div>
-                <div className="w-full bg-slate-600 rounded-full h-2">
+                <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
-                    className="bg-blue-500 h-2 rounded-full transition-all"
+                    className="bg-[#994B49] h-2 rounded-full transition-all"
                     style={{ width: `${proyecto.avance_actual}%` }}
                   />
                 </div>
