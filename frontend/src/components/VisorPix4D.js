@@ -25,11 +25,8 @@ const VisorPix4D = ({ vuelo, proyectoPix4dUrl, onUpdateUrl }) => {
   };
   
   const handleSave = () => {
-    if (tempUrl.trim()) {
-      setOverrideUrl(tempUrl);
-      if (onUpdateUrl) {
-        onUpdateUrl(tempUrl);
-      }
+    if (tempUrl.trim() && onUpdateUrl) {
+      onUpdateUrl(tempUrl);
     }
     setIsEditing(false);
   };
