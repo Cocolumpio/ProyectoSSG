@@ -50,10 +50,11 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 - [x] Mapa interactivo con Leaflet
 - [x] Lista de proyectos con selección
 - [x] Gráficos de volumetría con Recharts
-- [x] Visor Pix4D embebido en iframe
+- [x] Visor Pix4D embebido en iframe (sincronizado con datos del proyecto)
 - [x] Vista de Proyectos con tarjetas
 - [x] Modal de Nuevo Proyecto con campos para Pix4D y volumetría
 - [x] Modal de Editar Proyecto con datos pre-llenados
+- [x] Mensaje de confirmación global al guardar cambios
 - [x] Vista de Vuelos con tabla y filtros
 - [x] Branding personalizado (logo, colores)
 
