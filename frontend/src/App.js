@@ -330,9 +330,10 @@ function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onPr
       </div>
 
       {/* Visor 3D - Pix4D */}
-      {selectedProyecto && vuelosDelProyecto.length > 0 && (
+      {selectedProyecto && (selectedProyecto.pix4d_url || vuelosDelProyecto.length > 0) && (
         <VisorPix4D 
           vuelo={vuelosDelProyecto[0]} 
+          proyectoPix4dUrl={selectedProyecto.pix4d_url}
           onUpdateUrl={(url) => console.log('Nueva URL:', url)}
         />
       )}
