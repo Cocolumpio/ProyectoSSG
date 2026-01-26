@@ -760,29 +760,25 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShowSuccess
     e.preventDefault();
     setSaving(true);
     setError(null);
-    setSuccessMessage(null);
 
-    const projectName = formData.nombre; // Guardar el nombre antes del reset
+    const projectName = formData.nombre;
 
     try {
       const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
       await axios.put(`${API}/proyectos/${editingProject.id}`, formData);
       
-      // Primero cerrar el modal
       setShowEditForm(false);
       setEditingProject(null);
       resetForm();
       
-      // Mostrar mensaje de éxito
-      setSuccessMessage(`¡Proyecto "${projectName}" actualizado correctamente!`);
+      // Mostrar mensaje de éxito global
+      if (onShowSuccess) {
+        onShowSuccess(`¡Proyecto "${projectName}" actualizado correctamente!`);
+      }
       
-      // Ocultar mensaje después de 5 segundos
-      setTimeout(() => setSuccessMessage(null), 5000);
-      
-      // Refrescar los datos
       await onRefresh();
     } catch (err) {
-      console.error('handleEditSubmit - Error:', err);
+      console.error('Error al guardar:', err);
       setError(err.response?.data?.detail || 'Error al actualizar el proyecto');
     } finally {
       setSaving(false);
