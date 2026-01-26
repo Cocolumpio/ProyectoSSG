@@ -97,7 +97,7 @@ const VisorPix4D = ({ vuelo, onUpdateUrl }) => {
       )}
       
       <div 
-        className="relative bg-slate-900 rounded-lg overflow-hidden"
+        className="relative bg-gray-50 rounded-lg overflow-hidden border border-gray-200"
         style={{ height: '600px' }}
         data-testid="pix4d-viewer-container"
       >
@@ -114,37 +114,37 @@ const VisorPix4D = ({ vuelo, onUpdateUrl }) => {
       
       {vuelo && (
         <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
-          <div className="bg-slate-700/50 rounded-lg p-3">
-            <div className="text-slate-400 mb-1">Excavación</div>
-            <div className="text-white font-semibold text-lg">
+          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+            <div className="text-gray-600 mb-1">Excavación</div>
+            <div className="text-gray-900 font-semibold text-lg">
               {vuelo.volumetria.excavacion.toLocaleString()} m³
             </div>
           </div>
-          <div className="bg-slate-700/50 rounded-lg p-3">
-            <div className="text-slate-400 mb-1">Relleno</div>
-            <div className="text-white font-semibold text-lg">
+          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+            <div className="text-gray-600 mb-1">Relleno</div>
+            <div className="text-gray-900 font-semibold text-lg">
               {vuelo.volumetria.relleno.toLocaleString()} m³
             </div>
           </div>
-          <div className="bg-slate-700/50 rounded-lg p-3">
-            <div className="text-slate-400 mb-1">Materiales</div>
-            <div className="text-white font-semibold text-lg">
+          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+            <div className="text-gray-600 mb-1">Materiales</div>
+            <div className="text-gray-900 font-semibold text-lg">
               {vuelo.volumetria.materiales.toLocaleString()} m³
             </div>
           </div>
         </div>
       )}
       
-      <div className="mt-4 bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
-        <p className="text-blue-400 text-sm">
+      <div className="mt-4 bg-[#994B49]/10 border border-[#994B49]/30 rounded-lg p-3">
+        <p className="text-[#994B49] text-sm">
           <strong>✨ Visor Pix4D Integrado:</strong> Este modelo 3D es procesado por Pix4D Cloud. 
           Usa los controles del visor para rotar, hacer zoom y explorar el modelo. 
           Haz clic en el botón de abrir para ver en pantalla completa.
         </p>
       </div>
       
-      <div className="mt-3 bg-green-500/10 border border-green-500/30 rounded-lg p-3">
-        <p className="text-green-400 text-sm">
+      <div className="mt-3 bg-green-50 border border-green-200 rounded-lg p-3">
+        <p className="text-green-700 text-sm">
           <strong>📊 Datos del Vuelo:</strong> Fecha: {vuelo?.fecha_vuelo}, 
           Duración: {vuelo?.duracion_minutos} min, 
           Área: {vuelo?.area_cubierta?.toLocaleString()} m², 
