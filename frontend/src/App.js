@@ -569,18 +569,15 @@ function VuelosView({ vuelos, proyectos, onDelete, onRefresh }) {
 // KPI Card Component
 function KPICard({ icon: Icon, label, value, color, testId }) {
   const colorClasses = {
-    blue: 'bg-blue-500/20 text-blue-400',
-    green: 'bg-green-500/20 text-green-400',
-    purple: 'bg-purple-500/20 text-purple-400',
-    orange: 'bg-orange-500/20 text-orange-400'
+    brick: 'bg-[#994B49]/10 text-[#994B49]'
   };
 
   return (
-    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700" data-testid={testId}>
+    <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm" data-testid={testId}>
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-slate-400 text-sm mb-1">{label}</p>
-          <p className="text-3xl font-bold text-white">{value}</p>
+          <p className="text-gray-600 text-sm mb-1">{label}</p>
+          <p className="text-3xl font-bold text-gray-900">{value}</p>
         </div>
         <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
           <Icon className="h-6 w-6" />
