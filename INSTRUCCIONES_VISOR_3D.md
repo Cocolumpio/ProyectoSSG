@@ -9,7 +9,7 @@ Tu sistema **DroneBuild Pro** ahora tiene un **visor 3D completamente funcional*
 ## 🚀 Cómo Usar el Visor 3D
 
 ### **Paso 1: Acceder al Dashboard**
-1. Abre tu navegador y ve a: https://flight-reports-1.preview.emergentagent.com
+1. Abre tu navegador y ve a: https://dron-dashboard.preview.emergentagent.com
 2. Verás el dashboard principal con 3 proyectos activos
 
 ### **Paso 2: Seleccionar un Proyecto**
