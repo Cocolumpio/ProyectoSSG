@@ -735,15 +735,29 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
     e.preventDefault();
     setSaving(true);
     setError(null);
+    setSuccessMessage(null);
+
+    console.log('handleEditSubmit - Iniciando guardado...');
+    console.log('handleEditSubmit - editingProject.id:', editingProject?.id);
+    console.log('handleEditSubmit - formData:', JSON.stringify(formData, null, 2));
 
     try {
       const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
-      await axios.put(`${API}/proyectos/${editingProject.id}`, formData);
+      const response = await axios.put(`${API}/proyectos/${editingProject.id}`, formData);
+      console.log('handleEditSubmit - Respuesta del servidor:', response.data);
+      
       resetForm();
       setShowEditForm(false);
       setEditingProject(null);
+      setSuccessMessage(`¡Proyecto "${formData.nombre}" actualizado correctamente!`);
+      
+      // Ocultar mensaje después de 5 segundos
+      setTimeout(() => setSuccessMessage(null), 5000);
+      
       onRefresh();
     } catch (err) {
+      console.error('handleEditSubmit - Error:', err);
+      console.error('handleEditSubmit - Error response:', err.response?.data);
       setError(err.response?.data?.detail || 'Error al actualizar el proyecto');
     } finally {
       setSaving(false);
