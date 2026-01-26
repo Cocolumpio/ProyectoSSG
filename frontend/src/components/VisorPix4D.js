@@ -1,23 +1,23 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Box, ExternalLink, Edit2, Save, X } from 'lucide-react';
 
 const VisorPix4D = ({ vuelo, proyectoPix4dUrl, onUpdateUrl }) => {
-  // Prioridad: URL del proyecto > URL del vuelo > URL por defecto
-  const derivedUrl = useMemo(() => {
-    return proyectoPix4dUrl || vuelo?.pix4d_url || 'https://cloud.pix4d.com/embed/bim/mesh/2509725?shareToken=6c0b297df8a2429da6c43b31b28767a9';
-  }, [proyectoPix4dUrl, vuelo?.pix4d_url]);
-  
   const [isEditing, setIsEditing] = useState(false);
   const [tempUrl, setTempUrl] = useState('');
-  const [overrideUrl, setOverrideUrl] = useState(null);
   
-  // Limpiar override cuando cambia el URL del proyecto
-  useEffect(() => {
-    setOverrideUrl(null);
-  }, [proyectoPix4dUrl]);
+  // Usar ref para trackear el último proyectoPix4dUrl
+  const lastProyectoUrlRef = useRef(proyectoPix4dUrl);
   
-  // Usar override si existe, sino usar el derivado
-  const currentUrl = overrideUrl || derivedUrl;
+  // URL por defecto
+  const defaultUrl = 'https://cloud.pix4d.com/embed/bim/mesh/2509725?shareToken=6c0b297df8a2429da6c43b31b28767a9';
+  
+  // Determinar el URL a mostrar - siempre priorizar proyectoPix4dUrl
+  let currentUrl = proyectoPix4dUrl || vuelo?.pix4d_url || defaultUrl;
+  
+  // Si el proyectoPix4dUrl cambió, actualizar la ref
+  if (lastProyectoUrlRef.current !== proyectoPix4dUrl) {
+    lastProyectoUrlRef.current = proyectoPix4dUrl;
+  }
   
   const handleEdit = () => {
     setTempUrl(currentUrl);
