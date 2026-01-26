@@ -115,11 +115,15 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="bg-[#994B49] p-2 rounded-lg">
-                <Plane className="h-6 w-6 text-white" />
+              <div className="flex items-center">
+                <img 
+                  src="https://customer-assets.emergentagent.com/job_flight-reports-1/artifacts/qwo3sxlv_image.png" 
+                  alt="DrON Topografía"
+                  className="h-12 w-auto"
+                />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">DroneBuild Pro</h1>
+              <div className="border-l border-gray-300 pl-3">
+                <h1 className="text-2xl font-bold text-gray-900">DrON Topografía</h1>
                 <p className="text-sm text-gray-600">Gestión de Construcción con Drones</p>
               </div>
             </div>
