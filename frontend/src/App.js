@@ -217,40 +217,40 @@ function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onPr
           icon={Building2}
           label="Total Proyectos"
           value={estadisticas?.total_proyectos || 0}
-          color="blue"
+          color="brick"
           testId="kpi-proyectos"
         />
         <KPICard
           icon={Plane}
           label="Vuelos Realizados"
           value={estadisticas?.total_vuelos || 0}
-          color="green"
+          color="brick"
           testId="kpi-vuelos"
         />
         <KPICard
           icon={TrendingUp}
           label="Avance Promedio"
           value={`${estadisticas?.avance_promedio || 0}%`}
-          color="purple"
+          color="brick"
           testId="kpi-avance"
         />
         <KPICard
           icon={Database}
           label="Vol. Excavación Total"
           value={`${Math.round(estadisticas?.volumetria_total?.excavacion || 0)} m³`}
-          color="orange"
+          color="brick"
           testId="kpi-volumetria"
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Mapa */}
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700">
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
           <div className="flex items-center space-x-2 mb-4">
-            <MapIcon className="h-5 w-5 text-blue-400" />
-            <h2 className="text-xl font-semibold text-white">Ubicación de Proyectos</h2>
+            <MapIcon className="h-5 w-5 text-[#994B49]" />
+            <h2 className="text-xl font-semibold text-gray-900">Ubicación de Proyectos</h2>
           </div>
-          <div className="h-[400px] rounded-lg overflow-hidden" data-testid="map-container">
+          <div className="h-[400px] rounded-lg overflow-hidden border border-gray-200" data-testid="map-container">
             <MapContainer
               center={[mapCenter.lat, mapCenter.lng]}
               zoom={11}
