@@ -117,7 +117,7 @@ function App() {
             <div className="flex items-center space-x-3">
               <div className="flex items-center">
                 <img 
-                  src="https://customer-assets.emergentagent.com/job_flight-reports-1/artifacts/qwo3sxlv_image.png" 
+                  src="https://customer-assets.emergentagent.com/job_flight-reports-1/artifacts/arowdsbk_WhatsApp%20Image%202026-01-26%20at%201.14.37%20PM.jpeg" 
                   alt="DrON Topografía"
                   className="h-12 w-auto"
                 />
