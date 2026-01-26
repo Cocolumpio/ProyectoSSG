@@ -65,10 +65,6 @@ function App() {
       }
     } catch (error) {
       console.error('Error fetching data:', error);
-      // Crear datos demo si no hay datos
-      if (proyectos.length === 0) {
-        await crearDatosDemo();
-      }
     } finally {
       setLoading(false);
     }
