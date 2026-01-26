@@ -42,11 +42,7 @@ function App() {
   const [mapCenter, setMapCenter] = useState({ lat: 19.4326, lng: -99.1332 }); // Ciudad de México default
 
   // Fetch data
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [proyectosRes, vuelosRes, statsRes] = await Promise.all([
@@ -59,16 +55,22 @@ function App() {
       setEstadisticas(statsRes.data);
       
       // Si hay proyectos, seleccionar el primero
-      if (proyectosRes.data.length > 0 && !selectedProyecto) {
-        setSelectedProyecto(proyectosRes.data[0]);
-        setMapCenter(proyectosRes.data[0].coordenadas);
+      if (proyectosRes.data.length > 0) {
+        setSelectedProyecto(prev => prev || proyectosRes.data[0]);
+        if (!selectedProyecto) {
+          setMapCenter(proyectosRes.data[0].coordenadas);
+        }
       }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedProyecto]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleDeleteProyecto = async (id) => {
     if (window.confirm('¿Estás seguro de eliminar este proyecto?')) {
