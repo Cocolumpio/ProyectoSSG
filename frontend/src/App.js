@@ -61,9 +61,17 @@ function App() {
       setVuelos(vuelosRes.data);
       setEstadisticas(statsRes.data);
       
-      // Si hay proyectos, seleccionar el primero
+      // Si hay proyectos
       if (proyectosRes.data.length > 0) {
-        setSelectedProyecto(prev => prev || proyectosRes.data[0]);
+        // Si ya hay un proyecto seleccionado, actualizarlo con los datos más recientes
+        setSelectedProyecto(prev => {
+          if (prev) {
+            // Buscar el proyecto actualizado en los nuevos datos
+            const updated = proyectosRes.data.find(p => p.id === prev.id);
+            return updated || proyectosRes.data[0];
+          }
+          return proyectosRes.data[0];
+        });
         if (!selectedProyecto) {
           setMapCenter(proyectosRes.data[0].coordenadas);
         }
