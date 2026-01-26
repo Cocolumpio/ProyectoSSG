@@ -77,6 +77,7 @@ class Vuelo(BaseModel):
     num_imagenes: int
     volumetria: Volumetria
     archivo_nube_puntos: Optional[str] = None
+    pix4d_url: Optional[str] = None  # URL del iframe de Pix4D
     estado: str = "completado"  # completado, procesando, fallido
     notas: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -88,6 +89,7 @@ class VueloCreate(BaseModel):
     area_cubierta: float
     num_imagenes: int
     volumetria: Volumetria
+    pix4d_url: Optional[str] = None
     notas: Optional[str] = None
 
 class AvanceHito(BaseModel):
