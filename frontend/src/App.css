@@ -1,5 +1,6 @@
 .App {
     min-height: 100vh;
+    background-color: #F8F9FA;
 }
 
 /* Leaflet map fixes */
@@ -16,16 +17,16 @@
 }
 
 ::-webkit-scrollbar-track {
-    background: #1e293b;
+    background: #E5E7EB;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #475569;
+    background: #994B49;
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #64748b;
+    background: #7D3C3A;
 }
 
 /* Animation for cards */
@@ -40,6 +41,6 @@
     }
 }
 
-.bg-slate-800\/50 {
+.bg-custom-light {
     animation: fadeIn 0.3s ease-out;
 }
