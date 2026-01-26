@@ -119,6 +119,24 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
+      {/* Mensaje de éxito global */}
+      {globalSuccessMessage && (
+        <div className="fixed top-4 right-4 z-[100] bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3" data-testid="global-success-message">
+          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span className="font-medium">{globalSuccessMessage}</span>
+          <button 
+            onClick={() => setGlobalSuccessMessage(null)}
+            className="ml-2 hover:bg-green-600 rounded p-1"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
