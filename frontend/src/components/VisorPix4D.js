@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Box, ExternalLink, Edit2, Save, X } from 'lucide-react';
 
 const VisorPix4D = ({ vuelo, proyectoPix4dUrl, onUpdateUrl }) => {
@@ -10,6 +10,11 @@ const VisorPix4D = ({ vuelo, proyectoPix4dUrl, onUpdateUrl }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [tempUrl, setTempUrl] = useState('');
   const [overrideUrl, setOverrideUrl] = useState(null);
+  
+  // Limpiar override cuando cambia el URL del proyecto
+  useEffect(() => {
+    setOverrideUrl(null);
+  }, [proyectoPix4dUrl]);
   
   // Usar override si existe, sino usar el derivado
   const currentUrl = overrideUrl || derivedUrl;
