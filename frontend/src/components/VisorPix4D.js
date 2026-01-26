@@ -30,11 +30,11 @@ const VisorPix4D = ({ vuelo, onUpdateUrl }) => {
   };
   
   return (
-    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700">
+    <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
-          <Box className="h-5 w-5 text-blue-400" />
-          <h2 className="text-xl font-semibold text-white">Visor 3D - Modelo Pix4D</h2>
+          <Box className="h-5 w-5 text-[#994B49]" />
+          <h2 className="text-xl font-semibold text-gray-900">Visor 3D - Modelo Pix4D</h2>
         </div>
         
         <div className="flex items-center space-x-2">
@@ -44,14 +44,14 @@ const VisorPix4D = ({ vuelo, onUpdateUrl }) => {
                 href={currentUrl.replace('/embed/', '/')}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center space-x-2 px-3 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                 title="Abrir en Pix4D"
               >
                 <ExternalLink className="h-4 w-4" />
               </a>
               <button
                 onClick={handleEdit}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors"
                 data-testid="edit-pix4d-url"
               >
                 <Edit2 className="h-4 w-4" />
@@ -62,14 +62,14 @@ const VisorPix4D = ({ vuelo, onUpdateUrl }) => {
             <>
               <button
                 onClick={handleSave}
-                className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 <Save className="h-4 w-4" />
                 <span>Guardar</span>
               </button>
               <button
                 onClick={handleCancel}
-                className="flex items-center space-x-2 px-3 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -80,7 +80,7 @@ const VisorPix4D = ({ vuelo, onUpdateUrl }) => {
       
       {isEditing && (
         <div className="mb-4">
-          <label className="block text-sm text-slate-400 mb-2">
+          <label className="block text-sm text-gray-600 mb-2">
             URL del iframe de Pix4D
           </label>
           <input
@@ -88,9 +88,9 @@ const VisorPix4D = ({ vuelo, onUpdateUrl }) => {
             value={tempUrl}
             onChange={(e) => setTempUrl(e.target.value)}
             placeholder="https://cloud.pix4d.com/embed/bim/mesh/..."
-            className="w-full px-4 py-2 bg-slate-700 text-white rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 bg-gray-50 text-gray-900 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#994B49]"
           />
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-gray-500 mt-1">
             Pega aquí el src del iframe que te proporciona Pix4D
           </p>
         </div>
