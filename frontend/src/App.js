@@ -102,8 +102,8 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="text-white text-2xl">Cargando...</div>
+      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+        <div className="text-gray-900 text-2xl">Cargando...</div>
       </div>
     );
   }
