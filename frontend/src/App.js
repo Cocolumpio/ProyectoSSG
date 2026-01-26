@@ -40,6 +40,13 @@ function App() {
   const [showNewProjectForm, setShowNewProjectForm] = useState(false);
   const [showNewFlightForm, setShowNewFlightForm] = useState(false);
   const [mapCenter, setMapCenter] = useState({ lat: 19.4326, lng: -99.1332 }); // Ciudad de México default
+  const [globalSuccessMessage, setGlobalSuccessMessage] = useState(null);
+
+  // Función para mostrar mensaje de éxito global
+  const showSuccessMessage = (message) => {
+    setGlobalSuccessMessage(message);
+    setTimeout(() => setGlobalSuccessMessage(null), 5000);
+  };
 
   // Fetch data
   const fetchData = useCallback(async () => {
