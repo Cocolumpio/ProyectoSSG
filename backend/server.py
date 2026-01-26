@@ -423,7 +423,7 @@ async def obtener_avance(proyecto_id: str):
 async def actualizar_avance_hitos(proyecto_id: str, avance: Avance):
     doc = avance.model_dump()
     doc['updated_at'] = datetime.now(timezone.utc).isoformat()
-    result = await db.avances.update_one(
+    await db.avances.update_one(
         {"proyecto_id": proyecto_id},
         {"$set": doc},
         upsert=True
