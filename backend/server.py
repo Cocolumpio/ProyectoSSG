@@ -167,6 +167,33 @@ async def actualizar_avance(proyecto_id: str, avance: float):
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
     return {"message": "Avance actualizado", "avance": avance}
 
+@api_router.put("/proyectos/{proyecto_id}", response_model=Proyecto)
+async def actualizar_proyecto(proyecto_id: str, proyecto_update: ProyectoUpdate):
+    """Actualizar un proyecto existente con todos sus campos"""
+    # Obtener solo los campos que se proporcionaron (no None)
+    update_data = {k: v for k, v in proyecto_update.model_dump().items() if v is not None}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No se proporcionaron campos para actualizar")
+    
+    # Convertir volumetria a dict si existe
+    if 'volumetria' in update_data and update_data['volumetria']:
+        update_data['volumetria'] = update_data['volumetria'] if isinstance(update_data['volumetria'], dict) else update_data['volumetria']
+    
+    result = await db.proyectos.update_one(
+        {"id": proyecto_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    # Retornar el proyecto actualizado
+    proyecto = await db.proyectos.find_one({"id": proyecto_id}, {"_id": 0})
+    if isinstance(proyecto.get('created_at'), str):
+        proyecto['created_at'] = datetime.fromisoformat(proyecto['created_at'])
+    return proyecto
+
 @api_router.delete("/proyectos/{proyecto_id}")
 async def eliminar_proyecto(proyecto_id: str):
     result = await db.proyectos.delete_one({"id": proyecto_id})
