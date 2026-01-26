@@ -687,7 +687,7 @@ function ProjectFormContent({ formData, setFormData, error, saving, isEdit, onSu
 }
 
 // Proyectos View
-function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
+function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShowSuccess }) {
   const [showForm, setShowForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
@@ -704,7 +704,6 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null);
 
   const resetForm = () => {
     setFormData({
