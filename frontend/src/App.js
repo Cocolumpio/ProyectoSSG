@@ -359,14 +359,14 @@ function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onPr
 
       {/* Vuelos Recientes */}
       {selectedProyecto && vuelosDelProyecto.length > 0 && (
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700">
-          <h2 className="text-xl font-semibold text-white mb-4">
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
             Vuelos Recientes - {selectedProyecto.nombre}
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-left" data-testid="vuelos-table">
-              <thead className="border-b border-slate-700">
-                <tr className="text-slate-400">
+              <thead className="border-b border-gray-200">
+                <tr className="text-gray-600">
                   <th className="pb-3 pr-4">Fecha</th>
                   <th className="pb-3 pr-4">Duración</th>
                   <th className="pb-3 pr-4">Área</th>
@@ -374,15 +374,15 @@ function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onPr
                   <th className="pb-3">Estado</th>
                 </tr>
               </thead>
-              <tbody className="text-white">
+              <tbody className="text-gray-900">
                 {vuelosDelProyecto.map((vuelo) => (
-                  <tr key={vuelo.id} className="border-b border-slate-700/50">
+                  <tr key={vuelo.id} className="border-b border-gray-100">
                     <td className="py-3 pr-4">{vuelo.fecha_vuelo}</td>
                     <td className="py-3 pr-4">{vuelo.duracion_minutos} min</td>
                     <td className="py-3 pr-4">{vuelo.area_cubierta.toLocaleString()} m²</td>
                     <td className="py-3 pr-4">{vuelo.num_imagenes}</td>
                     <td className="py-3">
-                      <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-sm">
+                      <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm">
                         {vuelo.estado}
                       </span>
                     </td>
