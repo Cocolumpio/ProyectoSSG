@@ -410,7 +410,8 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
     coordenadas: { lat: 20.6597, lng: -103.3496 }, // Guadalajara por defecto
     fecha_inicio: '',
     fecha_fin_planeada: '',
-    descripcion: ''
+    descripcion: '',
+    avance_actual: 0
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -434,7 +435,12 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
 
     try {
       const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
-      await axios.post(`${API}/proyectos`, formData);
+      const response = await axios.post(`${API}/proyectos`, formData);
+      
+      // Si hay avance inicial, actualizarlo
+      if (formData.avance_actual > 0) {
+        await axios.put(`${API}/proyectos/${response.data.id}/avance?avance=${formData.avance_actual}`);
+      }
       
       // Limpiar formulario
       setFormData({
@@ -443,7 +449,8 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
         coordenadas: { lat: 20.6597, lng: -103.3496 },
         fecha_inicio: '',
         fecha_fin_planeada: '',
-        descripcion: ''
+        descripcion: '',
+        avance_actual: 0
       });
       setShowForm(false);
       onRefresh();
