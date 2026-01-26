@@ -40,6 +40,11 @@ class Coordinates(BaseModel):
     lat: float
     lng: float
 
+class Volumetria(BaseModel):
+    excavacion: float = 0.0  # m³
+    relleno: float = 0.0  # m³
+    materiales: float = 0.0  # m³
+
 class Proyecto(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
@@ -63,6 +68,7 @@ class ProyectoCreate(BaseModel):
     fecha_fin_planeada: str
     descripcion: Optional[str] = None
     pix4d_url: Optional[str] = None
+    avance_actual: float = 0.0
     volumetria: Optional[Volumetria] = None
 
 class ProyectoUpdate(BaseModel):
@@ -75,11 +81,6 @@ class ProyectoUpdate(BaseModel):
     descripcion: Optional[str] = None
     pix4d_url: Optional[str] = None
     volumetria: Optional[Volumetria] = None
-
-class Volumetria(BaseModel):
-    excavacion: float  # m³
-    relleno: float  # m³
-    materiales: float  # m³
 
 class Vuelo(BaseModel):
     model_config = ConfigDict(extra="ignore")
