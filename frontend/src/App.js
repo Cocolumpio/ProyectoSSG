@@ -5,8 +5,8 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { Building2, Plane, TrendingUp, Database, Upload, Plus, Map as MapIcon, Eye, Trash2, Box } from 'lucide-react';
-import Visor3DReal from './components/Visor3DReal';
+import { Building2, Plane, TrendingUp, Database, Upload, Plus, Map as MapIcon, Eye, Trash2 } from 'lucide-react';
+import VisorPix4D from './components/VisorPix4D';
 
 // Fix Leaflet default icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -392,11 +392,11 @@ function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onPr
         </div>
       </div>
 
-      {/* Visor 3D Real - Nube de Puntos */}
+      {/* Visor 3D - Pix4D */}
       {selectedProyecto && vuelosDelProyecto.length > 0 && (
-        <Visor3DReal 
+        <VisorPix4D 
           vuelo={vuelosDelProyecto[0]} 
-          onUploadComplete={() => fetchData()}
+          onUpdateUrl={(url) => console.log('Nueva URL:', url)}
         />
       )}
 
