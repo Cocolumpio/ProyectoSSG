@@ -1,13 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, ExternalLink, Edit2, Save, X } from 'lucide-react';
 
-const VisorPix4D = ({ vuelo, onUpdateUrl }) => {
+const VisorPix4D = ({ vuelo, proyectoPix4dUrl, onUpdateUrl }) => {
+  // Prioridad: URL del proyecto > URL del vuelo > URL por defecto
+  const defaultUrl = proyectoPix4dUrl || vuelo?.pix4d_url || 'https://cloud.pix4d.com/embed/bim/mesh/2509725?shareToken=6c0b297df8a2429da6c43b31b28767a9';
+  
   const [isEditing, setIsEditing] = useState(false);
   const [tempUrl, setTempUrl] = useState('');
-  
-  // URL por defecto del proyecto Pix4D
-  const defaultUrl = vuelo?.pix4d_url || 'https://cloud.pix4d.com/embed/bim/mesh/2509725?shareToken=6c0b297df8a2429da6c43b31b28767a9';
   const [currentUrl, setCurrentUrl] = useState(defaultUrl);
+  
+  // Actualizar currentUrl cuando cambie proyectoPix4dUrl
+  useEffect(() => {
+    const newUrl = proyectoPix4dUrl || vuelo?.pix4d_url || defaultUrl;
+    setCurrentUrl(newUrl);
+  }, [proyectoPix4dUrl, vuelo?.pix4d_url, defaultUrl]);
   
   const handleEdit = () => {
     setTempUrl(currentUrl);
