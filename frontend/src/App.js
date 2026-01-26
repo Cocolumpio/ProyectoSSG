@@ -333,24 +333,24 @@ function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onPr
 
       {/* Volumetría del Proyecto Seleccionado */}
       {selectedProyecto && volumetriaData.length > 0 && (
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700">
-          <h2 className="text-xl font-semibold text-white mb-4">
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
             Volumetrías - {selectedProyecto.nombre}
           </h2>
           <div className="h-[300px]" data-testid="volumetria-chart">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={volumetriaData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
-                <XAxis dataKey="nombre" stroke="#94a3b8" />
-                <YAxis stroke="#94a3b8" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                <XAxis dataKey="nombre" stroke="#6B7280" />
+                <YAxis stroke="#6B7280" />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569' }}
-                  labelStyle={{ color: '#fff' }}
+                  contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB' }}
+                  labelStyle={{ color: '#111827' }}
                 />
                 <Legend />
-                <Bar dataKey="excavacion" fill="#ef4444" name="Excavación (m³)" />
+                <Bar dataKey="excavacion" fill="#994B49" name="Excavación (m³)" />
                 <Bar dataKey="relleno" fill="#10b981" name="Relleno (m³)" />
-                <Bar dataKey="materiales" fill="#3b82f6" name="Materiales (m³)" />
+                <Bar dataKey="materiales" fill="#6B7280" name="Materiales (m³)" />
               </BarChart>
             </ResponsiveContainer>
           </div>
