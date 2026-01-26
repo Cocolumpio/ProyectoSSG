@@ -283,8 +283,8 @@ function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onPr
         </div>
 
         {/* Lista de Proyectos */}
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700">
-          <h2 className="text-xl font-semibold text-white mb-4">Proyectos Activos</h2>
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Proyectos Activos</h2>
           <div className="space-y-3 max-h-[400px] overflow-y-auto" data-testid="proyectos-list">
             {proyectos.map((proyecto) => (
               <div
@@ -292,27 +292,27 @@ function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onPr
                 onClick={() => onProyectoClick(proyecto)}
                 className={`p-4 rounded-lg cursor-pointer transition-all ${
                   selectedProyecto?.id === proyecto.id
-                    ? 'bg-blue-500/20 border-2 border-blue-500'
-                    : 'bg-slate-700/50 border border-slate-600 hover:bg-slate-700'
+                    ? 'bg-[#994B49]/10 border-2 border-[#994B49]'
+                    : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'
                 }`}
                 data-testid={`proyecto-item-${proyecto.id}`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-white">{proyecto.nombre}</h3>
-                    <p className="text-sm text-slate-400">{proyecto.ubicacion}</p>
+                    <h3 className="font-semibold text-gray-900">{proyecto.nombre}</h3>
+                    <p className="text-sm text-gray-600">{proyecto.ubicacion}</p>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-400">
+                    <div className="text-2xl font-bold text-[#994B49]">
                       {proyecto.avance_actual}%
                     </div>
-                    <div className="text-xs text-slate-400">Avance</div>
+                    <div className="text-xs text-gray-600">Avance</div>
                   </div>
                 </div>
                 <div className="mt-2">
-                  <div className="w-full bg-slate-600 rounded-full h-2">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
-                      className="bg-blue-500 h-2 rounded-full transition-all"
+                      className="bg-[#994B49] h-2 rounded-full transition-all"
                       style={{ width: `${proyecto.avance_actual}%` }}
                     />
                   </div>
