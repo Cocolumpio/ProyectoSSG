@@ -118,7 +118,7 @@ const VisorPix4D = ({ vuelo, proyectoPix4dUrl, onUpdateUrl }) => {
         />
       </div>
       
-      {vuelo && (
+      {vuelo && vuelo.volumetria && (
         <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
           <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
             <div className="text-gray-600 mb-1">Excavación</div>
@@ -149,14 +149,16 @@ const VisorPix4D = ({ vuelo, proyectoPix4dUrl, onUpdateUrl }) => {
         </p>
       </div>
       
-      <div className="mt-3 bg-green-50 border border-green-200 rounded-lg p-3">
-        <p className="text-green-700 text-sm">
-          <strong>📊 Datos del Vuelo:</strong> Fecha: {vuelo?.fecha_vuelo}, 
-          Duración: {vuelo?.duracion_minutos} min, 
-          Área: {vuelo?.area_cubierta?.toLocaleString()} m², 
-          Imágenes: {vuelo?.num_imagenes}
-        </p>
-      </div>
+      {vuelo && (
+        <div className="mt-3 bg-green-50 border border-green-200 rounded-lg p-3">
+          <p className="text-green-700 text-sm">
+            <strong>📊 Datos del Vuelo:</strong> Fecha: {vuelo.fecha_vuelo}, 
+            Duración: {vuelo.duracion_minutos} min, 
+            Área: {vuelo.area_cubierta?.toLocaleString()} m², 
+            Imágenes: {vuelo.num_imagenes}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
