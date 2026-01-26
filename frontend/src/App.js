@@ -590,6 +590,39 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Avance Actual (%)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    name="avance_actual"
+                    value={formData.avance_actual}
+                    onChange={handleInputChange}
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+                    placeholder="0"
+                  />
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500">
+                    %
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Útil para cargar obras pasadas ya terminadas o en progreso (0-100%)
+                </p>
+                <div className="mt-2">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-[#994B49] h-2 rounded-full transition-all"
+                      style={{ width: `${formData.avance_actual}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Descripción
                 </label>
                 <textarea
