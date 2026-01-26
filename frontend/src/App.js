@@ -406,17 +406,35 @@ function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onPr
 // Proyectos View
 function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
   const [showForm, setShowForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingProject, setEditingProject] = useState(null);
   const [formData, setFormData] = useState({
     nombre: '',
     ubicacion: '',
-    coordenadas: { lat: 20.6597, lng: -103.3496 }, // Guadalajara por defecto
+    coordenadas: { lat: 20.6597, lng: -103.3496 },
     fecha_inicio: '',
     fecha_fin_planeada: '',
     descripcion: '',
-    avance_actual: 0
+    avance_actual: 0,
+    pix4d_url: '',
+    volumetria: { excavacion: 0, relleno: 0, materiales: 0 }
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+
+  const resetForm = () => {
+    setFormData({
+      nombre: '',
+      ubicacion: '',
+      coordenadas: { lat: 20.6597, lng: -103.3496 },
+      fecha_inicio: '',
+      fecha_fin_planeada: '',
+      descripcion: '',
+      avance_actual: 0,
+      pix4d_url: '',
+      volumetria: { excavacion: 0, relleno: 0, materiales: 0 }
+    });
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -430,6 +448,30 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
     }));
   };
 
+  const handleVolumetriaChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      volumetria: { ...prev.volumetria, [field]: parseFloat(value) || 0 }
+    }));
+  };
+
+  const handleEditClick = (proyecto) => {
+    setEditingProject(proyecto);
+    setFormData({
+      nombre: proyecto.nombre || '',
+      ubicacion: proyecto.ubicacion || '',
+      coordenadas: proyecto.coordenadas || { lat: 20.6597, lng: -103.3496 },
+      fecha_inicio: proyecto.fecha_inicio || '',
+      fecha_fin_planeada: proyecto.fecha_fin_planeada || '',
+      descripcion: proyecto.descripcion || '',
+      avance_actual: proyecto.avance_actual || 0,
+      pix4d_url: proyecto.pix4d_url || '',
+      volumetria: proyecto.volumetria || { excavacion: 0, relleno: 0, materiales: 0 }
+    });
+    setShowEditForm(true);
+    setError(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -437,23 +479,8 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
 
     try {
       const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
-      const response = await axios.post(`${API}/proyectos`, formData);
-      
-      // Si hay avance inicial, actualizarlo
-      if (formData.avance_actual > 0) {
-        await axios.put(`${API}/proyectos/${response.data.id}/avance?avance=${formData.avance_actual}`);
-      }
-      
-      // Limpiar formulario
-      setFormData({
-        nombre: '',
-        ubicacion: '',
-        coordenadas: { lat: 20.6597, lng: -103.3496 },
-        fecha_inicio: '',
-        fecha_fin_planeada: '',
-        descripcion: '',
-        avance_actual: 0
-      });
+      await axios.post(`${API}/proyectos`, formData);
+      resetForm();
       setShowForm(false);
       onRefresh();
     } catch (err) {
@@ -463,12 +490,266 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
     }
   };
 
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+
+    try {
+      const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+      await axios.put(`${API}/proyectos/${editingProject.id}`, formData);
+      resetForm();
+      setShowEditForm(false);
+      setEditingProject(null);
+      onRefresh();
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Error al actualizar el proyecto');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Componente de formulario reutilizable
+  const ProjectFormContent = ({ isEdit = false, onSubmit, onClose }) => (
+    <form onSubmit={onSubmit} className="p-6 space-y-4">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Nombre del Proyecto *
+          </label>
+          <input
+            type="text"
+            name="nombre"
+            value={formData.nombre}
+            onChange={handleInputChange}
+            required
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+            placeholder="Ej: Hotel Marriott"
+            data-testid="project-name-input"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Ubicación *
+          </label>
+          <input
+            type="text"
+            name="ubicacion"
+            value={formData.ubicacion}
+            onChange={handleInputChange}
+            required
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+            placeholder="Ej: Guadalajara, Jalisco"
+            data-testid="project-location-input"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Latitud *
+          </label>
+          <input
+            type="number"
+            step="any"
+            value={formData.coordenadas.lat}
+            onChange={(e) => handleCoordChange('lat', e.target.value)}
+            required
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+            placeholder="20.6597"
+            data-testid="project-lat-input"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Longitud *
+          </label>
+          <input
+            type="number"
+            step="any"
+            value={formData.coordenadas.lng}
+            onChange={(e) => handleCoordChange('lng', e.target.value)}
+            required
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+            placeholder="-103.3496"
+            data-testid="project-lng-input"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Fecha de Inicio *
+          </label>
+          <input
+            type="date"
+            name="fecha_inicio"
+            value={formData.fecha_inicio}
+            onChange={handleInputChange}
+            required
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+            data-testid="project-start-date-input"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Fecha de Fin Planeada *
+          </label>
+          <input
+            type="date"
+            name="fecha_fin_planeada"
+            value={formData.fecha_fin_planeada}
+            onChange={handleInputChange}
+            required
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+            data-testid="project-end-date-input"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Avance Actual (%)
+        </label>
+        <div className="relative">
+          <input
+            type="number"
+            name="avance_actual"
+            value={formData.avance_actual}
+            onChange={handleInputChange}
+            min="0"
+            max="100"
+            step="0.1"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+            placeholder="0"
+            data-testid="project-progress-input"
+          />
+          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500">
+            %
+          </div>
+        </div>
+        <div className="mt-2">
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-[#994B49] h-2 rounded-full transition-all"
+              style={{ width: `${formData.avance_actual}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* URL de Pix4D */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          URL del Modelo 3D (Pix4D)
+        </label>
+        <input
+          type="url"
+          name="pix4d_url"
+          value={formData.pix4d_url}
+          onChange={handleInputChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+          placeholder="https://cloud.pix4d.com/embed/?projectId=..."
+          data-testid="project-pix4d-input"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Pega la URL del iframe de Pix4D para visualizar el modelo 3D
+        </p>
+      </div>
+
+      {/* Volumetrías */}
+      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+        <h4 className="font-medium text-gray-900 mb-3">Volumetría del Proyecto (m³)</h4>
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Excavación</label>
+            <input
+              type="number"
+              step="0.1"
+              min="0"
+              value={formData.volumetria.excavacion}
+              onChange={(e) => handleVolumetriaChange('excavacion', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+              data-testid="project-vol-excavacion-input"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Relleno</label>
+            <input
+              type="number"
+              step="0.1"
+              min="0"
+              value={formData.volumetria.relleno}
+              onChange={(e) => handleVolumetriaChange('relleno', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+              data-testid="project-vol-relleno-input"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Materiales</label>
+            <input
+              type="number"
+              step="0.1"
+              min="0"
+              value={formData.volumetria.materiales}
+              onChange={(e) => handleVolumetriaChange('materiales', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+              data-testid="project-vol-materiales-input"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Descripción
+        </label>
+        <textarea
+          name="descripcion"
+          value={formData.descripcion}
+          onChange={handleInputChange}
+          rows={3}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+          placeholder="Descripción del proyecto..."
+          data-testid="project-description-input"
+        />
+      </div>
+
+      <div className="flex items-center justify-end space-x-3 pt-4">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+          data-testid="project-cancel-btn"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          disabled={saving}
+          className="px-6 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          data-testid="project-submit-btn"
+        >
+          {saving ? 'Guardando...' : (isEdit ? 'Guardar Cambios' : 'Crear Proyecto')}
+        </button>
+      </div>
+    </form>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">Proyectos</h2>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => { resetForm(); setShowForm(true); }}
           className="flex items-center space-x-2 px-4 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors"
           data-testid="add-proyecto-btn"
         >
@@ -477,7 +758,7 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
         </button>
       </div>
 
-      {/* Formulario Modal */}
+      {/* Modal: Nuevo Proyecto */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -486,180 +767,35 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
               <button
                 onClick={() => setShowForm(false)}
                 className="text-gray-400 hover:text-gray-600"
+                data-testid="close-new-project-modal"
               >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
+            <ProjectFormContent onSubmit={handleSubmit} onClose={() => setShowForm(false)} />
+          </div>
+        </div>
+      )}
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                  {error}
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre del Proyecto *
-                </label>
-                <input
-                  type="text"
-                  name="nombre"
-                  value={formData.nombre}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-                  placeholder="Ej: Hotel Marriott"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Ubicación *
-                </label>
-                <input
-                  type="text"
-                  name="ubicacion"
-                  value={formData.ubicacion}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-                  placeholder="Ej: Guadalajara, Jalisco"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Latitud *
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={formData.coordenadas.lat}
-                    onChange={(e) => handleCoordChange('lat', e.target.value)}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-                    placeholder="20.6597"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Longitud *
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={formData.coordenadas.lng}
-                    onChange={(e) => handleCoordChange('lng', e.target.value)}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-                    placeholder="-103.3496"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Fecha de Inicio *
-                  </label>
-                  <input
-                    type="date"
-                    name="fecha_inicio"
-                    value={formData.fecha_inicio}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Fecha de Fin Planeada *
-                  </label>
-                  <input
-                    type="date"
-                    name="fecha_fin_planeada"
-                    value={formData.fecha_fin_planeada}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Avance Actual (%)
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    name="avance_actual"
-                    value={formData.avance_actual}
-                    onChange={handleInputChange}
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-                    placeholder="0"
-                  />
-                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500">
-                    %
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Útil para cargar obras pasadas ya terminadas o en progreso (0-100%)
-                </p>
-                <div className="mt-2">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-[#994B49] h-2 rounded-full transition-all"
-                      style={{ width: `${formData.avance_actual}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Descripción
-                </label>
-                <textarea
-                  name="descripcion"
-                  value={formData.descripcion}
-                  onChange={handleInputChange}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-                  placeholder="Descripción del proyecto..."
-                />
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-sm text-blue-700">
-                  <strong>Tip:</strong> Las coordenadas se pueden obtener desde Google Maps haciendo clic derecho en la ubicación y copiando las coordenadas.
-                </p>
-              </div>
-
-              <div className="flex items-center justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="px-6 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {saving ? 'Guardando...' : 'Crear Proyecto'}
-                </button>
-              </div>
-            </form>
+      {/* Modal: Editar Proyecto */}
+      {showEditForm && editingProject && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-gray-900">Editar Proyecto: {editingProject.nombre}</h3>
+              <button
+                onClick={() => { setShowEditForm(false); setEditingProject(null); }}
+                className="text-gray-400 hover:text-gray-600"
+                data-testid="close-edit-project-modal"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <ProjectFormContent isEdit onSubmit={handleEditSubmit} onClose={() => { setShowEditForm(false); setEditingProject(null); }} />
           </div>
         </div>
       )}
@@ -673,17 +809,27 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
           >
             <div className="flex items-start justify-between mb-4">
               <Building2 className="h-8 w-8 text-[#994B49]" />
-              <div className="flex space-x-2">
+              <div className="flex space-x-1">
                 <button
                   onClick={() => onSelect(proyecto)}
                   className="p-2 text-[#994B49] hover:bg-[#994B49]/10 rounded-lg transition-colors"
+                  title="Ver en Dashboard"
                   data-testid={`view-proyecto-${proyecto.id}`}
                 >
                   <Eye className="h-4 w-4" />
                 </button>
                 <button
+                  onClick={() => handleEditClick(proyecto)}
+                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  title="Editar Proyecto"
+                  data-testid={`edit-proyecto-${proyecto.id}`}
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button
                   onClick={() => onDelete(proyecto.id)}
                   className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Eliminar Proyecto"
                   data-testid={`delete-proyecto-${proyecto.id}`}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -701,6 +847,12 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh }) {
                 <span>Fin Planeado:</span>
                 <span>{proyecto.fecha_fin_planeada}</span>
               </div>
+              {proyecto.pix4d_url && (
+                <div className="flex items-center text-green-600 text-xs mt-2">
+                  <Eye className="h-3 w-3 mr-1" />
+                  Modelo 3D disponible
+                </div>
+              )}
               <div className="mt-4">
                 <div className="flex justify-between text-sm mb-1">
                   <span className="text-gray-600">Avance</span>
