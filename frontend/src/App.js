@@ -762,7 +762,7 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
     try {
       await axios.post(`${API}/proyectos/${proyecto.id}/avances-semanales`, formData);
       setShowAddForm(false);
-      setFormData({ semana: avances.length + 2, fecha: '', pix4d_url: '', descripcion: '', porcentaje_avance: 0 });
+      setFormData({ semana: avances.length + 2, fecha: '', pix4d_url: '', descripcion: '', porcentaje_avance: 0, volumen_excavacion: 0 });
       fetchAvances();
       if (onShowSuccess) {
         onShowSuccess(`Avance de Semana ${formData.semana} agregado correctamente`);
