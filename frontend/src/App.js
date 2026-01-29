@@ -959,27 +959,27 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
             {selectedAvance ? (
               <div className="flex-1 flex flex-col overflow-y-auto">
                 {/* Header del avance */}
-                <div className="p-4 bg-white border-b border-gray-200 flex-shrink-0">
+                <div className="p-3 sm:p-4 bg-white border-b border-gray-200 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-semibold text-gray-900">Semana {selectedAvance.semana}</h4>
-                      <p className="text-sm text-gray-500">{selectedAvance.fecha}</p>
+                      <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Semana {selectedAvance.semana}</h4>
+                      <p className="text-xs sm:text-sm text-gray-500">{selectedAvance.fecha}</p>
                     </div>
                     {selectedAvance.porcentaje_avance > 0 && (
                       <div className="text-right">
-                        <span className="text-2xl font-bold text-[#994B49]">{selectedAvance.porcentaje_avance}%</span>
-                        <p className="text-xs text-gray-500">Avance de obra</p>
+                        <span className="text-xl sm:text-2xl font-bold text-[#994B49]">{selectedAvance.porcentaje_avance}%</span>
+                        <p className="text-xs text-gray-500">Avance</p>
                       </div>
                     )}
                   </div>
                   {selectedAvance.descripcion && (
-                    <p className="mt-2 text-sm text-gray-600">{selectedAvance.descripcion}</p>
+                    <p className="mt-2 text-xs sm:text-sm text-gray-600">{selectedAvance.descripcion}</p>
                   )}
                 </div>
 
                 {/* Visor 3D */}
-                <div className="p-4 flex-shrink-0">
-                  <div className="bg-white rounded-xl overflow-hidden shadow-sm" style={{ height: '350px' }}>
+                <div className="p-2 sm:p-4 flex-shrink-0">
+                  <div className="bg-white rounded-xl overflow-hidden shadow-sm h-[200px] sm:h-[280px] md:h-[350px]">
                     <iframe
                       src={selectedAvance.pix4d_url}
                       className="w-full h-full border-0"
@@ -990,19 +990,19 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
                 </div>
 
                 {/* Galería de Imágenes */}
-                <div className="p-4 flex-1">
-                  <div className="bg-white rounded-xl p-4 shadow-sm h-full">
-                    <div className="flex items-center justify-between mb-4">
+                <div className="p-2 sm:p-4 flex-1">
+                  <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm h-full">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 sm:mb-4">
                       <div className="flex items-center space-x-2">
-                        <Image className="h-5 w-5 text-[#994B49]" />
-                        <h5 className="font-semibold text-gray-900">Fotos del Vuelo</h5>
+                        <Image className="h-4 sm:h-5 w-4 sm:w-5 text-[#994B49]" />
+                        <h5 className="font-semibold text-gray-900 text-sm sm:text-base">Fotos del Vuelo</h5>
                         {selectedAvance.imagenes && selectedAvance.imagenes.length > 0 && (
-                          <span className="text-sm text-gray-500">({selectedAvance.imagenes.length} fotos)</span>
+                          <span className="text-xs sm:text-sm text-gray-500">({selectedAvance.imagenes.length})</span>
                         )}
                       </div>
-                      <label className="flex items-center space-x-2 px-3 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] cursor-pointer transition-colors">
+                      <label className="flex items-center justify-center space-x-2 px-3 py-1.5 sm:py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] cursor-pointer transition-colors">
                         <Upload className="h-4 w-4" />
-                        <span className="text-sm">{uploadingImage ? 'Subiendo...' : 'Subir Fotos'}</span>
+                        <span className="text-xs sm:text-sm">{uploadingImage ? 'Subiendo...' : 'Subir Fotos'}</span>
                         <input
                           type="file"
                           multiple
@@ -1016,7 +1016,7 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
                     </div>
 
                     {selectedAvance.imagenes && selectedAvance.imagenes.length > 0 ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-[200px] overflow-y-auto">
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3 max-h-[150px] sm:max-h-[200px] overflow-y-auto">
                         {selectedAvance.imagenes.map((imageUrl, index) => (
                           <div
                             key={index}
