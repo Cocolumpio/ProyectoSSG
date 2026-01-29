@@ -853,30 +853,30 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-[80vw] h-[80vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full sm:w-[95vw] md:w-[90vw] lg:w-[80vw] h-[95vh] sm:h-[90vh] md:h-[85vh] lg:h-[80vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-[#994B49] text-white px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Layers className="h-6 w-6" />
+        <div className="bg-[#994B49] text-white px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <Layers className="h-5 sm:h-6 w-5 sm:w-6" />
             <div>
-              <h3 className="text-xl font-semibold">Avances Semanales</h3>
-              <p className="text-white/80 text-sm">{proyecto.nombre}</p>
+              <h3 className="text-base sm:text-xl font-semibold">Avances Semanales</h3>
+              <p className="text-white/80 text-xs sm:text-sm truncate max-w-[150px] sm:max-w-none">{proyecto.nombre}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10"
+            className="text-white/80 hover:text-white p-1.5 sm:p-2 rounded-lg hover:bg-white/10"
             data-testid="close-avances-modal"
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 sm:h-6 w-5 sm:w-6" />
           </button>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-col sm:flex-row flex-1 overflow-hidden">
           {/* Panel izquierdo - Lista de semanas */}
-          <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
-            <div className="p-4 border-b border-gray-200">
+          <div className="w-full sm:w-48 md:w-56 lg:w-64 bg-gray-50 border-b sm:border-b-0 sm:border-r border-gray-200 flex flex-col flex-shrink-0 max-h-[30vh] sm:max-h-none">
+            <div className="p-2 sm:p-4 border-b border-gray-200">
               <button
                 onClick={() => {
                   setFormData({ 
@@ -888,7 +888,7 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
                   });
                   setShowAddForm(true);
                 }}
-                className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors"
+                className="w-full flex items-center justify-center space-x-2 px-3 sm:px-4 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors text-sm sm:text-base"
                 data-testid="add-avance-btn"
               >
                 <Plus className="h-4 w-4" />
@@ -896,7 +896,7 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-2 space-y-2">
+            <div className="flex-1 overflow-y-auto p-2 space-y-2 flex sm:flex-col flex-row overflow-x-auto sm:overflow-x-hidden">
               {loading ? (
                 <div className="text-center py-8 text-gray-500">Cargando...</div>
               ) : avances.length === 0 ? (
