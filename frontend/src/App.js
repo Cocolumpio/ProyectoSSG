@@ -712,14 +712,33 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
 
   const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-  // Cargar avances semanales
+  // Cargar avances semanales al montar el componente
+  useEffect(() => {
+    const loadAvances = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${API}/proyectos/${proyecto.id}/avances-semanales`);
+        setAvances(response.data);
+        if (response.data.length > 0) {
+          setSelectedAvance(response.data[response.data.length - 1]); // Seleccionar el más reciente
+        }
+      } catch (err) {
+        console.error('Error cargando avances:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAvances();
+  }, [proyecto.id, API]);
+
+  // Función para recargar avances
   const fetchAvances = async () => {
     try {
       setLoading(true);
       const response = await axios.get(`${API}/proyectos/${proyecto.id}/avances-semanales`);
       setAvances(response.data);
       if (response.data.length > 0 && !selectedAvance) {
-        setSelectedAvance(response.data[response.data.length - 1]); // Seleccionar el más reciente
+        setSelectedAvance(response.data[response.data.length - 1]);
       }
     } catch (err) {
       console.error('Error cargando avances:', err);
@@ -727,10 +746,6 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchAvances();
-  }, [proyecto.id]);
 
   // Agregar nuevo avance
   const handleAddAvance = async (e) => {
