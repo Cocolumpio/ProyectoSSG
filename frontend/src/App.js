@@ -951,11 +951,12 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
             </div>
           </div>
 
-          {/* Panel derecho - Visor 3D */}
-          <div className="flex-1 flex flex-col bg-gray-100">
+          {/* Panel derecho - Visor 3D e Imágenes */}
+          <div className="flex-1 flex flex-col bg-gray-100 overflow-hidden">
             {selectedAvance ? (
-              <>
-                <div className="p-4 bg-white border-b border-gray-200">
+              <div className="flex-1 flex flex-col overflow-y-auto">
+                {/* Header del avance */}
+                <div className="p-4 bg-white border-b border-gray-200 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="font-semibold text-gray-900">Semana {selectedAvance.semana}</h4>
@@ -972,8 +973,10 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
                     <p className="mt-2 text-sm text-gray-600">{selectedAvance.descripcion}</p>
                   )}
                 </div>
-                <div className="flex-1 p-4">
-                  <div className="bg-white rounded-xl h-full overflow-hidden shadow-sm">
+
+                {/* Visor 3D */}
+                <div className="p-4 flex-shrink-0">
+                  <div className="bg-white rounded-xl overflow-hidden shadow-sm" style={{ height: '350px' }}>
                     <iframe
                       src={selectedAvance.pix4d_url}
                       className="w-full h-full border-0"
@@ -982,7 +985,84 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
                     />
                   </div>
                 </div>
-              </>
+
+                {/* Galería de Imágenes */}
+                <div className="p-4 flex-1">
+                  <div className="bg-white rounded-xl p-4 shadow-sm h-full">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-2">
+                        <Image className="h-5 w-5 text-[#994B49]" />
+                        <h5 className="font-semibold text-gray-900">Fotos del Vuelo</h5>
+                        {selectedAvance.imagenes && selectedAvance.imagenes.length > 0 && (
+                          <span className="text-sm text-gray-500">({selectedAvance.imagenes.length} fotos)</span>
+                        )}
+                      </div>
+                      <label className="flex items-center space-x-2 px-3 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] cursor-pointer transition-colors">
+                        <Upload className="h-4 w-4" />
+                        <span className="text-sm">{uploadingImage ? 'Subiendo...' : 'Subir Fotos'}</span>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          disabled={uploadingImage}
+                          className="hidden"
+                          data-testid="upload-images-input"
+                        />
+                      </label>
+                    </div>
+
+                    {selectedAvance.imagenes && selectedAvance.imagenes.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-[200px] overflow-y-auto">
+                        {selectedAvance.imagenes.map((imageUrl, index) => (
+                          <div
+                            key={index}
+                            className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer"
+                            onClick={() => setSelectedImage({ url: imageUrl, index })}
+                          >
+                            <img
+                              src={`${process.env.REACT_APP_BACKEND_URL}${imageUrl}`}
+                              alt={`Foto ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDownloadImage(imageUrl, index);
+                                }}
+                                className="p-2 bg-white rounded-full text-[#994B49] hover:bg-gray-100 mx-1"
+                                title="Descargar"
+                              >
+                                <Download className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteImage(imageUrl);
+                                }}
+                                className="p-2 bg-white rounded-full text-red-600 hover:bg-gray-100 mx-1"
+                                title="Eliminar"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                            <div className="absolute bottom-1 left-1 bg-black/50 text-white text-xs px-2 py-0.5 rounded">
+                              {index + 1}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+                        <Image className="h-12 w-12 mb-2" />
+                        <p className="text-sm">No hay fotos para esta semana</p>
+                        <p className="text-xs mt-1">Sube fotos del vuelo para que el cliente pueda descargarlas</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="flex-1 flex items-center justify-center text-gray-500">
                 <div className="text-center">
@@ -994,6 +1074,41 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
             )}
           </div>
         </div>
+
+        {/* Modal de vista previa de imagen */}
+        {selectedImage && (
+          <div 
+            className="absolute inset-0 bg-black/90 flex items-center justify-center z-20"
+            onClick={() => setSelectedImage(null)}
+          >
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-4 right-4 text-white/80 hover:text-white p-2"
+            >
+              <X className="h-8 w-8" />
+            </button>
+            <div className="max-w-4xl max-h-[80vh] p-4">
+              <img
+                src={`${process.env.REACT_APP_BACKEND_URL}${selectedImage.url}`}
+                alt={`Foto ${selectedImage.index + 1}`}
+                className="max-w-full max-h-[70vh] object-contain rounded-lg"
+              />
+              <div className="flex items-center justify-center mt-4 space-x-4">
+                <span className="text-white">Foto {selectedImage.index + 1}</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDownloadImage(selectedImage.url, selectedImage.index);
+                  }}
+                  className="flex items-center space-x-2 px-4 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A]"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Descargar</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Modal para agregar avance */}
         {showAddForm && (
