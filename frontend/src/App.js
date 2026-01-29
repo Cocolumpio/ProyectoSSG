@@ -785,7 +785,7 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-xl shadow-xl w-[80vw] h-[80vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="bg-[#994B49] text-white px-6 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
