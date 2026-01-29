@@ -263,6 +263,32 @@ async def obtener_vuelo(vuelo_id: str):
         vuelo['created_at'] = datetime.fromisoformat(vuelo['created_at'])
     return vuelo
 
+@api_router.put("/vuelos/{vuelo_id}", response_model=Vuelo)
+async def actualizar_vuelo(vuelo_id: str, vuelo_update: VueloUpdate):
+    """Actualizar un vuelo existente"""
+    update_data = {k: v for k, v in vuelo_update.model_dump().items() if v is not None}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No se proporcionaron campos para actualizar")
+    
+    # Convertir volumetria a dict si existe
+    if 'volumetria' in update_data and update_data['volumetria']:
+        if hasattr(update_data['volumetria'], 'model_dump'):
+            update_data['volumetria'] = update_data['volumetria'].model_dump()
+    
+    result = await db.vuelos.update_one(
+        {"id": vuelo_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Vuelo no encontrado")
+    
+    vuelo = await db.vuelos.find_one({"id": vuelo_id}, {"_id": 0})
+    if isinstance(vuelo.get('created_at'), str):
+        vuelo['created_at'] = datetime.fromisoformat(vuelo['created_at'])
+    return vuelo
+
 @api_router.delete("/vuelos/{vuelo_id}")
 async def eliminar_vuelo(vuelo_id: str):
     result = await db.vuelos.delete_one({"id": vuelo_id})
