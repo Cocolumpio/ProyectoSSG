@@ -908,7 +908,7 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
                   <div
                     key={avance.id}
                     onClick={() => setSelectedAvance(avance)}
-                    className={`p-3 rounded-lg cursor-pointer transition-all ${
+                    className={`p-2 sm:p-3 rounded-lg cursor-pointer transition-all flex-shrink-0 min-w-[120px] sm:min-w-0 ${
                       selectedAvance?.id === avance.id
                         ? 'bg-[#994B49] text-white'
                         : 'bg-white hover:bg-gray-100 text-gray-700'
@@ -916,16 +916,16 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
                     data-testid={`avance-semana-${avance.semana}`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Calendar className="h-4 w-4" />
-                        <span className="font-medium">Semana {avance.semana}</span>
+                      <div className="flex items-center space-x-1 sm:space-x-2">
+                        <Calendar className="h-3 sm:h-4 w-3 sm:w-4" />
+                        <span className="font-medium text-xs sm:text-base">Sem. {avance.semana}</span>
                       </div>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteAvance(avance.id);
                         }}
-                        className={`p-1 rounded hover:bg-red-100 ${
+                        className={`p-1 rounded hover:bg-red-100 hidden sm:block ${
                           selectedAvance?.id === avance.id ? 'hover:bg-white/20' : ''
                         }`}
                       >
@@ -936,13 +936,13 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
                       {avance.fecha}
                     </div>
                     {avance.porcentaje_avance > 0 && (
-                      <div className="mt-2">
+                      <div className="mt-1 sm:mt-2">
                         <div className={`text-xs mb-1 ${selectedAvance?.id === avance.id ? 'text-white/70' : 'text-gray-500'}`}>
-                          Avance: {avance.porcentaje_avance}%
+                          {avance.porcentaje_avance}%
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                        <div className="w-full bg-gray-200 rounded-full h-1 sm:h-1.5">
                           <div
-                            className={`h-1.5 rounded-full ${selectedAvance?.id === avance.id ? 'bg-white' : 'bg-[#994B49]'}`}
+                            className={`h-1 sm:h-1.5 rounded-full ${selectedAvance?.id === avance.id ? 'bg-white' : 'bg-[#994B49]'}`}
                             style={{ width: `${avance.porcentaje_avance}%` }}
                           />
                         </div>
