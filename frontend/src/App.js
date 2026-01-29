@@ -977,6 +977,42 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
                   )}
                 </div>
 
+                {/* Gráfico de Evolución del Progreso Semanal */}
+                {avances.length > 1 && (
+                  <div className="p-2 sm:p-4 flex-shrink-0">
+                    <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <TrendingUp className="h-4 sm:h-5 w-4 sm:w-5 text-[#994B49]" />
+                        <h5 className="font-semibold text-gray-900 text-sm sm:text-base">Evolución del Progreso</h5>
+                      </div>
+                      <div className="h-[120px] sm:h-[150px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={avances.filter(a => a.porcentaje_avance > 0).map(a => ({
+                            semana: `Sem ${a.semana}`,
+                            avance: a.porcentaje_avance
+                          }))}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                            <XAxis dataKey="semana" stroke="#6B7280" fontSize={11} />
+                            <YAxis stroke="#6B7280" fontSize={11} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+                            <Tooltip 
+                              formatter={(value) => [`${value}%`, 'Avance']}
+                              contentStyle={{ backgroundColor: '#FFF', border: '1px solid #E5E7EB', borderRadius: '8px' }}
+                            />
+                            <Line 
+                              type="monotone" 
+                              dataKey="avance" 
+                              stroke="#994B49" 
+                              strokeWidth={2} 
+                              dot={{ fill: '#994B49', strokeWidth: 2 }}
+                              activeDot={{ r: 6, fill: '#994B49' }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Visor 3D */}
                 <div className="p-2 sm:p-4 flex-shrink-0">
                   <div className="bg-white rounded-xl overflow-hidden shadow-sm h-[200px] sm:h-[280px] md:h-[350px]">
