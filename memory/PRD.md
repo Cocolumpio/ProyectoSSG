@@ -10,6 +10,10 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 - Mapa interactivo para ubicaciones de obras
 - Visor 3D para nubes de puntos usando Pix4D iframe
 - CRUD completo para proyectos con campos para URL de Pix4D y volumetría
+- CRUD completo para vuelos
+- Avances semanales con galería de fotos y modelos 3D
+- Gráfico de evolución del progreso semanal
+- Descarga de fotos en formato ZIP
 - Tema de UI con logo de "DrON Topografía" y colores gris claro (#F8F9FA) / rojo ladrillo (#994B49)
 
 ## Datos Iniciales
@@ -26,7 +30,7 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 /app/
 ├── backend/
 │   ├── server.py        # API FastAPI, modelos Pydantic, endpoints
-│   └── uploads/         # Archivos de nubes de puntos (si se usan)
+│   └── uploads/         # Archivos de nubes de puntos e imágenes
 ├── frontend/
 │   └── src/
 │       ├── App.js       # Componente principal con todas las vistas
@@ -38,10 +42,17 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 
 ## Implementado (Enero 2025)
 
+### Nuevas Funcionalidades (29 Enero 2025)
+- [x] **CRUD completo para Vuelos** - Formulario con crear, editar, eliminar
+  - Campos: proyecto, fecha, duración, área, imágenes, volumetría, URL Pix4D, estado, notas
+  - Endpoint PUT /api/vuelos/{id} agregado
+- [x] **Gráfico de Evolución del Progreso Semanal** - LineChart que muestra el avance % por semana
+- [x] **Descarga de Fotos en ZIP** - Botón "Descargar ZIP" en galería de fotos
+  - Endpoint GET /api/proyectos/{id}/avances-semanales/{avance_id}/imagenes/zip
+
 ### Correcciones de Despliegue (29 Enero 2025)
 - [x] **CRÍTICO:** Eliminados paquetes obsoletos `@react-three/drei`, `@react-three/fiber`, `three` que causaban error de build
   - El paquete `camera-controls@3.1.2` requería Node.js >=22.0.0, incompatible con el servidor de producción (20.18.1)
-  - Los componentes 3D que usaban estos paquetes fueron eliminados previamente; la visualización 3D usa Pix4D iframe
 - [x] Eliminado proyecto de prueba "Acuarela" de la base de datos
 - [x] Build de producción verificado exitosamente
 
