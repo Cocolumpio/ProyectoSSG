@@ -1000,19 +1000,35 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
                           <span className="text-xs sm:text-sm text-gray-500">({selectedAvance.imagenes.length})</span>
                         )}
                       </div>
-                      <label className="flex items-center justify-center space-x-2 px-3 py-1.5 sm:py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] cursor-pointer transition-colors">
-                        <Upload className="h-4 w-4" />
-                        <span className="text-xs sm:text-sm">{uploadingImage ? 'Subiendo...' : 'Subir Fotos'}</span>
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          disabled={uploadingImage}
-                          className="hidden"
-                          data-testid="upload-images-input"
-                        />
-                      </label>
+                      <div className="flex items-center gap-2">
+                        {/* Botón Descargar ZIP */}
+                        {selectedAvance.imagenes && selectedAvance.imagenes.length > 0 && (
+                          <button
+                            onClick={() => {
+                              window.open(`${process.env.REACT_APP_BACKEND_URL}/api/proyectos/${proyecto.id}/avances-semanales/${selectedAvance.id}/imagenes/zip`, '_blank');
+                            }}
+                            className="flex items-center justify-center space-x-2 px-3 py-1.5 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                            title="Descargar todas las fotos en ZIP"
+                            data-testid="download-zip-btn"
+                          >
+                            <FileArchive className="h-4 w-4" />
+                            <span className="text-xs sm:text-sm hidden sm:inline">Descargar ZIP</span>
+                          </button>
+                        )}
+                        <label className="flex items-center justify-center space-x-2 px-3 py-1.5 sm:py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] cursor-pointer transition-colors">
+                          <Upload className="h-4 w-4" />
+                          <span className="text-xs sm:text-sm">{uploadingImage ? 'Subiendo...' : 'Subir Fotos'}</span>
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            disabled={uploadingImage}
+                            className="hidden"
+                            data-testid="upload-images-input"
+                          />
+                        </label>
+                      </div>
                     </div>
 
                     {selectedAvance.imagenes && selectedAvance.imagenes.length > 0 ? (
