@@ -694,6 +694,337 @@ function ProjectFormContent({ formData, setFormData, error, saving, isEdit, onSu
   );
 }
 
+// Componente para visualizar avances semanales de un proyecto
+function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
+  const [avances, setAvances] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedAvance, setSelectedAvance] = useState(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [formData, setFormData] = useState({
+    semana: 1,
+    fecha: '',
+    pix4d_url: '',
+    descripcion: '',
+    porcentaje_avance: 0
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
+  // Cargar avances semanales
+  const fetchAvances = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API}/proyectos/${proyecto.id}/avances-semanales`);
+      setAvances(response.data);
+      if (response.data.length > 0 && !selectedAvance) {
+        setSelectedAvance(response.data[response.data.length - 1]); // Seleccionar el más reciente
+      }
+    } catch (err) {
+      console.error('Error cargando avances:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useState(() => {
+    fetchAvances();
+  }, [proyecto.id]);
+
+  // Agregar nuevo avance
+  const handleAddAvance = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+
+    try {
+      await axios.post(`${API}/proyectos/${proyecto.id}/avances-semanales`, formData);
+      setShowAddForm(false);
+      setFormData({ semana: avances.length + 2, fecha: '', pix4d_url: '', descripcion: '', porcentaje_avance: 0 });
+      fetchAvances();
+      if (onShowSuccess) {
+        onShowSuccess(`Avance de Semana ${formData.semana} agregado correctamente`);
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Error al agregar el avance');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Eliminar avance
+  const handleDeleteAvance = async (avanceId) => {
+    if (!window.confirm('¿Eliminar este avance semanal?')) return;
+    
+    try {
+      await axios.delete(`${API}/proyectos/${proyecto.id}/avances-semanales/${avanceId}`);
+      fetchAvances();
+      if (selectedAvance?.id === avanceId) {
+        setSelectedAvance(null);
+      }
+    } catch (err) {
+      console.error('Error eliminando avance:', err);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="bg-[#994B49] text-white px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <Layers className="h-6 w-6" />
+            <div>
+              <h3 className="text-xl font-semibold">Avances Semanales</h3>
+              <p className="text-white/80 text-sm">{proyecto.nombre}</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10"
+            data-testid="close-avances-modal"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        <div className="flex flex-1 overflow-hidden">
+          {/* Panel izquierdo - Lista de semanas */}
+          <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
+            <div className="p-4 border-b border-gray-200">
+              <button
+                onClick={() => {
+                  setFormData({ 
+                    semana: avances.length + 1, 
+                    fecha: new Date().toISOString().split('T')[0], 
+                    pix4d_url: '', 
+                    descripcion: '', 
+                    porcentaje_avance: 0 
+                  });
+                  setShowAddForm(true);
+                }}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors"
+                data-testid="add-avance-btn"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Nueva Semana</span>
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-2 space-y-2">
+              {loading ? (
+                <div className="text-center py-8 text-gray-500">Cargando...</div>
+              ) : avances.length === 0 ? (
+                <div className="text-center py-8 text-gray-500 text-sm">
+                  No hay avances semanales registrados
+                </div>
+              ) : (
+                avances.map((avance) => (
+                  <div
+                    key={avance.id}
+                    onClick={() => setSelectedAvance(avance)}
+                    className={`p-3 rounded-lg cursor-pointer transition-all ${
+                      selectedAvance?.id === avance.id
+                        ? 'bg-[#994B49] text-white'
+                        : 'bg-white hover:bg-gray-100 text-gray-700'
+                    }`}
+                    data-testid={`avance-semana-${avance.semana}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="h-4 w-4" />
+                        <span className="font-medium">Semana {avance.semana}</span>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteAvance(avance.id);
+                        }}
+                        className={`p-1 rounded hover:bg-red-100 ${
+                          selectedAvance?.id === avance.id ? 'hover:bg-white/20' : ''
+                        }`}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                    <div className={`text-xs mt-1 ${selectedAvance?.id === avance.id ? 'text-white/70' : 'text-gray-500'}`}>
+                      {avance.fecha}
+                    </div>
+                    {avance.porcentaje_avance > 0 && (
+                      <div className="mt-2">
+                        <div className={`text-xs mb-1 ${selectedAvance?.id === avance.id ? 'text-white/70' : 'text-gray-500'}`}>
+                          Avance: {avance.porcentaje_avance}%
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div
+                            className={`h-1.5 rounded-full ${selectedAvance?.id === avance.id ? 'bg-white' : 'bg-[#994B49]'}`}
+                            style={{ width: `${avance.porcentaje_avance}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Panel derecho - Visor 3D */}
+          <div className="flex-1 flex flex-col bg-gray-100">
+            {selectedAvance ? (
+              <>
+                <div className="p-4 bg-white border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Semana {selectedAvance.semana}</h4>
+                      <p className="text-sm text-gray-500">{selectedAvance.fecha}</p>
+                    </div>
+                    {selectedAvance.porcentaje_avance > 0 && (
+                      <div className="text-right">
+                        <span className="text-2xl font-bold text-[#994B49]">{selectedAvance.porcentaje_avance}%</span>
+                        <p className="text-xs text-gray-500">Avance de obra</p>
+                      </div>
+                    )}
+                  </div>
+                  {selectedAvance.descripcion && (
+                    <p className="mt-2 text-sm text-gray-600">{selectedAvance.descripcion}</p>
+                  )}
+                </div>
+                <div className="flex-1 p-4">
+                  <div className="bg-white rounded-xl h-full overflow-hidden shadow-sm">
+                    <iframe
+                      src={selectedAvance.pix4d_url}
+                      className="w-full h-full border-0"
+                      title={`Modelo 3D - Semana ${selectedAvance.semana}`}
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-gray-500">
+                <div className="text-center">
+                  <Layers className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg">Selecciona una semana para ver el modelo 3D</p>
+                  <p className="text-sm mt-2">o agrega un nuevo avance semanal</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Modal para agregar avance */}
+        {showAddForm && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h4 className="text-lg font-semibold text-gray-900">Nuevo Avance Semanal</h4>
+                <button onClick={() => setShowAddForm(false)} className="text-gray-400 hover:text-gray-600">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <form onSubmit={handleAddAvance} className="p-6 space-y-4">
+                {error && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                    {error}
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Semana *</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={formData.semana}
+                      onChange={(e) => setFormData(prev => ({ ...prev, semana: parseInt(e.target.value) || 1 }))}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+                      data-testid="avance-semana-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Fecha *</label>
+                    <input
+                      type="date"
+                      value={formData.fecha}
+                      onChange={(e) => setFormData(prev => ({ ...prev, fecha: e.target.value }))}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+                      data-testid="avance-fecha-input"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">URL del Modelo 3D (Pix4D) *</label>
+                  <input
+                    type="url"
+                    value={formData.pix4d_url}
+                    onChange={(e) => setFormData(prev => ({ ...prev, pix4d_url: e.target.value }))}
+                    required
+                    placeholder="https://cloud.pix4d.com/embed/..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+                    data-testid="avance-pix4d-input"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Porcentaje de Avance</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      value={formData.porcentaje_avance}
+                      onChange={(e) => setFormData(prev => ({ ...prev, porcentaje_avance: parseFloat(e.target.value) || 0 }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+                      data-testid="avance-porcentaje-input"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                  <textarea
+                    value={formData.descripcion}
+                    onChange={(e) => setFormData(prev => ({ ...prev, descripcion: e.target.value }))}
+                    rows={2}
+                    placeholder="Notas sobre el avance de esta semana..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+                    data-testid="avance-descripcion-input"
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddForm(false)}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="px-4 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors disabled:opacity-50"
+                    data-testid="avance-submit-btn"
+                  >
+                    {saving ? 'Guardando...' : 'Agregar Avance'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // Proyectos View
 function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShowSuccess }) {
   const [showForm, setShowForm] = useState(false);
