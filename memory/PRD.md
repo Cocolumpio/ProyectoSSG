@@ -81,6 +81,9 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
   - Vista previa ampliada de fotos
   - **Descarga individual de fotos** (nombradas automáticamente)
 - [x] Vista de Vuelos con tabla y filtros
+- [x] **CRUD completo para Vuelos** - Modal con formulario de crear/editar
+- [x] **Gráfico de Evolución del Progreso** - LineChart en modal de avances semanales
+- [x] **Botón Descargar ZIP** - Descarga todas las fotos de una semana en ZIP
 - [x] Branding personalizado (logo, colores)
 
 ### Testing
@@ -88,8 +91,7 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 - [x] Tests e2e de UI con Playwright (100% éxito)
 
 ## Backlog (P1)
-- [ ] CRUD completo para Vuelos (formulario para agregar/editar/eliminar vuelos)
-- [ ] Refactorizar App.js en componentes más pequeños
+- [ ] Refactorizar App.js en componentes más pequeños (>1600 líneas actualmente)
 
 ## Backlog (P2)
 - [ ] Funcionalidad de carga de archivos LAZ/LAS para archivo
@@ -107,6 +109,11 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 | DELETE | /api/proyectos/{id} | Eliminar proyecto |
 | GET | /api/vuelos | Listar vuelos |
 | POST | /api/vuelos | Crear vuelo |
+| **PUT** | **/api/vuelos/{id}** | **Actualizar vuelo** |
+| DELETE | /api/vuelos/{id} | Eliminar vuelo |
+| GET | /api/proyectos/{id}/avances-semanales | Listar avances semanales |
+| POST | /api/proyectos/{id}/avances-semanales | Crear avance semanal |
+| **GET** | **/api/proyectos/{id}/avances-semanales/{avance_id}/imagenes/zip** | **Descargar fotos en ZIP** |
 | GET | /api/estadisticas/resumen | Obtener estadísticas |
 
 ## Esquema de Datos
