@@ -45,6 +45,7 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 - [x] Endpoint de estadísticas/resumen
 - [x] Endpoint PUT /api/proyectos/{id} para editar proyectos completos
 - [x] Endpoints CRUD para avances semanales: GET, POST, PUT, DELETE /api/proyectos/{id}/avances-semanales
+- [x] **Endpoints para galería de imágenes**: POST, GET, DELETE para fotos de vuelo por avance semanal
 
 ### Frontend  
 - [x] Dashboard con KPIs (Total Proyectos, Vuelos, Avance Promedio, Volumetría)
@@ -56,7 +57,11 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 - [x] Modal de Nuevo Proyecto con campos para Pix4D y volumetría
 - [x] Modal de Editar Proyecto con datos pre-llenados
 - [x] Mensaje de confirmación global al guardar cambios
-- [x] **Modal de Avances Semanales** con visor 3D por semana
+- [x] **Modal de Avances Semanales (80% de pantalla)** con:
+  - Visor 3D por semana
+  - **Galería de fotos del vuelo** con subida múltiple
+  - Vista previa ampliada de fotos
+  - **Descarga individual de fotos** (nombradas automáticamente)
 - [x] Vista de Vuelos con tabla y filtros
 - [x] Branding personalizado (logo, colores)
 
