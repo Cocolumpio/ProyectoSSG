@@ -710,7 +710,8 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
     fecha: '',
     pix4d_url: '',
     descripcion: '',
-    porcentaje_avance: 0
+    porcentaje_avance: 0,
+    volumen_excavacion: 0
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
