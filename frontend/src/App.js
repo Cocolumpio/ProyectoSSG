@@ -728,7 +728,7 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
     }
   };
 
-  useState(() => {
+  useEffect(() => {
     fetchAvances();
   }, [proyecto.id]);
 
