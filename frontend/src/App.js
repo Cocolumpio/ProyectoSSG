@@ -1221,20 +1221,37 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Porcentaje de Avance</label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.1"
-                      value={formData.porcentaje_avance}
-                      onChange={(e) => setFormData(prev => ({ ...prev, porcentaje_avance: parseFloat(e.target.value) || 0 }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-                      data-testid="avance-porcentaje-input"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Porcentaje de Avance</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value={formData.porcentaje_avance}
+                        onChange={(e) => setFormData(prev => ({ ...prev, porcentaje_avance: parseFloat(e.target.value) || 0 }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+                        data-testid="avance-porcentaje-input"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Volumen Excavado</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        value={formData.volumen_excavacion}
+                        onChange={(e) => setFormData(prev => ({ ...prev, volumen_excavacion: parseFloat(e.target.value) || 0 }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+                        data-testid="avance-volumen-input"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">ton</span>
+                    </div>
                   </div>
                 </div>
 
