@@ -39,11 +39,12 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 ## Implementado (Enero 2025)
 
 ### Backend
-- [x] Modelos Pydantic: Proyecto, Vuelo, Volumetria, Avance
+- [x] Modelos Pydantic: Proyecto, Vuelo, Volumetria, Avance, AvanceSemanal
 - [x] Endpoints CRUD para proyectos: GET, POST, PUT, DELETE
 - [x] Endpoints para vuelos
 - [x] Endpoint de estadísticas/resumen
 - [x] Endpoint PUT /api/proyectos/{id} para editar proyectos completos
+- [x] Endpoints CRUD para avances semanales: GET, POST, PUT, DELETE /api/proyectos/{id}/avances-semanales
 
 ### Frontend  
 - [x] Dashboard con KPIs (Total Proyectos, Vuelos, Avance Promedio, Volumetría)
@@ -55,6 +56,7 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 - [x] Modal de Nuevo Proyecto con campos para Pix4D y volumetría
 - [x] Modal de Editar Proyecto con datos pre-llenados
 - [x] Mensaje de confirmación global al guardar cambios
+- [x] **Modal de Avances Semanales** con visor 3D por semana
 - [x] Vista de Vuelos con tabla y filtros
 - [x] Branding personalizado (logo, colores)
 
