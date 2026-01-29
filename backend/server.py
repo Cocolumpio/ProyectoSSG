@@ -45,6 +45,23 @@ class Volumetria(BaseModel):
     relleno: float = 0.0  # m³
     materiales: float = 0.0  # m³
 
+class AvanceSemanal(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    proyecto_id: str
+    semana: int  # Número de semana (1, 2, 3, etc.)
+    fecha: str  # Fecha del avance
+    pix4d_url: str  # URL del modelo 3D de Pix4D
+    descripcion: Optional[str] = None
+    porcentaje_avance: Optional[float] = None  # Porcentaje de avance en esa semana
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class AvanceSemanalCreate(BaseModel):
+    semana: int
+    fecha: str
+    pix4d_url: str
+    descripcion: Optional[str] = None
+    porcentaje_avance: Optional[float] = None
+
 class Proyecto(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
