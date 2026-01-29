@@ -184,25 +184,27 @@ function App() {
                 }`}
                 data-testid="nav-proyectos-btn"
               >
-                Proyectos
+                <span className="hidden sm:inline">Proyectos</span>
+                <Building2 className="h-4 w-4 sm:hidden" />
               </button>
               <button
                 onClick={() => setActiveView('vuelos')}
-                className={`px-4 py-2 rounded-lg transition-all ${
+                className={`px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base rounded-lg transition-all ${
                   activeView === 'vuelos'
                     ? 'bg-[#994B49] text-white'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
                 data-testid="nav-vuelos-btn"
               >
-                Vuelos
+                <span className="hidden sm:inline">Vuelos</span>
+                <Plane className="h-4 w-4 sm:hidden" />
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {activeView === 'dashboard' && (
           <DashboardView
             estadisticas={estadisticas}
