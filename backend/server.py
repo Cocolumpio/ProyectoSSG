@@ -55,6 +55,7 @@ class AvanceSemanal(BaseModel):
     pix4d_url: str  # URL del modelo 3D de Pix4D
     descripcion: Optional[str] = None
     porcentaje_avance: Optional[float] = None  # Porcentaje de avance en esa semana
+    volumen_excavacion: Optional[float] = None  # Volumen quitado en toneladas
     imagenes: List[str] = []  # URLs de las imágenes del vuelo
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -64,6 +65,7 @@ class AvanceSemanalCreate(BaseModel):
     pix4d_url: str
     descripcion: Optional[str] = None
     porcentaje_avance: Optional[float] = None
+    volumen_excavacion: Optional[float] = None  # Volumen quitado en toneladas
     imagenes: List[str] = []  # URLs de las imágenes del vuelo
 
 class Proyecto(BaseModel):
