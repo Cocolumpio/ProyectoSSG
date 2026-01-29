@@ -447,6 +447,83 @@ async def actualizar_avance_hitos(proyecto_id: str, avance: Avance):
     )
     return avance
 
+# --- Avances Semanales (Modelos 3D por semana) ---
+@api_router.get("/proyectos/{proyecto_id}/avances-semanales", response_model=List[AvanceSemanal])
+async def listar_avances_semanales(proyecto_id: str):
+    """Obtener todos los avances semanales de un proyecto ordenados por semana"""
+    avances = await db.avances_semanales.find(
+        {"proyecto_id": proyecto_id}, 
+        {"_id": 0}
+    ).sort("semana", 1).to_list(100)
+    
+    for avance in avances:
+        if isinstance(avance.get('created_at'), str):
+            avance['created_at'] = datetime.fromisoformat(avance['created_at'])
+    
+    return avances
+
+@api_router.post("/proyectos/{proyecto_id}/avances-semanales", response_model=AvanceSemanal)
+async def crear_avance_semanal(proyecto_id: str, avance: AvanceSemanalCreate):
+    """Crear un nuevo avance semanal con su modelo 3D"""
+    # Verificar que el proyecto existe
+    proyecto = await db.proyectos.find_one({"id": proyecto_id})
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    # Verificar que no exista ya un avance para esa semana
+    existente = await db.avances_semanales.find_one({
+        "proyecto_id": proyecto_id,
+        "semana": avance.semana
+    })
+    if existente:
+        raise HTTPException(status_code=400, detail=f"Ya existe un avance para la semana {avance.semana}")
+    
+    nuevo_avance = AvanceSemanal(
+        proyecto_id=proyecto_id,
+        **avance.model_dump()
+    )
+    
+    doc = nuevo_avance.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    await db.avances_semanales.insert_one(doc)
+    
+    return nuevo_avance
+
+@api_router.put("/proyectos/{proyecto_id}/avances-semanales/{avance_id}", response_model=AvanceSemanal)
+async def actualizar_avance_semanal(proyecto_id: str, avance_id: str, avance: AvanceSemanalCreate):
+    """Actualizar un avance semanal existente"""
+    update_data = avance.model_dump()
+    
+    result = await db.avances_semanales.update_one(
+        {"id": avance_id, "proyecto_id": proyecto_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Avance semanal no encontrado")
+    
+    avance_actualizado = await db.avances_semanales.find_one(
+        {"id": avance_id}, 
+        {"_id": 0}
+    )
+    if isinstance(avance_actualizado.get('created_at'), str):
+        avance_actualizado['created_at'] = datetime.fromisoformat(avance_actualizado['created_at'])
+    
+    return avance_actualizado
+
+@api_router.delete("/proyectos/{proyecto_id}/avances-semanales/{avance_id}")
+async def eliminar_avance_semanal(proyecto_id: str, avance_id: str):
+    """Eliminar un avance semanal"""
+    result = await db.avances_semanales.delete_one({
+        "id": avance_id,
+        "proyecto_id": proyecto_id
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Avance semanal no encontrado")
+    
+    return {"message": "Avance semanal eliminado"}
+
 # --- Estadísticas ---
 @api_router.get("/estadisticas/resumen")
 async def obtener_estadisticas():
