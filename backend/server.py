@@ -625,6 +625,50 @@ async def eliminar_imagen_avance(proyecto_id: str, avance_id: str, image_url: st
     
     return {"message": "Imagen eliminada"}
 
+@api_router.get("/proyectos/{proyecto_id}/avances-semanales/{avance_id}/imagenes/zip")
+async def descargar_imagenes_zip(proyecto_id: str, avance_id: str):
+    """Descargar todas las imágenes de un avance semanal en formato ZIP"""
+    # Verificar que el avance existe
+    avance = await db.avances_semanales.find_one({"id": avance_id, "proyecto_id": proyecto_id}, {"_id": 0})
+    if not avance:
+        raise HTTPException(status_code=404, detail="Avance semanal no encontrado")
+    
+    imagenes = avance.get('imagenes', [])
+    if not imagenes:
+        raise HTTPException(status_code=404, detail="No hay imágenes para descargar")
+    
+    # Obtener info del proyecto para el nombre del archivo
+    proyecto = await db.proyectos.find_one({"id": proyecto_id}, {"_id": 0})
+    proyecto_nombre = proyecto.get('nombre', 'Proyecto').replace(' ', '_') if proyecto else 'Proyecto'
+    semana = avance.get('semana', 0)
+    
+    # Crear ZIP en memoria
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for idx, image_url in enumerate(imagenes, 1):
+            try:
+                filename = image_url.split("/")[-1]
+                file_path = UPLOAD_DIR / "imagenes" / proyecto_id / avance_id / filename
+                if file_path.exists():
+                    # Nombre descriptivo para la imagen en el ZIP
+                    extension = Path(filename).suffix
+                    zip_filename = f"{proyecto_nombre}_Semana{semana}_Foto{idx}{extension}"
+                    zip_file.write(file_path, zip_filename)
+            except Exception as e:
+                logging.error(f"Error agregando imagen al ZIP: {e}")
+                continue
+    
+    zip_buffer.seek(0)
+    
+    # Nombre del archivo ZIP
+    zip_filename = f"{proyecto_nombre}_Semana{semana}_Fotos.zip"
+    
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/zip",
+        headers={"Content-Disposition": f"attachment; filename={zip_filename}"}
+    )
+
 # --- Estadísticas ---
 @api_router.get("/estadisticas/resumen")
 async def obtener_estadisticas():
