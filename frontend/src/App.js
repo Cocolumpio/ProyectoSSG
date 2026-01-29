@@ -1289,6 +1289,18 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShowSuccess
           </div>
         ))}
       </div>
+
+      {/* Modal de Avances Semanales */}
+      {showAvancesModal && selectedProjectForAvances && (
+        <AvancesSemanalesModal
+          proyecto={selectedProjectForAvances}
+          onClose={() => {
+            setShowAvancesModal(false);
+            setSelectedProjectForAvances(null);
+          }}
+          onShowSuccess={onShowSuccess}
+        />
+      )}
     </div>
   );
 }
