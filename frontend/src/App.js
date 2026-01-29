@@ -1507,6 +1507,16 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShowSuccess
                   <Layers className="h-4 w-4" />
                 </button>
                 <button
+                  onClick={() => {
+                    window.open(`${process.env.REACT_APP_BACKEND_URL}/api/proyectos/${proyecto.id}/reporte-ejecutivo`, '_blank');
+                  }}
+                  className="p-1.5 sm:p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                  title="Descargar Reporte Ejecutivo PDF"
+                  data-testid={`reporte-proyecto-${proyecto.id}`}
+                >
+                  <FileText className="h-4 w-4" />
+                </button>
+                <button
                   onClick={() => handleEditClick(proyecto)}
                   className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                   title="Editar Proyecto"
