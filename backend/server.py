@@ -526,6 +526,66 @@ async def eliminar_avance_semanal(proyecto_id: str, avance_id: str):
     
     return {"message": "Avance semanal eliminado"}
 
+@api_router.post("/proyectos/{proyecto_id}/avances-semanales/{avance_id}/imagenes")
+async def subir_imagen_avance(proyecto_id: str, avance_id: str, file: UploadFile = File(...)):
+    """Subir una imagen a un avance semanal"""
+    # Verificar que el avance existe
+    avance = await db.avances_semanales.find_one({"id": avance_id, "proyecto_id": proyecto_id})
+    if not avance:
+        raise HTTPException(status_code=404, detail="Avance semanal no encontrado")
+    
+    # Crear directorio para imágenes si no existe
+    images_dir = UPLOAD_DIR / "imagenes" / proyecto_id / avance_id
+    images_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Generar nombre único para la imagen
+    file_extension = Path(file.filename).suffix or ".jpg"
+    unique_filename = f"{uuid.uuid4()}{file_extension}"
+    file_path = images_dir / unique_filename
+    
+    # Guardar el archivo
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    # Generar URL de la imagen
+    image_url = f"/api/imagenes/{proyecto_id}/{avance_id}/{unique_filename}"
+    
+    # Agregar URL a la lista de imágenes del avance
+    await db.avances_semanales.update_one(
+        {"id": avance_id},
+        {"$push": {"imagenes": image_url}}
+    )
+    
+    return {"url": image_url, "filename": unique_filename}
+
+@api_router.get("/imagenes/{proyecto_id}/{avance_id}/{filename}")
+async def obtener_imagen(proyecto_id: str, avance_id: str, filename: str):
+    """Obtener una imagen de un avance semanal"""
+    file_path = UPLOAD_DIR / "imagenes" / proyecto_id / avance_id / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Imagen no encontrada")
+    return FileResponse(file_path)
+
+@api_router.delete("/proyectos/{proyecto_id}/avances-semanales/{avance_id}/imagenes")
+async def eliminar_imagen_avance(proyecto_id: str, avance_id: str, image_url: str):
+    """Eliminar una imagen de un avance semanal"""
+    # Eliminar de la base de datos
+    await db.avances_semanales.update_one(
+        {"id": avance_id, "proyecto_id": proyecto_id},
+        {"$pull": {"imagenes": image_url}}
+    )
+    
+    # Intentar eliminar el archivo físico
+    try:
+        filename = image_url.split("/")[-1]
+        file_path = UPLOAD_DIR / "imagenes" / proyecto_id / avance_id / filename
+        if file_path.exists():
+            file_path.unlink()
+    except Exception as e:
+        logging.error(f"Error eliminando archivo: {e}")
+    
+    return {"message": "Imagen eliminada"}
+
 # --- Estadísticas ---
 @api_router.get("/estadisticas/resumen")
 async def obtener_estadisticas():
