@@ -1408,19 +1408,19 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShowSuccess
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {proyectos.map((proyecto) => (
           <div
             key={proyecto.id}
-            className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:border-[#994B49] transition-all"
+            className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-sm hover:border-[#994B49] transition-all"
             data-testid={`proyecto-card-${proyecto.id}`}
           >
-            <div className="flex items-start justify-between mb-4">
-              <Building2 className="h-8 w-8 text-[#994B49]" />
-              <div className="flex space-x-1">
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
+              <Building2 className="h-6 sm:h-8 w-6 sm:w-8 text-[#994B49]" />
+              <div className="flex space-x-0.5 sm:space-x-1">
                 <button
                   onClick={() => onSelect(proyecto)}
-                  className="p-2 text-[#994B49] hover:bg-[#994B49]/10 rounded-lg transition-colors"
+                  className="p-1.5 sm:p-2 text-[#994B49] hover:bg-[#994B49]/10 rounded-lg transition-colors"
                   title="Ver en Dashboard"
                   data-testid={`view-proyecto-${proyecto.id}`}
                 >
@@ -1431,7 +1431,7 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShowSuccess
                     setSelectedProjectForAvances(proyecto);
                     setShowAvancesModal(true);
                   }}
-                  className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                  className="p-1.5 sm:p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                   title="Ver Avances Semanales"
                   data-testid={`avances-proyecto-${proyecto.id}`}
                 >
@@ -1439,7 +1439,7 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShowSuccess
                 </button>
                 <button
                   onClick={() => handleEditClick(proyecto)}
-                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                   title="Editar Proyecto"
                   data-testid={`edit-proyecto-${proyecto.id}`}
                 >
@@ -1447,7 +1447,7 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShowSuccess
                 </button>
                 <button
                   onClick={() => onDelete(proyecto.id)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  className="p-1.5 sm:p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                   title="Eliminar Proyecto"
                   data-testid={`delete-proyecto-${proyecto.id}`}
                 >
