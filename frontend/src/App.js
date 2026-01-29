@@ -979,36 +979,34 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
                   )}
                 </div>
 
-                {/* Gráfico de Evolución del Progreso Semanal */}
-                {avances.length > 1 && (
+                {/* Gráfico de Volumen de Excavación por Semana */}
+                {avances.length > 0 && avances.some(a => a.volumen_excavacion > 0) && (
                   <div className="p-2 sm:p-4 flex-shrink-0">
                     <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
                       <div className="flex items-center space-x-2 mb-3">
-                        <TrendingUp className="h-4 sm:h-5 w-4 sm:w-5 text-[#994B49]" />
-                        <h5 className="font-semibold text-gray-900 text-sm sm:text-base">Evolución del Progreso</h5>
+                        <Database className="h-4 sm:h-5 w-4 sm:w-5 text-[#994B49]" />
+                        <h5 className="font-semibold text-gray-900 text-sm sm:text-base">Volumen Excavado por Semana</h5>
                       </div>
-                      <div className="h-[120px] sm:h-[150px]">
+                      <div className="h-[150px] sm:h-[180px]">
                         <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={avances.filter(a => a.porcentaje_avance > 0).map(a => ({
+                          <BarChart data={avances.filter(a => a.volumen_excavacion > 0).map(a => ({
                             semana: `Sem ${a.semana}`,
-                            avance: a.porcentaje_avance
+                            volumen: a.volumen_excavacion
                           }))}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                             <XAxis dataKey="semana" stroke="#6B7280" fontSize={11} />
-                            <YAxis stroke="#6B7280" fontSize={11} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+                            <YAxis stroke="#6B7280" fontSize={11} tickFormatter={(v) => `${v} t`} />
                             <Tooltip 
-                              formatter={(value) => [`${value}%`, 'Avance']}
+                              formatter={(value) => [`${value.toLocaleString()} toneladas`, 'Volumen Excavado']}
                               contentStyle={{ backgroundColor: '#FFF', border: '1px solid #E5E7EB', borderRadius: '8px' }}
                             />
-                            <Line 
-                              type="monotone" 
-                              dataKey="avance" 
-                              stroke="#994B49" 
-                              strokeWidth={2} 
-                              dot={{ fill: '#994B49', strokeWidth: 2 }}
-                              activeDot={{ r: 6, fill: '#994B49' }}
+                            <Bar 
+                              dataKey="volumen" 
+                              fill="#994B49" 
+                              radius={[4, 4, 0, 0]}
+                              name="Volumen (toneladas)"
                             />
-                          </LineChart>
+                          </BarChart>
                         </ResponsiveContainer>
                       </div>
                     </div>
