@@ -1228,6 +1228,17 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShowSuccess
                   <Eye className="h-4 w-4" />
                 </button>
                 <button
+                  onClick={() => {
+                    setSelectedProjectForAvances(proyecto);
+                    setShowAvancesModal(true);
+                  }}
+                  className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                  title="Ver Avances Semanales"
+                  data-testid={`avances-proyecto-${proyecto.id}`}
+                >
+                  <Layers className="h-4 w-4" />
+                </button>
+                <button
                   onClick={() => handleEditClick(proyecto)}
                   className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                   title="Editar Proyecto"
