@@ -46,9 +46,18 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 - [x] **CRUD completo para Vuelos** - Formulario con crear, editar, eliminar
   - Campos: proyecto, fecha, duración, área, imágenes, volumetría, URL Pix4D, estado, notas
   - Endpoint PUT /api/vuelos/{id} agregado
-- [x] **Gráfico de Evolución del Progreso Semanal** - LineChart que muestra el avance % por semana
+- [x] **Gráfico de Volumen Excavado por Semana** - BarChart que muestra toneladas extraídas por semana
 - [x] **Descarga de Fotos en ZIP** - Botón "Descargar ZIP" en galería de fotos
   - Endpoint GET /api/proyectos/{id}/avances-semanales/{avance_id}/imagenes/zip
+- [x] **Reporte Ejecutivo PDF** - Generación de reportes para gestión de presupuesto de flotillas
+  - Endpoint GET /api/proyectos/{id}/reporte-ejecutivo?capacidad_camion=25
+  - Contenido:
+    - Información del proyecto (nombre, ubicación, coordenadas, fechas)
+    - Avance de obra en porcentaje
+    - Volumetría por semana (toneladas excavadas)
+    - Viajes de camión estimados por semana
+    - Desglose de costos por semana y total
+    - Resumen para logística de transporte
 
 ### Correcciones de Despliegue (29 Enero 2025)
 - [x] **CRÍTICO:** Eliminados paquetes obsoletos `@react-three/drei`, `@react-three/fiber`, `three` que causaban error de build
