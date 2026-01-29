@@ -1030,6 +1030,8 @@ function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShowSuccess
   const [showForm, setShowForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
+  const [showAvancesModal, setShowAvancesModal] = useState(false);
+  const [selectedProjectForAvances, setSelectedProjectForAvances] = useState(null);
   const [formData, setFormData] = useState({
     nombre: '',
     ubicacion: '',
