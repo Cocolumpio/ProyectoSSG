@@ -700,6 +700,8 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
   const [loading, setLoading] = useState(true);
   const [selectedAvance, setSelectedAvance] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null); // Para vista previa ampliada
   const [formData, setFormData] = useState({
     semana: 1,
     fecha: '',
