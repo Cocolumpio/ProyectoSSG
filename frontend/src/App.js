@@ -253,9 +253,9 @@ function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onPr
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <KPICard
           icon={Building2}
           label="Total Proyectos"
@@ -286,14 +286,14 @@ function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onPr
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Mapa */}
-        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <div className="flex items-center space-x-2 mb-4">
-            <MapIcon className="h-5 w-5 text-[#994B49]" />
-            <h2 className="text-xl font-semibold text-gray-900">Ubicación de Proyectos</h2>
+        <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-sm">
+          <div className="flex items-center space-x-2 mb-3 sm:mb-4">
+            <MapIcon className="h-4 sm:h-5 w-4 sm:w-5 text-[#994B49]" />
+            <h2 className="text-base sm:text-xl font-semibold text-gray-900">Ubicación de Proyectos</h2>
           </div>
-          <div className="h-[400px] rounded-lg overflow-hidden border border-gray-200" data-testid="map-container">
+          <div className="h-[250px] sm:h-[400px] rounded-lg overflow-hidden border border-gray-200" data-testid="map-container">
             <MapContainer
               center={[mapCenter.lat, mapCenter.lng]}
               zoom={11}
