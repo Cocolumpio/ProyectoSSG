@@ -38,6 +38,13 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 
 ## Implementado (Enero 2025)
 
+### Correcciones de Despliegue (29 Enero 2025)
+- [x] **CRÍTICO:** Eliminados paquetes obsoletos `@react-three/drei`, `@react-three/fiber`, `three` que causaban error de build
+  - El paquete `camera-controls@3.1.2` requería Node.js >=22.0.0, incompatible con el servidor de producción (20.18.1)
+  - Los componentes 3D que usaban estos paquetes fueron eliminados previamente; la visualización 3D usa Pix4D iframe
+- [x] Eliminado proyecto de prueba "Acuarela" de la base de datos
+- [x] Build de producción verificado exitosamente
+
 ### Backend
 - [x] Modelos Pydantic: Proyecto, Vuelo, Volumetria, Avance, AvanceSemanal
 - [x] Endpoints CRUD para proyectos: GET, POST, PUT, DELETE
