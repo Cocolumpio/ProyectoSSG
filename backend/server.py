@@ -129,6 +129,17 @@ class VueloCreate(BaseModel):
     pix4d_url: Optional[str] = None
     notas: Optional[str] = None
 
+class VueloUpdate(BaseModel):
+    proyecto_id: Optional[str] = None
+    fecha_vuelo: Optional[str] = None
+    duracion_minutos: Optional[int] = None
+    area_cubierta: Optional[float] = None
+    num_imagenes: Optional[int] = None
+    volumetria: Optional[Volumetria] = None
+    pix4d_url: Optional[str] = None
+    notas: Optional[str] = None
+    estado: Optional[str] = None
+
 class AvanceHito(BaseModel):
     nombre: str
     porcentaje_planeado: float
