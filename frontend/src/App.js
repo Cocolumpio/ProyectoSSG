@@ -333,7 +333,7 @@ function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onPr
               <div
                 key={proyecto.id}
                 onClick={() => onProyectoClick(proyecto)}
-                className={`p-4 rounded-lg cursor-pointer transition-all ${
+                className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
                   selectedProyecto?.id === proyecto.id
                     ? 'bg-[#994B49]/10 border-2 border-[#994B49]'
                     : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'
@@ -341,12 +341,12 @@ function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onPr
                 data-testid={`proyecto-item-${proyecto.id}`}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{proyecto.nombre}</h3>
-                    <p className="text-sm text-gray-600">{proyecto.ubicacion}</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{proyecto.nombre}</h3>
+                    <p className="text-xs sm:text-sm text-gray-600 truncate">{proyecto.ubicacion}</p>
                   </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-[#994B49]">
+                  <div className="text-right ml-2">
+                    <div className="text-lg sm:text-2xl font-bold text-[#994B49]">
                       {proyecto.avance_actual}%
                     </div>
                     <div className="text-xs text-gray-600">Avance</div>
@@ -377,16 +377,16 @@ function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onPr
 
       {/* Volumetría del Proyecto Seleccionado */}
       {selectedProyecto && volumetriaData.length > 0 && (
-        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+        <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-sm">
+          <h2 className="text-base sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
             Volumetrías - {selectedProyecto.nombre}
           </h2>
-          <div className="h-[300px]" data-testid="volumetria-chart">
+          <div className="h-[200px] sm:h-[300px]" data-testid="volumetria-chart">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={volumetriaData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis dataKey="nombre" stroke="#6B7280" />
-                <YAxis stroke="#6B7280" />
+                <XAxis dataKey="nombre" stroke="#6B7280" fontSize={12} />
+                <YAxis stroke="#6B7280" fontSize={12} />
                 <Tooltip
                   contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB' }}
                   labelStyle={{ color: '#111827' }}
