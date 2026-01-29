@@ -785,6 +785,70 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
     }
   };
 
+  // Subir imagen
+  const handleImageUpload = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !selectedAvance) return;
+
+    setUploadingImage(true);
+    try {
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        await axios.post(
+          `${API}/proyectos/${proyecto.id}/avances-semanales/${selectedAvance.id}/imagenes`,
+          formData,
+          { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
+      }
+      
+      // Recargar avances para obtener las nuevas imágenes
+      fetchAvances();
+      if (onShowSuccess) {
+        onShowSuccess(`${files.length} imagen(es) subida(s) correctamente`);
+      }
+    } catch (err) {
+      console.error('Error subiendo imagen:', err);
+    } finally {
+      setUploadingImage(false);
+      e.target.value = ''; // Limpiar input
+    }
+  };
+
+  // Descargar imagen
+  const handleDownloadImage = async (imageUrl, index) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}${imageUrl}`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${proyecto.nombre}_Semana${selectedAvance.semana}_Foto${index + 1}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error descargando imagen:', err);
+    }
+  };
+
+  // Eliminar imagen
+  const handleDeleteImage = async (imageUrl) => {
+    if (!window.confirm('¿Eliminar esta imagen?')) return;
+    
+    try {
+      await axios.delete(
+        `${API}/proyectos/${proyecto.id}/avances-semanales/${selectedAvance.id}/imagenes`,
+        { params: { image_url: imageUrl } }
+      );
+      fetchAvances();
+    } catch (err) {
+      console.error('Error eliminando imagen:', err);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-xl w-[80vw] h-[80vh] overflow-hidden flex flex-col">
