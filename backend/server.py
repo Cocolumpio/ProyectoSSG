@@ -131,6 +131,26 @@ class ProyectoUpdate(BaseModel):
     capacidad_camion: Optional[float] = None
     costo_viaje_camion: Optional[float] = None
 
+# Modelo para solicitud de vuelo programado
+class SolicitudVuelo(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    nombre_proyecto: str
+    fecha_inicio_proyecto: str
+    fecha_fin_proyecto: str
+    fecha_vuelo_deseada: str
+    hora_preferencia: Optional[str] = None
+    notas: Optional[str] = None
+    estado: str = "pendiente"  # pendiente, confirmado, completado, cancelado
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class SolicitudVueloCreate(BaseModel):
+    nombre_proyecto: str
+    fecha_inicio_proyecto: str
+    fecha_fin_proyecto: str
+    fecha_vuelo_deseada: str
+    hora_preferencia: Optional[str] = None
+    notas: Optional[str] = None
+
 class Vuelo(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
