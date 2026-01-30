@@ -91,6 +91,9 @@ class Proyecto(BaseModel):
     descripcion: Optional[str] = None
     pix4d_url: Optional[str] = None  # URL del modelo 3D
     volumetria: Optional[Volumetria] = None  # Volumetrías del proyecto
+    # Configuración de flotilla de camiones
+    capacidad_camion: float = 25.0  # Toneladas por camión (default 25 ton)
+    costo_viaje_camion: float = 2500.0  # Costo por viaje en MXN (default $2,500)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ProyectoCreate(BaseModel):
@@ -103,6 +106,9 @@ class ProyectoCreate(BaseModel):
     pix4d_url: Optional[str] = None
     avance_actual: float = 0.0
     volumetria: Optional[Volumetria] = None
+    # Configuración de flotilla
+    capacidad_camion: float = 25.0
+    costo_viaje_camion: float = 2500.0
 
 class ProyectoUpdate(BaseModel):
     nombre: Optional[str] = None
@@ -114,6 +120,9 @@ class ProyectoUpdate(BaseModel):
     descripcion: Optional[str] = None
     pix4d_url: Optional[str] = None
     volumetria: Optional[Volumetria] = None
+    # Configuración de flotilla
+    capacidad_camion: Optional[float] = None
+    costo_viaje_camion: Optional[float] = None
 
 class Vuelo(BaseModel):
     model_config = ConfigDict(extra="ignore")
