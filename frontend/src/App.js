@@ -682,7 +682,7 @@ function ProjectFormContent({ formData, setFormData, error, saving, isEdit, onSu
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
                 data-testid="project-capacidad-camion-input"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">ton</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">m³</span>
             </div>
           </div>
           <div>
@@ -1294,7 +1294,7 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
                         data-testid="avance-volumen-input"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">ton</span>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">m³</span>
                     </div>
                   </div>
                 </div>
