@@ -5,25 +5,31 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 
 ## Requisitos del Usuario
 - Dashboard con KPIs de proyectos y vuelos
-- Visualización de datos de volumetría (excavación, relleno, materiales)
+- Visualización de datos de volumetría (excavación, relleno, materiales) en m³
 - Seguimiento del avance de proyectos comparado con el cronograma
 - Mapa interactivo para ubicaciones de obras
 - Visor 3D para nubes de puntos usando Pix4D iframe
 - CRUD completo para proyectos con campos para URL de Pix4D y volumetría
 - CRUD completo para vuelos
 - Avances semanales con galería de fotos y modelos 3D
-- Gráfico de evolución del progreso semanal
+- Gráfico de volumen excavado por semana
 - Descarga de fotos en formato ZIP
+- Generación de reportes ejecutivos PDF con costos de flotilla
+- **Programación de vuelos por el cliente con notificación por email + Google Calendar**
 - Tema de UI con logo de "DrON Topografía" y colores gris claro (#F8F9FA) / rojo ladrillo (#994B49)
+
+## Cliente
+- **SandstormGam** - Cliente único con acceso al formulario de programación de vuelos
 
 ## Datos Iniciales
 - Proyecto único: "Hotel Marriott" en Guadalajara, Jalisco con 40% de avance
 
 ## Stack Tecnológico
 - **Frontend:** React, TailwindCSS, Leaflet, Recharts, Axios
-- **Backend:** FastAPI, Pydantic, Motor (MongoDB async driver)
+- **Backend:** FastAPI, Pydantic, Motor (MongoDB async driver), Resend (email)
 - **Base de datos:** MongoDB
 - **Visor 3D:** Pix4D iframe embebido
+- **Email:** Resend API
 
 ## Arquitectura
 ```
