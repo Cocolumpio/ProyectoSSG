@@ -188,14 +188,16 @@ function App() {
 }
 
 // NavButton Component
-function NavButton({ children, active, onClick, testId }) {
+function NavButton({ children, active, onClick, testId, highlight }) {
   return (
     <button
       onClick={onClick}
-      className={`px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+      className={`px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center ${
         active
           ? 'bg-[#994B49] text-white'
-          : 'text-gray-600 hover:bg-gray-100'
+          : highlight
+            ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 border border-amber-300'
+            : 'text-gray-600 hover:bg-gray-100'
       }`}
       data-testid={testId}
     >
