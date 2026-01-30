@@ -135,6 +135,10 @@ function App() {
               <NavButton active={activeView === 'vuelos'} onClick={() => setActiveView('vuelos')} testId="nav-vuelos-btn">
                 Vuelos
               </NavButton>
+              <NavButton active={activeView === 'programar'} onClick={() => setActiveView('programar')} testId="nav-programar-btn" highlight>
+                <CalendarPlus className="h-4 w-4 sm:mr-1" />
+                <span className="hidden sm:inline">Programar</span>
+              </NavButton>
             </nav>
           </div>
         </div>
