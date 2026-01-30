@@ -692,13 +692,10 @@ async def descargar_imagenes_zip(proyecto_id: str, avance_id: str):
 
 # --- Reporte Ejecutivo PDF ---
 @api_router.get("/proyectos/{proyecto_id}/reporte-ejecutivo")
-async def generar_reporte_ejecutivo(proyecto_id: str, capacidad_camion: float = 25.0):
+async def generar_reporte_ejecutivo(proyecto_id: str):
     """
     Genera un reporte ejecutivo en PDF para un proyecto.
-    
-    Args:
-        proyecto_id: ID del proyecto
-        capacidad_camion: Capacidad promedio del camión en toneladas (default: 25 ton)
+    Usa la configuración de flotilla guardada en el proyecto.
     
     Returns:
         PDF con el reporte ejecutivo
@@ -707,6 +704,10 @@ async def generar_reporte_ejecutivo(proyecto_id: str, capacidad_camion: float = 
     proyecto = await db.proyectos.find_one({"id": proyecto_id}, {"_id": 0})
     if not proyecto:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    # Obtener configuración de flotilla del proyecto
+    capacidad_camion = proyecto.get('capacidad_camion', 25.0) or 25.0
+    costo_por_viaje = proyecto.get('costo_viaje_camion', 2500.0) or 2500.0
     
     # Obtener avances semanales
     avances = await db.avances_semanales.find(
@@ -717,6 +718,7 @@ async def generar_reporte_ejecutivo(proyecto_id: str, capacidad_camion: float = 
     # Calcular totales
     volumen_total = sum(a.get('volumen_excavacion', 0) or 0 for a in avances)
     total_viajes = int(volumen_total / capacidad_camion) if capacidad_camion > 0 else 0
+    costo_total_estimado = total_viajes * costo_por_viaje
     
     # Crear PDF en memoria
     buffer = io.BytesIO()
