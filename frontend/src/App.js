@@ -2,12 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Building2, Plane, Plus, Eye, Trash2, Pencil, Layers, X, FileText } from 'lucide-react';
+import { Building2, Plane, Plus, Eye, Trash2, Pencil, Layers, X, FileText, CalendarPlus } from 'lucide-react';
 
 // Componentes refactorizados
 import { DashboardView } from './components/Dashboard/DashboardView';
 import { ProjectFormContent } from './components/Projects/ProjectFormContent';
 import { AvancesSemanalesModal } from './components/Projects/AvancesSemanalesModal';
+import { SolicitarVueloForm } from './components/Flights/SolicitarVueloForm';
 import { KPICard } from './components/common/KPICard';
 
 // Configuración de Leaflet
