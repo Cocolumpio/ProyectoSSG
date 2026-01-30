@@ -104,7 +104,9 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 - [x] Tests e2e de UI con Playwright (100% éxito)
 
 ## Backlog (P1)
-- [ ] Refactorizar App.js en componentes más pequeños (>1600 líneas actualmente)
+- [x] **COMPLETADO:** Refactorizar App.js en componentes más pequeños
+  - Reducido de ~2061 líneas a 625 líneas (70% reducción)
+  - Componentes extraídos: DashboardView, ProjectFormContent, AvancesSemanalesModal, KPICard, MapRecenter
 
 ## Backlog (P2)
 - [ ] Funcionalidad de carga de archivos LAZ/LAS para archivo
