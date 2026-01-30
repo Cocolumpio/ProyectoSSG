@@ -894,15 +894,12 @@ async def generar_reporte_ejecutivo(proyecto_id: str):
     # --- RESUMEN PARA LOGÍSTICA DE TRANSPORTE ---
     story.append(Paragraph("🚚 RESUMEN PARA LOGÍSTICA DE TRANSPORTE", section_style))
     
-    # Cálculos de logística
-    costo_por_viaje = 2500  # Costo estimado por viaje en pesos (ajustable)
-    costo_total_estimado = total_viajes * costo_por_viaje
-    
+    # Los valores vienen del proyecto (ya calculados arriba)
     logistica_data = [
         ["Capacidad por Camión:", f"{capacidad_camion:,.1f} toneladas"],
         ["Volumen Total Excavado:", f"{volumen_total:,.1f} toneladas"],
         ["Total de Viajes Requeridos:", f"{total_viajes:,} viajes"],
-        ["Costo Estimado por Viaje:", f"${costo_por_viaje:,.2f} MXN"],
+        ["Costo por Viaje:", f"${costo_por_viaje:,.2f} MXN"],
         ["Costo Total Estimado:", f"${costo_total_estimado:,.2f} MXN"],
     ]
     
