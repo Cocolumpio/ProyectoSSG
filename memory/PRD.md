@@ -58,6 +58,11 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
     - Viajes de camión estimados por semana
     - Desglose de costos por semana y total
     - Resumen para logística de transporte
+- [x] **Programación de Vuelos con Notificación Email** (Resend)
+  - Formulario para que el cliente solicite vuelos
+  - Envío automático de email al administrador
+  - Link de Google Calendar incluido en el email
+  - Campos: nombre proyecto, fechas, hora preferida, notas
 - [x] **Configuración de Flotilla por Proyecto** - Campos configurables para cálculo de costos
   - `capacidad_camion`: Toneladas que carga cada camión (default 25 ton)
   - `costo_viaje_camion`: Precio por viaje en MXN (default $2,500)
