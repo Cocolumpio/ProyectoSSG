@@ -1041,14 +1041,14 @@ function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
                             <XAxis dataKey="semana" stroke="#6B7280" fontSize={11} />
                             <YAxis stroke="#6B7280" fontSize={11} tickFormatter={(v) => `${v} t`} />
                             <Tooltip 
-                              formatter={(value) => [`${value.toLocaleString()} toneladas`, 'Volumen Excavado']}
+                              formatter={(value) => [`${value.toLocaleString()} m³`, 'Volumen Excavado']}
                               contentStyle={{ backgroundColor: '#FFF', border: '1px solid #E5E7EB', borderRadius: '8px' }}
                             />
                             <Bar 
                               dataKey="volumen" 
                               fill="#994B49" 
                               radius={[4, 4, 0, 0]}
-                              name="Volumen (toneladas)"
+                              name="Volumen (m³)"
                             />
                           </BarChart>
                         </ResponsiveContainer>
