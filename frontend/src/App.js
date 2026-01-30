@@ -173,6 +173,15 @@ function App() {
             onRefresh={fetchData}
           />
         )}
+        {activeView === 'programar' && (
+          <div className="max-w-2xl mx-auto py-8">
+            <SolicitarVueloForm 
+              onSuccess={(data) => {
+                showGlobalSuccess('¡Solicitud de vuelo enviada correctamente!');
+              }}
+            />
+          </div>
+        )}
       </main>
     </div>
   );
