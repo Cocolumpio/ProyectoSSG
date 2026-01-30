@@ -50,7 +50,7 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 - [x] **Descarga de Fotos en ZIP** - Botón "Descargar ZIP" en galería de fotos
   - Endpoint GET /api/proyectos/{id}/avances-semanales/{avance_id}/imagenes/zip
 - [x] **Reporte Ejecutivo PDF** - Generación de reportes para gestión de presupuesto de flotillas
-  - Endpoint GET /api/proyectos/{id}/reporte-ejecutivo?capacidad_camion=25
+  - Endpoint GET /api/proyectos/{id}/reporte-ejecutivo
   - Contenido:
     - Información del proyecto (nombre, ubicación, coordenadas, fechas)
     - Avance de obra en porcentaje
@@ -58,6 +58,10 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
     - Viajes de camión estimados por semana
     - Desglose de costos por semana y total
     - Resumen para logística de transporte
+- [x] **Configuración de Flotilla por Proyecto** - Campos configurables para cálculo de costos
+  - `capacidad_camion`: Toneladas que carga cada camión (default 25 ton)
+  - `costo_viaje_camion`: Precio por viaje en MXN (default $2,500)
+  - Cálculo automático de viajes necesarios y costo total en el reporte PDF
 
 ### Correcciones de Despliegue (29 Enero 2025)
 - [x] **CRÍTICO:** Eliminados paquetes obsoletos `@react-three/drei`, `@react-three/fiber`, `three` que causaban error de build
