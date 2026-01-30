@@ -65,7 +65,7 @@ class AvanceSemanal(BaseModel):
     pix4d_url: str  # URL del modelo 3D de Pix4D
     descripcion: Optional[str] = None
     porcentaje_avance: Optional[float] = None  # Porcentaje de avance en esa semana
-    volumen_excavacion: Optional[float] = None  # Volumen quitado en toneladas
+    volumen_excavacion: Optional[float] = None  # Volumen quitado en m³
     imagenes: List[str] = []  # URLs de las imágenes del vuelo
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -75,7 +75,7 @@ class AvanceSemanalCreate(BaseModel):
     pix4d_url: str
     descripcion: Optional[str] = None
     porcentaje_avance: Optional[float] = None
-    volumen_excavacion: Optional[float] = None  # Volumen quitado en toneladas
+    volumen_excavacion: Optional[float] = None  # Volumen quitado en m³
     imagenes: List[str] = []  # URLs de las imágenes del vuelo
 
 class Proyecto(BaseModel):
@@ -92,7 +92,7 @@ class Proyecto(BaseModel):
     pix4d_url: Optional[str] = None  # URL del modelo 3D
     volumetria: Optional[Volumetria] = None  # Volumetrías del proyecto
     # Configuración de flotilla de camiones
-    capacidad_camion: float = 25.0  # Toneladas por camión (default 25 ton)
+    capacidad_camion: float = 25.0  # m³ por camión (default 25 m³)
     costo_viaje_camion: float = 2500.0  # Costo por viaje en MXN (default $2,500)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -839,7 +839,7 @@ async def generar_reporte_ejecutivo(proyecto_id: str):
     
     if avances:
         # Tabla de volúmenes por semana
-        vol_headers = ["Semana", "Fecha", "Volumen (ton)", "Viajes Estimados", "Avance (%)"]
+        vol_headers = ["Semana", "Fecha", "Volumen (m³)", "Viajes Estimados", "Avance (%)"]
         vol_data = [vol_headers]
         
         for avance in avances:
@@ -896,8 +896,8 @@ async def generar_reporte_ejecutivo(proyecto_id: str):
     
     # Los valores vienen del proyecto (ya calculados arriba)
     logistica_data = [
-        ["Capacidad por Camión:", f"{capacidad_camion:,.1f} toneladas"],
-        ["Volumen Total Excavado:", f"{volumen_total:,.1f} toneladas"],
+        ["Capacidad por Camión:", f"{capacidad_camion:,.1f} m³"],
+        ["Volumen Total Excavado:", f"{volumen_total:,.1f} m³"],
         ["Total de Viajes Requeridos:", f"{total_viajes:,} viajes"],
         ["Costo por Viaje:", f"${costo_por_viaje:,.2f} MXN"],
         ["Costo Total Estimado:", f"${costo_total_estimado:,.2f} MXN"],
@@ -928,7 +928,7 @@ async def generar_reporte_ejecutivo(proyecto_id: str):
     if avances:
         story.append(Paragraph("💰 DESGLOSE DE COSTOS POR SEMANA", section_style))
         
-        costo_headers = ["Semana", "Volumen (ton)", "Viajes", "Costo Estimado"]
+        costo_headers = ["Semana", "Volumen (m³)", "Viajes", "Costo Estimado"]
         costo_data = [costo_headers]
         
         for avance in avances:
