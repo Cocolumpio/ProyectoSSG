@@ -183,6 +183,15 @@ class AvanceSemanalCreate(BaseModel):
     volumen_excavacion: Optional[float] = None  # Volumen quitado en m³
     imagenes: List[str] = []  # URLs de las imágenes del vuelo
 
+class AvanceSemanalUpdate(BaseModel):
+    """Modelo para actualización parcial de avance semanal"""
+    semana: Optional[int] = None
+    fecha: Optional[str] = None
+    pix4d_url: Optional[str] = None
+    descripcion: Optional[str] = None
+    porcentaje_avance: Optional[float] = None
+    volumen_excavacion: Optional[float] = None
+
 class Proyecto(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
