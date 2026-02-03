@@ -132,9 +132,12 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
   - **Feb 2025:** Extraídos `ProyectosView` y `VuelosView` - Refactorización 100% completa
 
 ## Backlog (P2)
+- [ ] Vista Admin para Solicitudes de Vuelo (gestionar solicitudes pendientes)
+- [ ] Notificación al cliente cuando se confirma un vuelo
+- [ ] Funcionalidad DELETE para Vuelos desde el frontend
+- [ ] Refactorizar backend server.py en routes/models/services
 - [ ] Funcionalidad de carga de archivos LAZ/LAS para archivo
 - [ ] Agregar autenticación de usuarios
-- [ ] Exportar reportes en PDF
 
 ## API Endpoints
 | Método | Endpoint | Descripción |
