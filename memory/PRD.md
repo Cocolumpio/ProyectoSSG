@@ -16,18 +16,22 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 - Descarga de fotos en formato ZIP
 - Generación de reportes ejecutivos PDF con costos de flotilla
 - **Programación de vuelos por el cliente con notificación por email + Google Calendar**
+- **Sistema de autenticación con roles (Admin/Cliente)**
+- **Vista Admin: acceso completo + gestión de solicitudes**
+- **Vista Cliente: solo lectura + crear/ver solicitudes propias**
 - Tema de UI con logo de "DrON Topografía" y colores gris claro (#F8F9FA) / rojo ladrillo (#994B49)
 
-## Cliente
-- **SandstormGam** - Cliente único con acceso al formulario de programación de vuelos
-
-## Datos Iniciales
-- Proyecto único: "Hotel Marriott" en Guadalajara, Jalisco con 40% de avance
+## Usuarios del Sistema
+- **Admin (ianalejandrogn@gmail.com):** Acceso completo a todas las funciones
+  - Credenciales: admin@dron.mx / admin123
+- **Clientes:** Vista de solo lectura + solicitar vuelos
+  - Ejemplo: cliente@test.com / cliente123
 
 ## Stack Tecnológico
 - **Frontend:** React, TailwindCSS, Leaflet, Recharts, Axios
-- **Backend:** FastAPI, Pydantic, Motor (MongoDB async driver), Resend (email)
+- **Backend:** FastAPI, Pydantic, Motor (MongoDB async driver), Resend (email), python-jose (JWT)
 - **Base de datos:** MongoDB
+- **Autenticación:** JWT con bcrypt para hashing de contraseñas
 - **Visor 3D:** Pix4D iframe embebido
 - **Email:** Resend API
 
@@ -35,19 +39,35 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 ```
 /app/
 ├── backend/
-│   ├── server.py        # API FastAPI monolítica
+│   ├── server.py        # API FastAPI con auth + endpoints
 │   └── uploads/         # Archivos e imágenes
 ├── frontend/
 │   └── src/
-│       ├── App.js       # Estado global, routing, header (~209 líneas)
+│       ├── App.js       # Estado global, routing, header, vistas read-only
+│       ├── context/
+│       │   └── AuthContext.jsx    # ✅ NUEVO (Feb 2025)
 │       └── components/
+│           ├── Auth/
+│           │   └── LoginPage.jsx         # ✅ NUEVO (Feb 2025)
+│           ├── Admin/
+│           │   └── SolicitudesAdminView.jsx  # ✅ NUEVO (Feb 2025)
+│           ├── Client/
+│           │   └── MisSolicitudesView.jsx    # ✅ NUEVO (Feb 2025)
 │           ├── Dashboard/
 │           │   └── DashboardView.jsx
 │           ├── Projects/
-│           │   ├── ProyectosView.jsx      # ✅ NUEVO (Feb 2025)
+│           │   ├── ProyectosView.jsx
 │           │   ├── ProjectFormContent.jsx
 │           │   └── AvancesSemanalesModal.jsx
 │           ├── Flights/
+│           │   ├── VuelosView.jsx
+│           │   └── SolicitarVueloForm.jsx
+│           └── common/
+│               ├── KPICard.jsx
+│               └── MapRecenter.jsx
+└── memory/
+    └── PRD.md
+```
 │           │   ├── VuelosView.jsx         # ✅ NUEVO (Feb 2025)
 │           │   └── SolicitarVueloForm.jsx
 │           └── common/
