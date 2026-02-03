@@ -346,19 +346,21 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                             <span className="text-xs sm:text-sm hidden sm:inline">Descargar ZIP</span>
                           </button>
                         )}
-                        <label className="flex items-center justify-center space-x-2 px-3 py-1.5 sm:py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] cursor-pointer transition-colors">
-                          <Upload className="h-4 w-4" />
-                          <span className="text-xs sm:text-sm">{uploadingImage ? 'Subiendo...' : 'Subir Fotos'}</span>
-                          <input
-                            type="file"
-                            multiple
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            disabled={uploadingImage}
-                            className="hidden"
-                            data-testid="upload-images-input"
-                          />
-                        </label>
+                        {!readOnly && (
+                          <label className="flex items-center justify-center space-x-2 px-3 py-1.5 sm:py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] cursor-pointer transition-colors">
+                            <Upload className="h-4 w-4" />
+                            <span className="text-xs sm:text-sm">{uploadingImage ? 'Subiendo...' : 'Subir Fotos'}</span>
+                            <input
+                              type="file"
+                              multiple
+                              accept="image/*"
+                              onChange={handleImageUpload}
+                              disabled={uploadingImage}
+                              className="hidden"
+                              data-testid="upload-images-input"
+                            />
+                          </label>
+                        )}
                       </div>
                     </div>
 
