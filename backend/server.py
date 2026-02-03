@@ -789,9 +789,13 @@ async def crear_avance_semanal(proyecto_id: str, avance: AvanceSemanalCreate):
     return nuevo_avance
 
 @api_router.put("/proyectos/{proyecto_id}/avances-semanales/{avance_id}", response_model=AvanceSemanal)
-async def actualizar_avance_semanal(proyecto_id: str, avance_id: str, avance: AvanceSemanalCreate):
-    """Actualizar un avance semanal existente"""
-    update_data = avance.model_dump()
+async def actualizar_avance_semanal(proyecto_id: str, avance_id: str, avance: AvanceSemanalUpdate):
+    """Actualizar un avance semanal existente (actualización parcial)"""
+    # Solo incluir campos que fueron proporcionados (no None)
+    update_data = {k: v for k, v in avance.model_dump().items() if v is not None}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No hay campos para actualizar")
     
     result = await db.avances_semanales.update_one(
         {"id": avance_id, "proyecto_id": proyecto_id},
