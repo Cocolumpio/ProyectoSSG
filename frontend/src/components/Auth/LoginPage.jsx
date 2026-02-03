@@ -35,11 +35,11 @@ export function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#994B49] rounded-2xl mb-4 shadow-lg">
-            <Plane className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-[#994B49]">DrON</h1>
-          <p className="text-gray-500">Topografía</p>
+          <img 
+            src="/logo-dron.png" 
+            alt="DrON Topografía" 
+            className="h-20 w-auto mx-auto mb-4"
+          />
         </div>
 
         {/* Card */}
