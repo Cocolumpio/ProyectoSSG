@@ -174,26 +174,28 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
         <div className="flex flex-col sm:flex-row flex-1 overflow-hidden">
           {/* Panel izquierdo - Lista de semanas */}
           <div className="w-full sm:w-48 md:w-56 lg:w-64 bg-gray-50 border-b sm:border-b-0 sm:border-r border-gray-200 flex flex-col flex-shrink-0 max-h-[30vh] sm:max-h-none">
-            <div className="p-2 sm:p-4 border-b border-gray-200">
-              <button
-                onClick={() => {
-                  setFormData({ 
-                    semana: avances.length + 1, 
-                    fecha: new Date().toISOString().split('T')[0], 
-                    pix4d_url: '', 
-                    descripcion: '', 
-                    porcentaje_avance: 0,
-                    volumen_excavacion: 0
-                  });
-                  setShowAddForm(true);
-                }}
-                className="w-full flex items-center justify-center space-x-2 px-3 sm:px-4 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors text-sm sm:text-base"
-                data-testid="add-avance-btn"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Nueva Semana</span>
-              </button>
-            </div>
+            {!readOnly && (
+              <div className="p-2 sm:p-4 border-b border-gray-200">
+                <button
+                  onClick={() => {
+                    setFormData({ 
+                      semana: avances.length + 1, 
+                      fecha: new Date().toISOString().split('T')[0], 
+                      pix4d_url: '', 
+                      descripcion: '', 
+                      porcentaje_avance: 0,
+                      volumen_excavacion: 0
+                    });
+                    setShowAddForm(true);
+                  }}
+                  className="w-full flex items-center justify-center space-x-2 px-3 sm:px-4 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors text-sm sm:text-base"
+                  data-testid="add-avance-btn"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Nueva Semana</span>
+                </button>
+              </div>
+            )}
             
             <div className="flex-1 overflow-y-auto p-2 space-y-2 flex sm:flex-col flex-row overflow-x-auto sm:overflow-x-hidden">
               {loading ? (
