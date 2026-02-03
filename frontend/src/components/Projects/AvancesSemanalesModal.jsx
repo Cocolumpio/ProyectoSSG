@@ -93,6 +93,42 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
     }
   };
 
+  const handleEditLinkClick = () => {
+    setEditLinkValue(selectedAvance?.pix4d_url || '');
+    setEditingLink(true);
+  };
+
+  const handleSaveLink = async () => {
+    if (!selectedAvance) return;
+    
+    setSavingLink(true);
+    try {
+      await axios.put(`${API}/proyectos/${proyecto.id}/avances-semanales/${selectedAvance.id}`, {
+        pix4d_url: editLinkValue
+      });
+      
+      // Actualizar el avance seleccionado localmente
+      const updatedAvance = { ...selectedAvance, pix4d_url: editLinkValue };
+      setSelectedAvance(updatedAvance);
+      setAvances(avances.map(a => a.id === selectedAvance.id ? updatedAvance : a));
+      
+      setEditingLink(false);
+      if (onShowSuccess) {
+        onShowSuccess(`Link de Pix4D actualizado para Semana ${selectedAvance.semana}`);
+      }
+    } catch (err) {
+      console.error('Error actualizando link:', err);
+      alert('Error al actualizar el link de Pix4D');
+    } finally {
+      setSavingLink(false);
+    }
+  };
+
+  const handleCancelEditLink = () => {
+    setEditingLink(false);
+    setEditLinkValue('');
+  };
+
   const handleImageUpload = async (e) => {
     const files = e.target.files;
     if (!files || files.length === 0 || !selectedAvance) return;
