@@ -97,3 +97,7 @@ backend/uploads/e1084311-7fe0-41d8-86a5-88c35d67c06d.laz
 # Environment files
 *.env
 *.env.*
+-e 
+# Environment files
+*.env
+*.env.*
