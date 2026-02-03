@@ -385,13 +385,15 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                               >
                                 <Download className="h-4 w-4" />
                               </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleDeleteImage(imageUrl); }}
-                                className="p-2 bg-white rounded-full text-red-600 hover:bg-gray-100 mx-1"
-                                title="Eliminar"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
+                              {!readOnly && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleDeleteImage(imageUrl); }}
+                                  className="p-2 bg-white rounded-full text-red-600 hover:bg-gray-100 mx-1"
+                                  title="Eliminar"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              )}
                             </div>
                             <div className="absolute bottom-1 left-1 bg-black/50 text-white text-xs px-2 py-0.5 rounded">
                               {index + 1}
