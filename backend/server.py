@@ -239,6 +239,11 @@ class SolicitudVuelo(BaseModel):
     hora_preferencia: Optional[str] = None
     notas: Optional[str] = None
     estado: str = "pendiente"  # pendiente, confirmado, completado, cancelado
+    cliente_id: Optional[str] = None  # ID del usuario cliente que hizo la solicitud
+    cliente_email: Optional[str] = None  # Email del cliente
+    cliente_nombre: Optional[str] = None  # Nombre del cliente
+    comentario_admin: Optional[str] = None  # Comentario del admin al aprobar/rechazar
+    fecha_respuesta: Optional[str] = None  # Fecha cuando el admin respondió
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class SolicitudVueloCreate(BaseModel):
@@ -248,6 +253,10 @@ class SolicitudVueloCreate(BaseModel):
     fecha_vuelo_deseada: str
     hora_preferencia: Optional[str] = None
     notas: Optional[str] = None
+
+class SolicitudVueloUpdate(BaseModel):
+    estado: str
+    comentario_admin: Optional[str] = None
 
 class Vuelo(BaseModel):
     model_config = ConfigDict(extra="ignore")
