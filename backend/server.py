@@ -1259,8 +1259,27 @@ def generar_google_calendar_link(titulo, fecha, hora, descripcion, ubicacion="")
     return f"{base_url}?{query_string}"
 
 @api_router.post("/solicitudes-vuelo", response_model=dict)
-async def crear_solicitud_vuelo(solicitud: SolicitudVueloCreate):
+async def crear_solicitud_vuelo(solicitud: SolicitudVueloCreate, credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))):
     """Crear una solicitud de vuelo y enviar notificación por email"""
+    
+    # Obtener info del cliente si está autenticado
+    cliente_id = None
+    cliente_email = None
+    cliente_nombre = None
+    
+    if credentials:
+        try:
+            token = credentials.credentials
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_id = payload.get("sub")
+            if user_id:
+                user = await db.usuarios.find_one({"id": user_id}, {"_id": 0})
+                if user:
+                    cliente_id = user["id"]
+                    cliente_email = user["email"]
+                    cliente_nombre = user["nombre"]
+        except Exception:
+            pass  # Si hay error con el token, continuar sin datos de cliente
     
     # Crear la solicitud
     nueva_solicitud = SolicitudVuelo(
@@ -1269,7 +1288,10 @@ async def crear_solicitud_vuelo(solicitud: SolicitudVueloCreate):
         fecha_fin_proyecto=solicitud.fecha_fin_proyecto,
         fecha_vuelo_deseada=solicitud.fecha_vuelo_deseada,
         hora_preferencia=solicitud.hora_preferencia,
-        notas=solicitud.notas
+        notas=solicitud.notas,
+        cliente_id=cliente_id,
+        cliente_email=cliente_email,
+        cliente_nombre=cliente_nombre
     )
     
     solicitud_dict = nueva_solicitud.model_dump()
