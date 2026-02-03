@@ -142,13 +142,11 @@ function AppContent() {
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
             <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#994B49] rounded-lg flex items-center justify-center">
-                <Plane className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg sm:text-xl font-bold text-[#994B49]">DrON</h1>
-                <p className="text-xs text-gray-500 hidden sm:block">Topografía</p>
-              </div>
+              <img 
+                src="/logo-dron.png" 
+                alt="DrON Topografía" 
+                className="h-10 sm:h-12 w-auto"
+              />
             </div>
             
             <nav className="flex items-center space-x-1 sm:space-x-2">
