@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Database, Upload, Plus, Trash2, Calendar, Layers, X, Download, Image, FileArchive } from 'lucide-react';
+import { Database, Upload, Plus, Trash2, Calendar, Layers, X, Download, Image, FileArchive, Pencil, Link, Check } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -12,6 +12,9 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
   const [showAddForm, setShowAddForm] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [editingLink, setEditingLink] = useState(false);
+  const [editLinkValue, setEditLinkValue] = useState('');
+  const [savingLink, setSavingLink] = useState(false);
   const [formData, setFormData] = useState({
     semana: 1,
     fecha: '',
