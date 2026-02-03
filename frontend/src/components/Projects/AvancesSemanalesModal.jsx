@@ -5,7 +5,7 @@ import { Database, Upload, Plus, Trash2, Calendar, Layers, X, Download, Image, F
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess }) {
+export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOnly = false }) {
   const [avances, setAvances] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedAvance, setSelectedAvance] = useState(null);
