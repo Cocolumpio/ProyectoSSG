@@ -221,17 +221,19 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                         <Calendar className="h-3 sm:h-4 w-3 sm:w-4" />
                         <span className="font-medium text-xs sm:text-base">Sem. {avance.semana}</span>
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteAvance(avance.id);
-                        }}
-                        className={`p-1 rounded hover:bg-red-100 hidden sm:block ${
-                          selectedAvance?.id === avance.id ? 'hover:bg-white/20' : ''
-                        }`}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
+                      {!readOnly && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteAvance(avance.id);
+                          }}
+                          className={`p-1 rounded hover:bg-red-100 hidden sm:block ${
+                            selectedAvance?.id === avance.id ? 'hover:bg-white/20' : ''
+                          }`}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      )}
                     </div>
                     <div className={`text-xs mt-1 ${selectedAvance?.id === avance.id ? 'text-white/70' : 'text-gray-500'}`}>
                       {avance.fecha}
