@@ -35,13 +35,24 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 ```
 /app/
 ├── backend/
-│   ├── server.py        # API FastAPI, modelos Pydantic, endpoints
-│   └── uploads/         # Archivos de nubes de puntos e imágenes
+│   ├── server.py        # API FastAPI monolítica
+│   └── uploads/         # Archivos e imágenes
 ├── frontend/
 │   └── src/
-│       ├── App.js       # Componente principal con todas las vistas
+│       ├── App.js       # Estado global, routing, header (~209 líneas)
 │       └── components/
-│           └── VisorPix4D.js  # Visor 3D de Pix4D
+│           ├── Dashboard/
+│           │   └── DashboardView.jsx
+│           ├── Projects/
+│           │   ├── ProyectosView.jsx      # ✅ NUEVO (Feb 2025)
+│           │   ├── ProjectFormContent.jsx
+│           │   └── AvancesSemanalesModal.jsx
+│           ├── Flights/
+│           │   ├── VuelosView.jsx         # ✅ NUEVO (Feb 2025)
+│           │   └── SolicitarVueloForm.jsx
+│           └── common/
+│               ├── KPICard.jsx
+│               └── MapRecenter.jsx
 └── memory/
     └── PRD.md           # Este archivo
 ```
