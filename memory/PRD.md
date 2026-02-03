@@ -127,8 +127,9 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 
 ## Backlog (P1)
 - [x] **COMPLETADO:** Refactorizar App.js en componentes más pequeños
-  - Reducido de ~2061 líneas a 625 líneas (70% reducción)
+  - Reducido de ~640 líneas a ~209 líneas (67% reducción)
   - Componentes extraídos: DashboardView, ProjectFormContent, AvancesSemanalesModal, KPICard, MapRecenter
+  - **Feb 2025:** Extraídos `ProyectosView` y `VuelosView` - Refactorización 100% completa
 
 ## Backlog (P2)
 - [ ] Funcionalidad de carga de archivos LAZ/LAS para archivo
