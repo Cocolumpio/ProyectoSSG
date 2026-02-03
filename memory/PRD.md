@@ -157,12 +157,12 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
   - Notificación por email al cliente cuando admin confirma/rechaza
 
 ## Backlog (P2)
-- [ ] Vista Admin para Solicitudes de Vuelo (gestionar solicitudes pendientes)
-- [ ] Notificación al cliente cuando se confirma un vuelo
+- [x] **COMPLETADO:** Vista Admin para Solicitudes de Vuelo
+- [x] **COMPLETADO:** Notificación al cliente cuando se confirma un vuelo
 - [ ] Funcionalidad DELETE para Vuelos desde el frontend
 - [ ] Refactorizar backend server.py en routes/models/services
 - [ ] Funcionalidad de carga de archivos LAZ/LAS para archivo
-- [ ] Agregar autenticación de usuarios
+- [ ] Agregar gestión de usuarios (crear/editar/desactivar desde admin)
 
 ## API Endpoints
 | Método | Endpoint | Descripción |
