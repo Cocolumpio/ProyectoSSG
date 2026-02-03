@@ -40,6 +40,15 @@ load_dotenv(ROOT_DIR / '.env')
 resend.api_key = os.environ.get('RESEND_API_KEY')
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'ianalejandrogn@gmail.com')
 
+# JWT Configuration
+SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'dron-topografia-secret-key-2025-super-secure')
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 días
+
+# Password hashing
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+security = HTTPBearer()
+
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
