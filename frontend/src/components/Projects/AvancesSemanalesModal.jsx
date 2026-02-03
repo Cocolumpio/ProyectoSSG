@@ -350,13 +350,93 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
 
                 {/* Visor 3D */}
                 <div className="p-2 sm:p-4 flex-shrink-0">
-                  <div className="bg-white rounded-xl overflow-hidden shadow-sm h-[200px] sm:h-[280px] md:h-[350px]">
-                    <iframe
-                      src={selectedAvance.pix4d_url}
-                      className="w-full h-full border-0"
-                      title={`Modelo 3D - Semana ${selectedAvance.semana}`}
-                      allowFullScreen
-                    />
+                  <div className="bg-white rounded-xl overflow-hidden shadow-sm">
+                    {/* Header del visor con botón de editar link */}
+                    <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100 bg-gray-50">
+                      <div className="flex items-center space-x-2">
+                        <Link className="h-4 w-4 text-gray-500" />
+                        <span className="text-xs text-gray-500 truncate max-w-[200px] sm:max-w-[400px]">
+                          {selectedAvance.pix4d_url || 'Sin URL de Pix4D'}
+                        </span>
+                      </div>
+                      {!readOnly && (
+                        <button
+                          onClick={handleEditLinkClick}
+                          className="flex items-center space-x-1 px-2 py-1 text-xs text-[#994B49] hover:bg-[#994B49]/10 rounded transition-colors"
+                          title="Editar link de Pix4D"
+                          data-testid="edit-pix4d-link-btn"
+                        >
+                          <Pencil className="h-3 w-3" />
+                          <span className="hidden sm:inline">Editar Link</span>
+                        </button>
+                      )}
+                    </div>
+                    
+                    {/* Modal de edición de link */}
+                    {editingLink && (
+                      <div className="px-3 py-3 bg-blue-50 border-b border-blue-100">
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                          URL del Modelo Pix4D
+                        </label>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="url"
+                            value={editLinkValue}
+                            onChange={(e) => setEditLinkValue(e.target.value)}
+                            placeholder="https://cloud.pix4d.com/embed/..."
+                            className="flex-1 px-3 py-2 text-sm border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+                            data-testid="pix4d-link-input"
+                          />
+                          <button
+                            onClick={handleSaveLink}
+                            disabled={savingLink}
+                            className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                            title="Guardar"
+                            data-testid="save-pix4d-link-btn"
+                          >
+                            {savingLink ? (
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <Check className="h-4 w-4" />
+                            )}
+                          </button>
+                          <button
+                            onClick={handleCancelEditLink}
+                            className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                            title="Cancelar"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Iframe del modelo */}
+                    <div className="h-[200px] sm:h-[280px] md:h-[350px]">
+                      {selectedAvance.pix4d_url ? (
+                        <iframe
+                          src={selectedAvance.pix4d_url}
+                          className="w-full h-full border-0"
+                          title={`Modelo 3D - Semana ${selectedAvance.semana}`}
+                          allowFullScreen
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+                          <div className="text-center">
+                            <Layers className="h-12 w-12 mx-auto mb-2" />
+                            <p className="text-sm">No hay modelo 3D configurado</p>
+                            {!readOnly && (
+                              <button
+                                onClick={handleEditLinkClick}
+                                className="mt-2 text-[#994B49] hover:underline text-sm"
+                              >
+                                Agregar URL de Pix4D
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
