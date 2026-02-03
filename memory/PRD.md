@@ -150,6 +150,11 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
   - Reducido de ~640 líneas a ~209 líneas (67% reducción)
   - Componentes extraídos: DashboardView, ProjectFormContent, AvancesSemanalesModal, KPICard, MapRecenter
   - **Feb 2025:** Extraídos `ProyectosView` y `VuelosView` - Refactorización 100% completa
+- [x] **COMPLETADO (Feb 2025):** Sistema de autenticación con roles Admin/Cliente
+  - JWT con bcrypt para hashing de contraseñas
+  - Vista Admin: acceso completo + panel de gestión de solicitudes
+  - Vista Cliente: solo lectura + historial de solicitudes propias
+  - Notificación por email al cliente cuando admin confirma/rechaza
 
 ## Backlog (P2)
 - [ ] Vista Admin para Solicitudes de Vuelo (gestionar solicitudes pendientes)
