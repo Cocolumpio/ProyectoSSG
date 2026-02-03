@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plane, LogIn, UserPlus, Eye, EyeOff } from 'lucide-react';
+import { LogIn, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export function LoginPage() {
