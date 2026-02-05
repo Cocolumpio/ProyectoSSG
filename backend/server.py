@@ -207,7 +207,7 @@ class Proyecto(BaseModel):
     volumetria: Optional[Volumetria] = None  # Volumetrías del proyecto
     # Configuración de flotilla de camiones
     capacidad_camion: float = 25.0  # m³ por camión (default 25 m³)
-    costo_viaje_camion: float = 2500.0  # Costo por viaje en MXN (default $2,500)
+    costo_m3: float = 150.0  # Costo por metro cúbico en MXN (default $150)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ProyectoCreate(BaseModel):
