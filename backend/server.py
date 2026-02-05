@@ -1140,7 +1140,7 @@ async def generar_reporte_ejecutivo(proyecto_id: str):
         ["Capacidad por Camión:", f"{capacidad_camion:,.1f} m³"],
         ["Volumen Total Excavado:", f"{volumen_total:,.1f} m³"],
         ["Total de Viajes Requeridos:", f"{total_viajes:,} viajes"],
-        ["Costo por Viaje:", f"${costo_por_viaje:,.2f} MXN"],
+        ["Costo por m³:", f"${costo_por_m3:,.2f} MXN"],
         ["Costo Total Estimado:", f"${costo_total_estimado:,.2f} MXN"],
     ]
     
