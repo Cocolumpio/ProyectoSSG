@@ -948,7 +948,7 @@ async def generar_reporte_ejecutivo(proyecto_id: str):
     
     # Obtener configuración de flotilla del proyecto
     capacidad_camion = proyecto.get('capacidad_camion', 25.0) or 25.0
-    costo_por_viaje = proyecto.get('costo_viaje_camion', 2500.0) or 2500.0
+    costo_por_m3 = proyecto.get('costo_m3', 150.0) or 150.0
     
     # Obtener avances semanales
     avances = await db.avances_semanales.find(
@@ -959,7 +959,7 @@ async def generar_reporte_ejecutivo(proyecto_id: str):
     # Calcular totales
     volumen_total = sum(a.get('volumen_excavacion', 0) or 0 for a in avances)
     total_viajes = int(volumen_total / capacidad_camion) if capacidad_camion > 0 else 0
-    costo_total_estimado = total_viajes * costo_por_viaje
+    costo_total_estimado = volumen_total * costo_por_m3  # Cálculo basado en m³
     
     # Crear PDF en memoria
     buffer = io.BytesIO()
