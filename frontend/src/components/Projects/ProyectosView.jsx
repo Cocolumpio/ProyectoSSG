@@ -39,7 +39,7 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
       descripcion: proyecto.descripcion || '', avance_actual: proyecto.avance_actual || 0,
       pix4d_url: proyecto.pix4d_url || '',
       volumetria: proyecto.volumetria || { excavacion: 0, relleno: 0, materiales: 0 },
-      capacidad_camion: proyecto.capacidad_camion || 25, costo_viaje_camion: proyecto.costo_viaje_camion || 2500
+      capacidad_camion: proyecto.capacidad_camion || 25, costo_m3: proyecto.costo_m3 || 150
     });
     setShowEditForm(true);
     setError(null);
