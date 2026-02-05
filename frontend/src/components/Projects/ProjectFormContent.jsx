@@ -242,17 +242,17 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
             </div>
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Costo por Viaje</label>
+            <label className="block text-sm text-gray-600 mb-1">Costo por m³</label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
               <input
                 type="number"
-                step="100"
+                step="10"
                 min="0"
-                value={formData.costo_viaje_camion}
-                onChange={(e) => setFormData(prev => ({ ...prev, costo_viaje_camion: parseFloat(e.target.value) || 2500 }))}
+                value={formData.costo_m3}
+                onChange={(e) => setFormData(prev => ({ ...prev, costo_m3: parseFloat(e.target.value) || 150 }))}
                 className="w-full pl-7 pr-14 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-                data-testid="project-costo-viaje-input"
+                data-testid="project-costo-m3-input"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">MXN</span>
             </div>
