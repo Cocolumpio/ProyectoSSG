@@ -1175,7 +1175,7 @@ async def generar_reporte_ejecutivo(proyecto_id: str):
         for avance in avances:
             volumen = avance.get('volumen_excavacion', 0) or 0
             viajes = int(volumen / capacidad_camion) if capacidad_camion > 0 else 0
-            costo = viajes * costo_por_viaje
+            costo = volumen * costo_por_m3  # Costo basado en volumen
             costo_data.append([
                 f"Semana {avance.get('semana', '?')}",
                 f"{volumen:,.1f}",
