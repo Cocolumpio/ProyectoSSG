@@ -16,7 +16,7 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
     nombre: '', ubicacion: '', coordenadas: { lat: 20.6597, lng: -103.3496 },
     fecha_inicio: '', fecha_fin_planeada: '', descripcion: '', avance_actual: 0,
     pix4d_url: '', volumetria: { excavacion: 0, relleno: 0, materiales: 0 },
-    capacidad_camion: 25, costo_viaje_camion: 2500
+    capacidad_camion: 25, costo_m3: 150
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
