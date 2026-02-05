@@ -222,7 +222,7 @@ class ProyectoCreate(BaseModel):
     volumetria: Optional[Volumetria] = None
     # Configuración de flotilla
     capacidad_camion: float = 25.0
-    costo_viaje_camion: float = 2500.0
+    costo_m3: float = 150.0  # Costo por metro cúbico en MXN
 
 class ProyectoUpdate(BaseModel):
     nombre: Optional[str] = None
@@ -236,7 +236,7 @@ class ProyectoUpdate(BaseModel):
     volumetria: Optional[Volumetria] = None
     # Configuración de flotilla
     capacidad_camion: Optional[float] = None
-    costo_viaje_camion: Optional[float] = None
+    costo_m3: Optional[float] = None
 
 # Modelo para solicitud de vuelo programado
 class SolicitudVuelo(BaseModel):
