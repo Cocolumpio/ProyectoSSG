@@ -155,6 +155,11 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
   - Vista Admin: acceso completo + panel de gestión de solicitudes
   - Vista Cliente: solo lectura + historial de solicitudes propias
   - Notificación por email al cliente cuando admin confirma/rechaza
+- [x] **COMPLETADO (Feb 2025):** Gestión de usuarios desde panel admin
+  - Crear nuevos usuarios (admin/cliente)
+  - Activar/desactivar usuarios
+  - Búsqueda de usuarios
+  - Estadísticas de usuarios
 
 ## Backlog (P2)
 - [x] **COMPLETADO:** Vista Admin para Solicitudes de Vuelo
