@@ -14,6 +14,7 @@ import { ProyectosView } from './components/Projects/ProyectosView';
 import { VuelosView } from './components/Flights/VuelosView';
 import { SolicitarVueloForm } from './components/Flights/SolicitarVueloForm';
 import { SolicitudesAdminView } from './components/Admin/SolicitudesAdminView';
+import { UsuariosAdminView } from './components/Admin/UsuariosAdminView';
 import { MisSolicitudesView } from './components/Client/MisSolicitudesView';
 
 // Configuración de Leaflet
