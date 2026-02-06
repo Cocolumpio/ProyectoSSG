@@ -173,6 +173,18 @@ function AppContent() {
                 </NavButton>
               )}
               
+              {/* Admin: gestión de usuarios */}
+              {isAdmin && (
+                <NavButton 
+                  active={activeView === 'usuarios'} 
+                  onClick={() => setActiveView('usuarios')} 
+                  testId="nav-usuarios-btn"
+                >
+                  <Users className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Usuarios</span>
+                </NavButton>
+              )}
+              
               {/* Cliente: mis solicitudes */}
               {!isAdmin && (
                 <NavButton 
