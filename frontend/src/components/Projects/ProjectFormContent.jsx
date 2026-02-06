@@ -1,14 +1,37 @@
+import { useState, useEffect, useRef } from 'react';
+import { MapPin, Search, Loader2 } from 'lucide-react';
+
 export function ProjectFormContent({ formData, setFormData, error, saving, isEdit, onSubmit, onClose }) {
+  const [searchingAddress, setSearchingAddress] = useState(false);
+  const [addressSuggestions, setAddressSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [addressInput, setAddressInput] = useState(formData.direccion || formData.ubicacion || '');
+  const searchTimeout = useRef(null);
+  const suggestionsRef = useRef(null);
+
+  useEffect(() => {
+    // Set initial address from formData
+    if (formData.direccion) {
+      setAddressInput(formData.direccion);
+    } else if (formData.ubicacion && !addressInput) {
+      setAddressInput(formData.ubicacion);
+    }
+  }, [formData.direccion, formData.ubicacion]);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleCoordChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      coordenadas: { ...prev.coordenadas, [field]: parseFloat(value) || 0 }
-    }));
   };
 
   const handleVolumetriaChange = (field, value) => {
@@ -16,6 +39,64 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
       ...prev,
       volumetria: { ...prev.volumetria, [field]: parseFloat(value) || 0 }
     }));
+  };
+
+  const searchAddress = async (query) => {
+    if (query.length < 3) {
+      setAddressSuggestions([]);
+      return;
+    }
+
+    setSearchingAddress(true);
+    try {
+      // Using Nominatim (OpenStreetMap) for geocoding - free service
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=mx&limit=5`,
+        {
+          headers: {
+            'Accept-Language': 'es'
+          }
+        }
+      );
+      const data = await response.json();
+      setAddressSuggestions(data);
+      setShowSuggestions(data.length > 0);
+    } catch (err) {
+      console.error('Error searching address:', err);
+      setAddressSuggestions([]);
+    } finally {
+      setSearchingAddress(false);
+    }
+  };
+
+  const handleAddressInputChange = (e) => {
+    const value = e.target.value;
+    setAddressInput(value);
+    
+    // Debounce search
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+    
+    searchTimeout.current = setTimeout(() => {
+      searchAddress(value);
+    }, 500);
+  };
+
+  const selectAddress = (suggestion) => {
+    const displayName = suggestion.display_name;
+    const lat = parseFloat(suggestion.lat);
+    const lng = parseFloat(suggestion.lon);
+    
+    setAddressInput(displayName);
+    setFormData(prev => ({
+      ...prev,
+      direccion: displayName,
+      ubicacion: displayName.split(',').slice(0, 2).join(',').trim(), // Short version for display
+      coordenadas: { lat, lng }
+    }));
+    setShowSuggestions(false);
+    setAddressSuggestions([]);
   };
 
   return (
@@ -44,57 +125,6 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Ubicación *
-          </label>
-          <input
-            type="text"
-            name="ubicacion"
-            value={formData.ubicacion}
-            onChange={handleInputChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-            placeholder="Ej: Guadalajara, Jalisco"
-            data-testid="project-location-input"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Latitud *
-          </label>
-          <input
-            type="number"
-            step="any"
-            value={formData.coordenadas.lat}
-            onChange={(e) => handleCoordChange('lat', e.target.value)}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-            placeholder="20.6597"
-            data-testid="project-lat-input"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Longitud *
-          </label>
-          <input
-            type="number"
-            step="any"
-            value={formData.coordenadas.lng}
-            onChange={(e) => handleCoordChange('lng', e.target.value)}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-            placeholder="-103.3496"
-            data-testid="project-lng-input"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
             Fecha de Inicio *
           </label>
           <input
@@ -107,6 +137,60 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
             data-testid="project-start-date-input"
           />
         </div>
+      </div>
+
+      {/* Address Search Field */}
+      <div className="relative" ref={suggestionsRef}>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          <MapPin className="inline h-4 w-4 mr-1" />
+          Dirección de la Obra *
+        </label>
+        <div className="relative">
+          <input
+            type="text"
+            value={addressInput}
+            onChange={handleAddressInputChange}
+            onFocus={() => addressSuggestions.length > 0 && setShowSuggestions(true)}
+            required
+            className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+            placeholder="Escribe la dirección y selecciona de la lista..."
+            data-testid="project-address-input"
+          />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            {searchingAddress ? (
+              <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />
+            ) : (
+              <Search className="h-5 w-5 text-gray-400" />
+            )}
+          </div>
+        </div>
+        
+        {/* Address Suggestions Dropdown */}
+        {showSuggestions && addressSuggestions.length > 0 && (
+          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            {addressSuggestions.map((suggestion, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => selectAddress(suggestion)}
+                className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-start space-x-2"
+              >
+                <MapPin className="h-4 w-4 text-[#994B49] mt-0.5 flex-shrink-0" />
+                <span className="text-sm text-gray-700">{suggestion.display_name}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        
+        {/* Show selected coordinates */}
+        {formData.coordenadas && formData.coordenadas.lat !== 0 && (
+          <p className="mt-1 text-xs text-gray-500">
+            📍 Coordenadas: {formData.coordenadas.lat.toFixed(6)}, {formData.coordenadas.lng.toFixed(6)}
+          </p>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Fecha de Fin Planeada *
@@ -121,40 +205,26 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
             data-testid="project-end-date-input"
           />
         </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Avance Actual (%)
-        </label>
-        <div className="relative">
-          <input
-            type="number"
-            name="avance_actual"
-            value={formData.avance_actual}
-            onChange={handleInputChange}
-            min="0"
-            max="100"
-            step="0.1"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-            placeholder="0"
-            data-testid="project-progress-input"
-          />
-          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500">
-            %
-          </div>
-        </div>
-        <div className="mt-2">
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-[#994B49] h-2 rounded-full transition-all"
-              style={{ width: `${formData.avance_actual}%` }}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Avance Actual (%)
+          </label>
+          <div className="relative">
+            <input
+              type="number"
+              name="avance_actual"
+              value={formData.avance_actual}
+              onChange={handleInputChange}
+              min="0"
+              max="100"
+              className="w-full px-4 py-2 pr-8 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+              data-testid="project-progress-input"
             />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
           </div>
         </div>
       </div>
 
-      {/* URL de Pix4D */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           URL del Modelo 3D (Pix4D)
@@ -165,17 +235,14 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
           value={formData.pix4d_url}
           onChange={handleInputChange}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-          placeholder="https://cloud.pix4d.com/embed/?projectId=..."
+          placeholder="https://cloud.pix4d.com/embed/..."
           data-testid="project-pix4d-input"
         />
-        <p className="text-xs text-gray-500 mt-1">
-          Pega la URL del iframe de Pix4D para visualizar el modelo 3D
-        </p>
       </div>
 
-      {/* Volumetrías */}
+      {/* Volumetría Section */}
       <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-        <h4 className="font-medium text-gray-900 mb-3">Volumetría del Proyecto (m³)</h4>
+        <h4 className="font-medium text-gray-900 mb-3">📊 Volumetría del Proyecto (m³)</h4>
         <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="block text-sm text-gray-600 mb-1">Excavación</label>
@@ -185,7 +252,7 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
               min="0"
               value={formData.volumetria.excavacion}
               onChange={(e) => handleVolumetriaChange('excavacion', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
               data-testid="project-vol-excavacion-input"
             />
           </div>
@@ -197,7 +264,7 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
               min="0"
               value={formData.volumetria.relleno}
               onChange={(e) => handleVolumetriaChange('relleno', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
               data-testid="project-vol-relleno-input"
             />
           </div>
@@ -209,33 +276,28 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
               min="0"
               value={formData.volumetria.materiales}
               onChange={(e) => handleVolumetriaChange('materiales', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
               data-testid="project-vol-materiales-input"
             />
           </div>
         </div>
       </div>
 
-      {/* Configuración de Flotilla de Camiones */}
+      {/* Fleet Configuration Section */}
       <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-        <h4 className="font-medium text-gray-900 mb-3 flex items-center">
-          <span className="mr-2">🚛</span>
-          Configuración de Flotilla de Camiones
-        </h4>
-        <p className="text-xs text-gray-500 mb-3">
-          Estos valores se usarán para calcular los costos de retiro de material en el reporte ejecutivo
-        </p>
+        <h4 className="font-medium text-gray-900 mb-1">🚛 Configuración de Flotilla de Camiones</h4>
+        <p className="text-xs text-gray-500 mb-3">Estos valores se usarán para calcular los costos de retiro de material en el reporte ejecutivo</p>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm text-gray-600 mb-1">Capacidad por Camión</label>
             <div className="relative">
               <input
                 type="number"
-                step="0.1"
+                step="1"
                 min="1"
                 value={formData.capacidad_camion}
                 onChange={(e) => setFormData(prev => ({ ...prev, capacidad_camion: parseFloat(e.target.value) || 25 }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+                className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
                 data-testid="project-capacidad-camion-input"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">m³</span>
@@ -280,14 +342,13 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
           type="button"
           onClick={onClose}
           className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-          data-testid="project-cancel-btn"
         >
           Cancelar
         </button>
         <button
           type="submit"
           disabled={saving}
-          className="px-6 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors disabled:opacity-50"
           data-testid="project-submit-btn"
         >
           {saving ? 'Guardando...' : (isEdit ? 'Guardar Cambios' : 'Crear Proyecto')}
