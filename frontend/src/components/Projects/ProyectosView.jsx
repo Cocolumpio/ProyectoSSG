@@ -13,7 +13,7 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
   const [showAvancesModal, setShowAvancesModal] = useState(false);
   const [selectedProjectForAvances, setSelectedProjectForAvances] = useState(null);
   const [formData, setFormData] = useState({
-    nombre: '', ubicacion: '', coordenadas: { lat: 20.6597, lng: -103.3496 },
+    nombre: '', ubicacion: '', direccion: '', coordenadas: { lat: 0, lng: 0 },
     fecha_inicio: '', fecha_fin_planeada: '', descripcion: '', avance_actual: 0,
     pix4d_url: '', volumetria: { excavacion: 0, relleno: 0, materiales: 0 },
     capacidad_camion: 25, costo_m3: 150
@@ -23,23 +23,28 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
 
   const resetForm = () => {
     setFormData({
-      nombre: '', ubicacion: '', coordenadas: { lat: 20.6597, lng: -103.3496 },
+      nombre: '', ubicacion: '', direccion: '', coordenadas: { lat: 0, lng: 0 },
       fecha_inicio: '', fecha_fin_planeada: '', descripcion: '', avance_actual: 0,
       pix4d_url: '', volumetria: { excavacion: 0, relleno: 0, materiales: 0 },
-      capacidad_camion: 25, costo_viaje_camion: 2500
+      capacidad_camion: 25, costo_m3: 150
     });
   };
 
   const handleEditClick = (proyecto) => {
     setEditingProject(proyecto);
     setFormData({
-      nombre: proyecto.nombre || '', ubicacion: proyecto.ubicacion || '',
-      coordenadas: proyecto.coordenadas || { lat: 20.6597, lng: -103.3496 },
-      fecha_inicio: proyecto.fecha_inicio || '', fecha_fin_planeada: proyecto.fecha_fin_planeada || '',
-      descripcion: proyecto.descripcion || '', avance_actual: proyecto.avance_actual || 0,
+      nombre: proyecto.nombre || '', 
+      ubicacion: proyecto.ubicacion || '',
+      direccion: proyecto.direccion || proyecto.ubicacion || '',
+      coordenadas: proyecto.coordenadas || { lat: 0, lng: 0 },
+      fecha_inicio: proyecto.fecha_inicio || '', 
+      fecha_fin_planeada: proyecto.fecha_fin_planeada || '',
+      descripcion: proyecto.descripcion || '', 
+      avance_actual: proyecto.avance_actual || 0,
       pix4d_url: proyecto.pix4d_url || '',
       volumetria: proyecto.volumetria || { excavacion: 0, relleno: 0, materiales: 0 },
-      capacidad_camion: proyecto.capacidad_camion || 25, costo_m3: proyecto.costo_m3 || 150
+      capacidad_camion: proyecto.capacidad_camion || 25, 
+      costo_m3: proyecto.costo_m3 || 150
     });
     setShowEditForm(true);
     setError(null);
