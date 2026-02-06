@@ -139,23 +139,6 @@ export function LoginPage() {
             </button>
           </div>
         </div>
-
-        {/* Demo credentials */}
-        <div className="mt-6 bg-white/50 rounded-xl p-4 text-center">
-          <p className="text-sm text-gray-500 mb-2">Credenciales de demostración:</p>
-          <div className="grid grid-cols-2 gap-4 text-xs">
-            <div className="bg-white rounded-lg p-2">
-              <p className="font-medium text-gray-700">Admin</p>
-              <p className="text-gray-500">admin@dron.mx</p>
-              <p className="text-gray-400">admin123</p>
-            </div>
-            <div className="bg-white rounded-lg p-2">
-              <p className="font-medium text-gray-700">Cliente</p>
-              <p className="text-gray-500">cliente@test.com</p>
-              <p className="text-gray-400">cliente123</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
