@@ -283,6 +283,10 @@ function AppContent() {
           <SolicitudesAdminView onShowSuccess={showGlobalSuccess} />
         )}
         
+        {activeView === 'usuarios' && isAdmin && (
+          <UsuariosAdminView onShowSuccess={showGlobalSuccess} />
+        )}
+        
         {activeView === 'mis-solicitudes' && !isAdmin && (
           <MisSolicitudesView onNuevaSolicitud={() => setActiveView('programar')} />
         )}
