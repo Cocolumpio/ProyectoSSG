@@ -164,10 +164,14 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 ## Backlog (P2)
 - [x] **COMPLETADO:** Vista Admin para Solicitudes de Vuelo
 - [x] **COMPLETADO:** Notificación al cliente cuando se confirma un vuelo
-- [ ] Funcionalidad DELETE para Vuelos desde el frontend
-- [ ] Refactorizar backend server.py en routes/models/services
+- [x] **COMPLETADO:** Funcionalidad DELETE para Vuelos (ya existía en backend y frontend)
+- [x] **COMPLETADO:** Gestión de usuarios desde panel admin
+- [x] **COMPLETADO:** Estructura de carpetas preparada para refactorización gradual del backend
+  - `/backend/models/` - Modelos Pydantic
+  - `/backend/services/` - Database, Auth services
+  - `/backend/routes/` - Rutas de API (estructura lista)
+- [ ] Completar migración gradual de server.py a módulos
 - [ ] Funcionalidad de carga de archivos LAZ/LAS para archivo
-- [ ] Agregar gestión de usuarios (crear/editar/desactivar desde admin)
 
 ## API Endpoints
 | Método | Endpoint | Descripción |
