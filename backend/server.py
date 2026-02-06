@@ -198,6 +198,7 @@ class Proyecto(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     nombre: str
     ubicacion: str
+    direccion: Optional[str] = None  # Dirección completa de la obra
     coordenadas: Coordinates
     fecha_inicio: str
     fecha_fin_planeada: str
@@ -213,6 +214,7 @@ class Proyecto(BaseModel):
 class ProyectoCreate(BaseModel):
     nombre: str
     ubicacion: str
+    direccion: Optional[str] = None
     coordenadas: Coordinates
     fecha_inicio: str
     fecha_fin_planeada: str
@@ -227,6 +229,7 @@ class ProyectoCreate(BaseModel):
 class ProyectoUpdate(BaseModel):
     nombre: Optional[str] = None
     ubicacion: Optional[str] = None
+    direccion: Optional[str] = None
     coordenadas: Optional[Coordinates] = None
     fecha_inicio: Optional[str] = None
     fecha_fin_planeada: Optional[str] = None
