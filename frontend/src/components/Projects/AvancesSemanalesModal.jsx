@@ -801,7 +801,7 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 text-gray-400">
                           <div className="text-center p-6">
-                            <Cube className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                            <Box className="h-16 w-16 mx-auto mb-4 text-gray-300" />
                             <p className="text-lg font-medium text-gray-500 mb-2">Sin modelo 3D</p>
                             <p className="text-sm text-gray-400 mb-4">Sube una nube de puntos (.ply) o configura una URL de Pix4D</p>
                             {!readOnly && (
