@@ -651,50 +651,34 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">URL del Modelo 3D (Pix4D) *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Volumen Excavado (m³) *</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={formData.volumen_excavacion}
+                      onChange={(e) => setFormData(prev => ({ ...prev, volumen_excavacion: parseFloat(e.target.value) || 0 }))}
+                      required
+                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+                      placeholder="Ej: 3500"
+                      data-testid="avance-volumen-input"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">m³</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Volumen de material excavado esta semana</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">URL del Modelo 3D (Pix4D)</label>
                   <input
                     type="url"
                     value={formData.pix4d_url}
                     onChange={(e) => setFormData(prev => ({ ...prev, pix4d_url: e.target.value }))}
-                    required
                     placeholder="https://cloud.pix4d.com/embed/..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
                     data-testid="avance-pix4d-input"
                   />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Porcentaje de Avance</label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        value={formData.porcentaje_avance}
-                        onChange={(e) => setFormData(prev => ({ ...prev, porcentaje_avance: parseFloat(e.target.value) || 0 }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-                        data-testid="avance-porcentaje-input"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Volumen Excavado</label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.1"
-                        value={formData.volumen_excavacion}
-                        onChange={(e) => setFormData(prev => ({ ...prev, volumen_excavacion: parseFloat(e.target.value) || 0 }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-                        data-testid="avance-volumen-input"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">m³</span>
-                    </div>
-                  </div>
                 </div>
 
                 <div>
