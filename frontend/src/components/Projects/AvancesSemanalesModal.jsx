@@ -398,33 +398,46 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                 </div>
 
                 {/* Gráfico de Volumen - Progresión Lineal */}
-                {avances.length > 0 && avances.some(a => a.volumen_excavacion > 0) && (
+                {avances.length > 0 && (
                   <div className="p-2 sm:p-4 flex-shrink-0">
                     <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
-                      <div className="flex items-center space-x-2 mb-3">
-                        <Database className="h-4 sm:h-5 w-4 sm:w-5 text-[#994B49]" />
-                        <h5 className="font-semibold text-gray-900 text-sm sm:text-base">Progresión de Excavación</h5>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-2">
+                          <Database className="h-4 sm:h-5 w-4 sm:w-5 text-[#994B49]" />
+                          <h5 className="font-semibold text-gray-900 text-sm sm:text-base">Progresión de Excavación</h5>
+                        </div>
+                        {proyecto.volumen_total_planeado > 0 && (
+                          <div className="text-xs text-gray-500">
+                            Meta: <span className="font-semibold text-[#994B49]">{proyecto.volumen_total_planeado?.toLocaleString()} m³</span>
+                          </div>
+                        )}
                       </div>
-                      <div className="h-[150px] sm:h-[180px]">
+                      <div className="h-[180px] sm:h-[220px]">
                         <ResponsiveContainer width="100%" height="100%">
                           <LineChart data={(() => {
                             // Ordenar avances por semana y calcular volumen acumulado
                             const sortedAvances = [...avances]
-                              .filter(a => a.volumen_excavacion > 0)
                               .sort((a, b) => a.semana - b.semana);
                             let acumulado = 0;
                             return sortedAvances.map(a => {
-                              acumulado += a.volumen_excavacion;
+                              acumulado += (a.volumen_excavacion || 0);
                               return {
                                 semana: `Sem ${a.semana}`,
-                                volumen: a.volumen_excavacion,
-                                acumulado: acumulado
+                                volumen: a.volumen_excavacion || 0,
+                                acumulado: acumulado,
+                                meta: proyecto.volumen_total_planeado || 0
                               };
                             });
                           })()}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                             <XAxis dataKey="semana" stroke="#6B7280" fontSize={11} />
-                            <YAxis stroke="#6B7280" fontSize={11} tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
+                            <YAxis 
+                              stroke="#6B7280" 
+                              fontSize={11} 
+                              domain={[0, proyecto.volumen_total_planeado > 0 ? proyecto.volumen_total_planeado : 'auto']}
+                              tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : v.toLocaleString()}
+                              label={{ value: 'm³', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: 10, fill: '#6B7280' } }}
+                            />
                             <Tooltip 
                               formatter={(value, name) => [
                                 `${value.toLocaleString()} m³`, 
