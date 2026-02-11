@@ -170,6 +170,89 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
     setEditVolumenValue(0);
   };
 
+  const handleModel3DUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedAvance) return;
+
+    // Verificar extensión
+    const validExtensions = ['.ply', '.xyz', '.pts', '.pcd'];
+    const extension = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
+    if (!validExtensions.includes(extension)) {
+      alert(`Formato no soportado. Use: ${validExtensions.join(', ')}`);
+      return;
+    }
+
+    setUploadingModel(true);
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+      
+      const response = await axios.post(
+        `${API}/proyectos/${proyecto.id}/avances-semanales/${selectedAvance.id}/modelo3d`,
+        formDataUpload,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+      
+      // Actualizar el avance seleccionado localmente
+      const updatedAvance = { 
+        ...selectedAvance, 
+        modelo_3d_url: response.data.url,
+        modelo_3d_tipo: 'local'
+      };
+      setSelectedAvance(updatedAvance);
+      setAvances(avances.map(a => a.id === selectedAvance.id ? updatedAvance : a));
+      setViewerMode('local');
+      
+      if (onShowSuccess) {
+        onShowSuccess(`Modelo 3D subido (${response.data.size_mb} MB)`);
+      }
+    } catch (err) {
+      console.error('Error subiendo modelo 3D:', err);
+      alert(err.response?.data?.detail || 'Error al subir el modelo 3D');
+    } finally {
+      setUploadingModel(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleDeleteModel3D = async () => {
+    if (!selectedAvance || !window.confirm('¿Eliminar el modelo 3D local?')) return;
+
+    try {
+      await axios.delete(
+        `${API}/proyectos/${proyecto.id}/avances-semanales/${selectedAvance.id}/modelo3d`
+      );
+      
+      // Actualizar el avance seleccionado localmente
+      const updatedAvance = { 
+        ...selectedAvance, 
+        modelo_3d_url: null,
+        modelo_3d_tipo: null
+      };
+      setSelectedAvance(updatedAvance);
+      setAvances(avances.map(a => a.id === selectedAvance.id ? updatedAvance : a));
+      setViewerMode('auto');
+      
+      if (onShowSuccess) {
+        onShowSuccess('Modelo 3D eliminado');
+      }
+    } catch (err) {
+      console.error('Error eliminando modelo 3D:', err);
+    }
+  };
+
+  // Determinar qué visor mostrar
+  const getActiveViewer = () => {
+    if (!selectedAvance) return 'none';
+    if (viewerMode === 'local' && selectedAvance.modelo_3d_url) return 'local';
+    if (viewerMode === 'pix4d' && selectedAvance.pix4d_url) return 'pix4d';
+    if (viewerMode === 'auto') {
+      if (selectedAvance.modelo_3d_url) return 'local';
+      if (selectedAvance.pix4d_url) return 'pix4d';
+    }
+    return 'none';
+  };
+
   const handleImageUpload = async (e) => {
     const files = e.target.files;
     if (!files || files.length === 0 || !selectedAvance) return;
