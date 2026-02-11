@@ -201,6 +201,95 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
         />
       )}
 
+      {/* Modal de Asignar Clientes */}
+      {showAssignModal && selectedProjectForAssign && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[80vh] overflow-hidden">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Asignar Clientes</h3>
+                <p className="text-sm text-gray-500">{selectedProjectForAssign.nombre}</p>
+              </div>
+              <button 
+                onClick={() => { setShowAssignModal(false); setSelectedProjectForAssign(null); }} 
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(80vh-140px)]">
+              {loadingClients ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-8 h-8 border-4 border-[#994B49] border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : availableClients.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                  <p>No hay clientes disponibles</p>
+                  <p className="text-sm mt-1">Crea clientes desde el panel de usuarios</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {availableClients.map(client => (
+                    <label
+                      key={client.id}
+                      className={`flex items-center p-3 rounded-lg border cursor-pointer transition-colors ${
+                        selectedClients.includes(client.id)
+                          ? 'border-[#994B49] bg-[#994B49]/5'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedClients.includes(client.id)}
+                        onChange={() => handleToggleClient(client.id)}
+                        className="w-4 h-4 text-[#994B49] border-gray-300 rounded focus:ring-[#994B49]"
+                      />
+                      <div className="ml-3 flex-1">
+                        <p className="font-medium text-gray-900">{client.email}</p>
+                        <p className="text-xs text-gray-500">ID: {client.id.slice(0, 8)}...</p>
+                      </div>
+                      {selectedClients.includes(client.id) && (
+                        <span className="text-xs bg-[#994B49] text-white px-2 py-0.5 rounded-full">
+                          Asignado
+                        </span>
+                      )}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-between">
+              <span className="text-sm text-gray-500">
+                {selectedClients.length} cliente(s) seleccionado(s)
+              </span>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => { setShowAssignModal(false); setSelectedProjectForAssign(null); }}
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveAssignment}
+                  disabled={savingAssignment}
+                  className="px-4 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] disabled:opacity-50 transition-colors flex items-center space-x-2"
+                >
+                  {savingAssignment ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <UserPlus className="h-4 w-4" />
+                  )}
+                  <span>Guardar</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Grid de Proyectos */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" data-testid="proyectos-grid">
         {proyectos.map((proyecto) => (
