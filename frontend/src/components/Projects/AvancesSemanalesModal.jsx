@@ -15,6 +15,9 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
   const [editingLink, setEditingLink] = useState(false);
   const [editLinkValue, setEditLinkValue] = useState('');
   const [savingLink, setSavingLink] = useState(false);
+  const [editingVolumen, setEditingVolumen] = useState(false);
+  const [editVolumenValue, setEditVolumenValue] = useState(0);
+  const [savingVolumen, setSavingVolumen] = useState(false);
   const [formData, setFormData] = useState({
     semana: 1,
     fecha: '',
