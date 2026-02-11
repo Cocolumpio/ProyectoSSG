@@ -160,6 +160,11 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
   - Activar/desactivar usuarios
   - Búsqueda de usuarios
   - Estadísticas de usuarios
+- [x] **COMPLETADO (Feb 2025):** Edición inline del volumen excavado en avances semanales
+  - Botón de editar junto al valor del volumen (solo visible para admins)
+  - Campo de entrada con botones de guardar y cancelar
+  - Recálculo automático del porcentaje de avance del proyecto
+  - Actualización instantánea del gráfico de progresión
 
 ## Backlog (P2)
 - [x] **COMPLETADO:** Vista Admin para Solicitudes de Vuelo
