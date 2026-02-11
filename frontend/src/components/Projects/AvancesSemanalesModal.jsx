@@ -275,19 +275,6 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                     <div className={`text-xs mt-1 ${selectedAvance?.id === avance.id ? 'text-white/70' : 'text-gray-500'}`}>
                       {avance.fecha}
                     </div>
-                    {avance.porcentaje_avance > 0 && (
-                      <div className="mt-1 sm:mt-2">
-                        <div className={`text-xs mb-1 ${selectedAvance?.id === avance.id ? 'text-white/70' : 'text-gray-500'}`}>
-                          {avance.porcentaje_avance}%
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-1 sm:h-1.5">
-                          <div
-                            className={`h-1 sm:h-1.5 rounded-full ${selectedAvance?.id === avance.id ? 'bg-white' : 'bg-[#994B49]'}`}
-                            style={{ width: `${avance.porcentaje_avance}%` }}
-                          />
-                        </div>
-                      </div>
-                    )}
                   </div>
                 ))
               )}
