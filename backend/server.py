@@ -991,6 +991,119 @@ async def descargar_imagenes_zip(proyecto_id: str, avance_id: str):
         headers={"Content-Disposition": f"attachment; filename={zip_filename}"}
     )
 
+# --- Modelos 3D (Nubes de Puntos) ---
+@api_router.post("/proyectos/{proyecto_id}/avances-semanales/{avance_id}/modelo3d")
+async def subir_modelo_3d(proyecto_id: str, avance_id: str, file: UploadFile = File(...)):
+    """Subir un modelo 3D (nube de puntos PLY) a un avance semanal"""
+    # Verificar que el avance existe
+    avance = await db.avances_semanales.find_one({"id": avance_id, "proyecto_id": proyecto_id})
+    if not avance:
+        raise HTTPException(status_code=404, detail="Avance semanal no encontrado")
+    
+    # Verificar extensión del archivo
+    file_extension = Path(file.filename).suffix.lower()
+    allowed_extensions = ['.ply', '.xyz', '.pts', '.pcd']
+    if file_extension not in allowed_extensions:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Formato no soportado. Use: {', '.join(allowed_extensions)}"
+        )
+    
+    # Crear directorio para modelos 3D si no existe
+    models_dir = UPLOAD_DIR / "modelos3d" / proyecto_id / avance_id
+    models_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Eliminar modelo anterior si existe
+    old_model = avance.get('modelo_3d_url')
+    if old_model:
+        try:
+            old_filename = old_model.split("/")[-1]
+            old_file_path = models_dir / old_filename
+            if old_file_path.exists():
+                old_file_path.unlink()
+        except Exception as e:
+            logging.error(f"Error eliminando modelo anterior: {e}")
+    
+    # Generar nombre único para el modelo
+    unique_filename = f"{uuid.uuid4()}{file_extension}"
+    file_path = models_dir / unique_filename
+    
+    # Guardar el archivo
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    # Generar URL del modelo
+    model_url = f"/api/modelos3d/{proyecto_id}/{avance_id}/{unique_filename}"
+    
+    # Actualizar el avance con la URL del modelo
+    await db.avances_semanales.update_one(
+        {"id": avance_id},
+        {"$set": {"modelo_3d_url": model_url, "modelo_3d_tipo": "local"}}
+    )
+    
+    # Obtener tamaño del archivo
+    file_size = file_path.stat().st_size
+    file_size_mb = round(file_size / (1024 * 1024), 2)
+    
+    return {
+        "url": model_url, 
+        "filename": unique_filename,
+        "size_mb": file_size_mb,
+        "tipo": "local"
+    }
+
+@api_router.get("/modelos3d/{proyecto_id}/{avance_id}/{filename}")
+async def obtener_modelo_3d(proyecto_id: str, avance_id: str, filename: str):
+    """Obtener un modelo 3D de un avance semanal"""
+    file_path = UPLOAD_DIR / "modelos3d" / proyecto_id / avance_id / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Modelo 3D no encontrado")
+    
+    # Determinar el content-type basado en la extensión
+    extension = Path(filename).suffix.lower()
+    content_types = {
+        '.ply': 'application/octet-stream',
+        '.xyz': 'text/plain',
+        '.pts': 'text/plain',
+        '.pcd': 'application/octet-stream'
+    }
+    content_type = content_types.get(extension, 'application/octet-stream')
+    
+    return FileResponse(
+        file_path,
+        media_type=content_type,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Cache-Control": "public, max-age=3600"
+        }
+    )
+
+@api_router.delete("/proyectos/{proyecto_id}/avances-semanales/{avance_id}/modelo3d")
+async def eliminar_modelo_3d(proyecto_id: str, avance_id: str):
+    """Eliminar el modelo 3D de un avance semanal"""
+    # Obtener el avance para encontrar el archivo
+    avance = await db.avances_semanales.find_one({"id": avance_id, "proyecto_id": proyecto_id})
+    if not avance:
+        raise HTTPException(status_code=404, detail="Avance semanal no encontrado")
+    
+    model_url = avance.get('modelo_3d_url')
+    if model_url and '/api/modelos3d/' in model_url:
+        try:
+            filename = model_url.split("/")[-1]
+            file_path = UPLOAD_DIR / "modelos3d" / proyecto_id / avance_id / filename
+            if file_path.exists():
+                file_path.unlink()
+        except Exception as e:
+            logging.error(f"Error eliminando modelo 3D: {e}")
+    
+    # Actualizar la base de datos
+    await db.avances_semanales.update_one(
+        {"id": avance_id, "proyecto_id": proyecto_id},
+        {"$set": {"modelo_3d_url": None, "modelo_3d_tipo": None}}
+    )
+    
+    return {"message": "Modelo 3D eliminado"}
+
 # --- Reporte Ejecutivo PDF ---
 @api_router.get("/proyectos/{proyecto_id}/reporte-ejecutivo")
 async def generar_reporte_ejecutivo(proyecto_id: str):
