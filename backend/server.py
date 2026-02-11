@@ -836,6 +836,9 @@ async def crear_avance_semanal(proyecto_id: str, avance: AvanceSemanalCreate):
     doc['created_at'] = doc['created_at'].isoformat()
     await db.avances_semanales.insert_one(doc)
     
+    # Recalcular el porcentaje de avance del proyecto
+    await recalcular_avance_proyecto(proyecto_id)
+    
     return nuevo_avance
 
 @api_router.put("/proyectos/{proyecto_id}/avances-semanales/{avance_id}", response_model=AvanceSemanal)
@@ -862,6 +865,10 @@ async def actualizar_avance_semanal(proyecto_id: str, avance_id: str, avance: Av
     if isinstance(avance_actualizado.get('created_at'), str):
         avance_actualizado['created_at'] = datetime.fromisoformat(avance_actualizado['created_at'])
     
+    # Si se actualizó el volumen de excavación, recalcular el avance del proyecto
+    if 'volumen_excavacion' in update_data:
+        await recalcular_avance_proyecto(proyecto_id)
+    
     return avance_actualizado
 
 @api_router.delete("/proyectos/{proyecto_id}/avances-semanales/{avance_id}")
@@ -874,6 +881,9 @@ async def eliminar_avance_semanal(proyecto_id: str, avance_id: str):
     
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Avance semanal no encontrado")
+    
+    # Recalcular el porcentaje de avance del proyecto
+    await recalcular_avance_proyecto(proyecto_id)
     
     return {"message": "Avance semanal eliminado"}
 
