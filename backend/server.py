@@ -552,6 +552,46 @@ async def actualizar_proyecto(proyecto_id: str, proyecto_update: ProyectoUpdate)
         proyecto['created_at'] = datetime.fromisoformat(proyecto['created_at'])
     return proyecto
 
+@api_router.post("/proyectos/{proyecto_id}/asignar-clientes")
+async def asignar_clientes_proyecto(proyecto_id: str, cliente_ids: List[str]):
+    """Asignar una lista de clientes a un proyecto"""
+    # Verificar que el proyecto existe
+    proyecto = await db.proyectos.find_one({"id": proyecto_id})
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    # Verificar que todos los clientes existen
+    for cliente_id in cliente_ids:
+        cliente = await db.users.find_one({"id": cliente_id})
+        if not cliente:
+            raise HTTPException(status_code=404, detail=f"Cliente {cliente_id} no encontrado")
+    
+    # Actualizar la lista de clientes asignados
+    await db.proyectos.update_one(
+        {"id": proyecto_id},
+        {"$set": {"clientes_asignados": cliente_ids}}
+    )
+    
+    return {"message": f"Proyecto asignado a {len(cliente_ids)} cliente(s)", "clientes_asignados": cliente_ids}
+
+@api_router.get("/proyectos/{proyecto_id}/clientes-asignados")
+async def obtener_clientes_asignados(proyecto_id: str):
+    """Obtener la lista de clientes asignados a un proyecto"""
+    proyecto = await db.proyectos.find_one({"id": proyecto_id}, {"_id": 0})
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    clientes_ids = proyecto.get('clientes_asignados', [])
+    
+    # Obtener información de los clientes
+    clientes = []
+    for cliente_id in clientes_ids:
+        cliente = await db.users.find_one({"id": cliente_id}, {"_id": 0, "hashed_password": 0})
+        if cliente:
+            clientes.append(cliente)
+    
+    return clientes
+
 @api_router.delete("/proyectos/{proyecto_id}")
 async def eliminar_proyecto(proyecto_id: str):
     result = await db.proyectos.delete_one({"id": proyecto_id})
