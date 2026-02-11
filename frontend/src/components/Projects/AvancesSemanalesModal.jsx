@@ -662,7 +662,7 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                     {/* Header del visor con tabs y controles */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-3 py-2 border-b border-gray-100 bg-gray-50 gap-2">
                       <div className="flex items-center space-x-2">
-                        <Cube className="h-4 w-4 text-[#994B49]" />
+                        <Box className="h-4 w-4 text-[#994B49]" />
                         <span className="text-sm font-medium text-gray-700">Modelo 3D</span>
                         
                         {/* Tabs para cambiar entre visores */}
@@ -677,7 +677,7 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                                     : 'text-gray-600 hover:text-gray-900'
                                 }`}
                               >
-                                <Cube className="h-3 w-3" />
+                                <Box className="h-3 w-3" />
                                 <span>Local</span>
                               </button>
                             )}
