@@ -335,6 +335,66 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                   {selectedAvance.descripcion && (
                     <p className="mt-2 text-xs sm:text-sm text-gray-600">{selectedAvance.descripcion}</p>
                   )}
+                  
+                  {/* Volumen excavado con edición inline */}
+                  <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Database className="h-4 w-4 text-[#994B49]" />
+                        <span className="text-sm font-medium text-gray-700">Volumen Excavado:</span>
+                      </div>
+                      {editingVolumen ? (
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.1"
+                            value={editVolumenValue}
+                            onChange={(e) => setEditVolumenValue(parseFloat(e.target.value) || 0)}
+                            className="w-32 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+                            data-testid="edit-volumen-input"
+                          />
+                          <span className="text-sm text-gray-500">m³</span>
+                          <button
+                            onClick={handleSaveVolumen}
+                            disabled={savingVolumen}
+                            className="p-1.5 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 transition-colors"
+                            title="Guardar"
+                            data-testid="save-volumen-btn"
+                          >
+                            {savingVolumen ? (
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <Check className="h-4 w-4" />
+                            )}
+                          </button>
+                          <button
+                            onClick={handleCancelEditVolumen}
+                            className="p-1.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                            title="Cancelar"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg font-bold text-[#994B49]" data-testid="volumen-value">
+                            {(selectedAvance.volumen_excavacion || 0).toLocaleString()} m³
+                          </span>
+                          {!readOnly && (
+                            <button
+                              onClick={handleEditVolumenClick}
+                              className="p-1.5 text-gray-500 hover:text-[#994B49] hover:bg-gray-200 rounded transition-colors"
+                              title="Editar volumen"
+                              data-testid="edit-volumen-btn"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Gráfico de Volumen - Progresión Lineal */}
