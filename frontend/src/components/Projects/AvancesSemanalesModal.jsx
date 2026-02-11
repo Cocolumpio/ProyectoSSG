@@ -292,12 +292,6 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                       <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Semana {selectedAvance.semana}</h4>
                       <p className="text-xs sm:text-sm text-gray-500">{selectedAvance.fecha}</p>
                     </div>
-                    {selectedAvance.porcentaje_avance > 0 && (
-                      <div className="text-right">
-                        <span className="text-xl sm:text-2xl font-bold text-[#994B49]">{selectedAvance.porcentaje_avance}%</span>
-                        <p className="text-xs text-gray-500">Avance</p>
-                      </div>
-                    )}
                   </div>
                   {selectedAvance.descripcion && (
                     <p className="mt-2 text-xs sm:text-sm text-gray-600">{selectedAvance.descripcion}</p>
