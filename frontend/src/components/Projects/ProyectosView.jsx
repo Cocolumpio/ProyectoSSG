@@ -318,6 +318,14 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
                   >
                     <FileText className="h-4 w-4" />
                   </button>
+                  <button 
+                    onClick={() => handleOpenAssignModal(proyecto)} 
+                    className="p-1.5 sm:p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors" 
+                    title="Asignar Clientes"
+                    data-testid={`assign-proyecto-${proyecto.id}`}
+                  >
+                    <Users className="h-4 w-4" />
+                  </button>
                   <button onClick={() => handleEditClick(proyecto)} className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Editar Proyecto" data-testid={`edit-proyecto-${proyecto.id}`}>
                     <Pencil className="h-4 w-4" />
                   </button>
