@@ -345,6 +345,12 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
                 <div><span className="text-gray-500">Inicio:</span> <span className="text-gray-700">{proyecto.fecha_inicio}</span></div>
                 <div><span className="text-gray-500">Fin:</span> <span className="text-gray-700">{proyecto.fecha_fin_planeada}</span></div>
               </div>
+              {proyecto.clientes_asignados && proyecto.clientes_asignados.length > 0 && (
+                <div className="mt-3 flex items-center space-x-1 text-xs text-orange-600">
+                  <Users className="h-3.5 w-3.5" />
+                  <span>{proyecto.clientes_asignados.length} cliente(s) asignado(s)</span>
+                </div>
+              )}
             </div>
           </div>
         ))}
