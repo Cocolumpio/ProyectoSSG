@@ -131,6 +131,42 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
     setEditLinkValue('');
   };
 
+  const handleEditVolumenClick = () => {
+    setEditVolumenValue(selectedAvance?.volumen_excavacion || 0);
+    setEditingVolumen(true);
+  };
+
+  const handleSaveVolumen = async () => {
+    if (!selectedAvance) return;
+    
+    setSavingVolumen(true);
+    try {
+      await axios.put(`${API}/proyectos/${proyecto.id}/avances-semanales/${selectedAvance.id}`, {
+        volumen_excavacion: editVolumenValue
+      });
+      
+      // Actualizar el avance seleccionado localmente
+      const updatedAvance = { ...selectedAvance, volumen_excavacion: editVolumenValue };
+      setSelectedAvance(updatedAvance);
+      setAvances(avances.map(a => a.id === selectedAvance.id ? updatedAvance : a));
+      
+      setEditingVolumen(false);
+      if (onShowSuccess) {
+        onShowSuccess(`Volumen actualizado para Semana ${selectedAvance.semana}`);
+      }
+    } catch (err) {
+      console.error('Error actualizando volumen:', err);
+      alert('Error al actualizar el volumen');
+    } finally {
+      setSavingVolumen(false);
+    }
+  };
+
+  const handleCancelEditVolumen = () => {
+    setEditingVolumen(false);
+    setEditVolumenValue(0);
+  };
+
   const handleImageUpload = async (e) => {
     const files = e.target.files;
     if (!files || files.length === 0 || !selectedAvance) return;
