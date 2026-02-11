@@ -319,30 +319,71 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                   )}
                 </div>
 
-                {/* Gráfico de Volumen */}
+                {/* Gráfico de Volumen - Progresión Lineal */}
                 {avances.length > 0 && avances.some(a => a.volumen_excavacion > 0) && (
                   <div className="p-2 sm:p-4 flex-shrink-0">
                     <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
                       <div className="flex items-center space-x-2 mb-3">
                         <Database className="h-4 sm:h-5 w-4 sm:w-5 text-[#994B49]" />
-                        <h5 className="font-semibold text-gray-900 text-sm sm:text-base">Volumen Excavado por Semana</h5>
+                        <h5 className="font-semibold text-gray-900 text-sm sm:text-base">Progresión de Excavación</h5>
                       </div>
                       <div className="h-[150px] sm:h-[180px]">
                         <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={avances.filter(a => a.volumen_excavacion > 0).map(a => ({
-                            semana: `Sem ${a.semana}`,
-                            volumen: a.volumen_excavacion
-                          }))}>
+                          <LineChart data={(() => {
+                            // Ordenar avances por semana y calcular volumen acumulado
+                            const sortedAvances = [...avances]
+                              .filter(a => a.volumen_excavacion > 0)
+                              .sort((a, b) => a.semana - b.semana);
+                            let acumulado = 0;
+                            return sortedAvances.map(a => {
+                              acumulado += a.volumen_excavacion;
+                              return {
+                                semana: `Sem ${a.semana}`,
+                                volumen: a.volumen_excavacion,
+                                acumulado: acumulado
+                              };
+                            });
+                          })()}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                             <XAxis dataKey="semana" stroke="#6B7280" fontSize={11} />
-                            <YAxis stroke="#6B7280" fontSize={11} tickFormatter={(v) => `${v}`} />
+                            <YAxis stroke="#6B7280" fontSize={11} tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
                             <Tooltip 
-                              formatter={(value) => [`${value.toLocaleString()} m³`, 'Volumen Excavado']}
+                              formatter={(value, name) => [
+                                `${value.toLocaleString()} m³`, 
+                                name === 'acumulado' ? 'Total Acumulado' : 'Esta Semana'
+                              ]}
                               contentStyle={{ backgroundColor: '#FFF', border: '1px solid #E5E7EB', borderRadius: '8px' }}
                             />
-                            <Bar dataKey="volumen" fill="#994B49" radius={[4, 4, 0, 0]} name="Volumen (m³)" />
-                          </BarChart>
+                            <Line 
+                              type="monotone" 
+                              dataKey="acumulado" 
+                              stroke="#994B49" 
+                              strokeWidth={3}
+                              dot={{ fill: '#994B49', strokeWidth: 2, r: 5 }}
+                              activeDot={{ r: 7, fill: '#7D3C3A' }}
+                              name="acumulado"
+                            />
+                            <Line 
+                              type="monotone" 
+                              dataKey="volumen" 
+                              stroke="#60A5FA" 
+                              strokeWidth={2}
+                              strokeDasharray="5 5"
+                              dot={{ fill: '#60A5FA', strokeWidth: 2, r: 4 }}
+                              name="volumen"
+                            />
+                          </LineChart>
                         </ResponsiveContainer>
+                      </div>
+                      <div className="flex items-center justify-center gap-6 mt-2 text-xs">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-0.5 bg-[#994B49]"></div>
+                          <span className="text-gray-600">Acumulado</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-0.5 bg-blue-400 border-dashed"></div>
+                          <span className="text-gray-600">Semanal</span>
+                        </div>
                       </div>
                     </div>
                   </div>
