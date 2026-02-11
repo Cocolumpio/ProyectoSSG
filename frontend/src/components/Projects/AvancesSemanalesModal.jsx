@@ -221,7 +221,6 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                       fecha: new Date().toISOString().split('T')[0], 
                       pix4d_url: '', 
                       descripcion: '', 
-                      porcentaje_avance: 0,
                       volumen_excavacion: 0
                     });
                     setShowAddForm(true);
