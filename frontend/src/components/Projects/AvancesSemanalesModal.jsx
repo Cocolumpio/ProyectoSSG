@@ -441,10 +441,19 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                             <Tooltip 
                               formatter={(value, name) => [
                                 `${value.toLocaleString()} m³`, 
-                                name === 'acumulado' ? 'Total Acumulado' : 'Esta Semana'
+                                name === 'acumulado' ? 'Total Acumulado' : name === 'meta' ? 'Meta Planeada' : 'Esta Semana'
                               ]}
                               contentStyle={{ backgroundColor: '#FFF', border: '1px solid #E5E7EB', borderRadius: '8px' }}
                             />
+                            {proyecto.volumen_total_planeado > 0 && (
+                              <ReferenceLine 
+                                y={proyecto.volumen_total_planeado} 
+                                stroke="#22C55E" 
+                                strokeWidth={2}
+                                strokeDasharray="8 4"
+                                label={{ value: 'Meta', position: 'right', fill: '#22C55E', fontSize: 10 }}
+                              />
+                            )}
                             <Line 
                               type="monotone" 
                               dataKey="acumulado" 
@@ -466,15 +475,21 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                           </LineChart>
                         </ResponsiveContainer>
                       </div>
-                      <div className="flex items-center justify-center gap-6 mt-2 text-xs">
+                      <div className="flex items-center justify-center gap-4 sm:gap-6 mt-2 text-xs flex-wrap">
                         <div className="flex items-center gap-2">
                           <div className="w-4 h-0.5 bg-[#994B49]"></div>
                           <span className="text-gray-600">Acumulado</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className="w-4 h-0.5 bg-blue-400 border-dashed"></div>
+                          <div className="w-4 h-0.5 bg-blue-400" style={{borderBottom: '2px dashed'}}></div>
                           <span className="text-gray-600">Semanal</span>
                         </div>
+                        {proyecto.volumen_total_planeado > 0 && (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-0.5 bg-green-500" style={{borderBottom: '2px dashed'}}></div>
+                            <span className="text-gray-600">Meta</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
