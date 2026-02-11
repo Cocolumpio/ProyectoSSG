@@ -170,6 +170,12 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
   - Línea de proyección naranja que muestra la tendencia hacia la meta
   - Indicador de "Meta en: ~X semanas" con estimación de tiempo
   - Se muestra "✅ Meta alcanzada" cuando se completa el volumen planeado
+- [x] **COMPLETADO (Feb 2025):** Visor de nubes de puntos 3D local
+  - Subida de archivos PLY, XYZ, PTS, PCD desde el navegador
+  - Visor 3D con Three.js (rotación, zoom, pan)
+  - Tabs para cambiar entre visor local y Pix4D
+  - Pix4D como respaldo si el visor local falla
+  - Indicador de número de puntos y controles de navegación
 
 ## Backlog (P2)
 - [x] **COMPLETADO:** Vista Admin para Solicitudes de Vuelo
