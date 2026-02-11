@@ -176,6 +176,11 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
   - Tabs para cambiar entre visor local y Pix4D
   - Pix4D como respaldo si el visor local falla
   - Indicador de número de puntos y controles de navegación
+- [x] **COMPLETADO (Feb 2025):** Asignación de proyectos a clientes
+  - Modal para asignar múltiples clientes a un proyecto
+  - Filtrado automático de proyectos por cliente asignado
+  - Indicador visual de clientes asignados en tarjetas de proyecto
+  - Vista de cliente solo muestra proyectos donde está asignado
 
 ## Backlog (P2)
 - [x] **COMPLETADO:** Vista Admin para Solicitudes de Vuelo
