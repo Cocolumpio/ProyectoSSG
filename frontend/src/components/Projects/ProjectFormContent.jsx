@@ -207,22 +207,49 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Avance Actual (%)
+            Volumen Total Planeado (m³) *
           </label>
           <div className="relative">
             <input
               type="number"
-              name="avance_actual"
-              value={formData.avance_actual}
+              name="volumen_total_planeado"
+              value={formData.volumen_total_planeado || ''}
               onChange={handleInputChange}
               min="0"
-              max="100"
-              className="w-full px-4 py-2 pr-8 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-              data-testid="project-progress-input"
+              step="100"
+              placeholder="Ej: 50000"
+              className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+              data-testid="project-volumen-planeado-input"
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">m³</span>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">Total de volumen estimado a excavar según el programa del cliente</p>
+        </div>
+      </div>
+
+      {/* Avance calculado automáticamente */}
+      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="font-medium text-blue-900 mb-1">📊 Avance del Proyecto</h4>
+            <p className="text-xs text-blue-700">
+              El porcentaje se calcula automáticamente: (Volumen excavado / Volumen planeado) × 100
+            </p>
+          </div>
+          <div className="text-right">
+            <span className="text-3xl font-bold text-blue-600">{formData.avance_actual || 0}%</span>
           </div>
         </div>
+        {formData.volumen_total_planeado > 0 && (
+          <div className="mt-3">
+            <div className="w-full bg-blue-200 rounded-full h-2">
+              <div 
+                className="bg-blue-600 h-2 rounded-full transition-all" 
+                style={{ width: `${Math.min(formData.avance_actual || 0, 100)}%` }} 
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       <div>
