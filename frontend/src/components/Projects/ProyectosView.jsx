@@ -101,7 +101,7 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
     setLoadingClients(true);
     
     try {
-      const response = await axios.get(`${API}/users`);
+      const response = await axios.get(`${API}/auth/users`);
       // Filtrar solo clientes activos
       const clients = response.data.filter(u => u.rol === 'client' && u.activo);
       setAvailableClients(clients);
