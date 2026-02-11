@@ -397,100 +397,175 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                   </div>
                 </div>
 
-                {/* Gráfico de Volumen - Progresión Lineal */}
+                {/* Gráfico de Volumen - Progresión Lineal con Proyección */}
                 {avances.length > 0 && (
                   <div className="p-2 sm:p-4 flex-shrink-0">
                     <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center space-x-2">
-                          <Database className="h-4 sm:h-5 w-4 sm:w-5 text-[#994B49]" />
-                          <h5 className="font-semibold text-gray-900 text-sm sm:text-base">Progresión de Excavación</h5>
-                        </div>
-                        {proyecto.volumen_total_planeado > 0 && (
-                          <div className="text-xs text-gray-500">
-                            Meta: <span className="font-semibold text-[#994B49]">{proyecto.volumen_total_planeado?.toLocaleString()} m³</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="h-[180px] sm:h-[220px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={(() => {
-                            // Ordenar avances por semana y calcular volumen acumulado
-                            const sortedAvances = [...avances]
-                              .sort((a, b) => a.semana - b.semana);
-                            let acumulado = 0;
-                            return sortedAvances.map(a => {
-                              acumulado += (a.volumen_excavacion || 0);
-                              return {
-                                semana: `Sem ${a.semana}`,
-                                volumen: a.volumen_excavacion || 0,
-                                acumulado: acumulado,
-                                meta: proyecto.volumen_total_planeado || 0
-                              };
+                      {(() => {
+                        // Calcular datos del gráfico con proyección
+                        const sortedAvances = [...avances].sort((a, b) => a.semana - b.semana);
+                        let acumulado = 0;
+                        const chartData = sortedAvances.map(a => {
+                          acumulado += (a.volumen_excavacion || 0);
+                          return {
+                            semana: `Sem ${a.semana}`,
+                            semanaNum: a.semana,
+                            volumen: a.volumen_excavacion || 0,
+                            acumulado: acumulado,
+                            proyeccion: null
+                          };
+                        });
+
+                        // Calcular proyección si hay datos y meta
+                        const totalExcavado = acumulado;
+                        const semanasConDatos = sortedAvances.filter(a => a.volumen_excavacion > 0).length;
+                        const ritmoSemanal = semanasConDatos > 0 ? totalExcavado / semanasConDatos : 0;
+                        const metaVolumen = proyecto.volumen_total_planeado || 0;
+                        
+                        let semanasRestantes = 0;
+                        let semanaMeta = null;
+                        
+                        if (ritmoSemanal > 0 && metaVolumen > 0 && totalExcavado < metaVolumen) {
+                          semanasRestantes = Math.ceil((metaVolumen - totalExcavado) / ritmoSemanal);
+                          const ultimaSemana = sortedAvances.length > 0 ? sortedAvances[sortedAvances.length - 1].semana : 0;
+                          semanaMeta = ultimaSemana + semanasRestantes;
+                          
+                          // Agregar puntos de proyección
+                          let proyeccionAcumulado = totalExcavado;
+                          for (let i = 1; i <= Math.min(semanasRestantes, 8); i++) {
+                            proyeccionAcumulado += ritmoSemanal;
+                            if (proyeccionAcumulado > metaVolumen) proyeccionAcumulado = metaVolumen;
+                            chartData.push({
+                              semana: `Sem ${ultimaSemana + i}`,
+                              semanaNum: ultimaSemana + i,
+                              volumen: null,
+                              acumulado: null,
+                              proyeccion: proyeccionAcumulado
                             });
-                          })()}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                            <XAxis dataKey="semana" stroke="#6B7280" fontSize={11} />
-                            <YAxis 
-                              stroke="#6B7280" 
-                              fontSize={11} 
-                              domain={[0, proyecto.volumen_total_planeado > 0 ? proyecto.volumen_total_planeado : 'auto']}
-                              tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : v.toLocaleString()}
-                              label={{ value: 'm³', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: 10, fill: '#6B7280' } }}
-                            />
-                            <Tooltip 
-                              formatter={(value, name) => [
-                                `${value.toLocaleString()} m³`, 
-                                name === 'acumulado' ? 'Total Acumulado' : name === 'meta' ? 'Meta Planeada' : 'Esta Semana'
-                              ]}
-                              contentStyle={{ backgroundColor: '#FFF', border: '1px solid #E5E7EB', borderRadius: '8px' }}
-                            />
-                            {proyecto.volumen_total_planeado > 0 && (
-                              <ReferenceLine 
-                                y={proyecto.volumen_total_planeado} 
-                                stroke="#22C55E" 
-                                strokeWidth={2}
-                                strokeDasharray="8 4"
-                                label={{ value: 'Meta', position: 'right', fill: '#22C55E', fontSize: 10 }}
-                              />
-                            )}
-                            <Line 
-                              type="monotone" 
-                              dataKey="acumulado" 
-                              stroke="#994B49" 
-                              strokeWidth={3}
-                              dot={{ fill: '#994B49', strokeWidth: 2, r: 5 }}
-                              activeDot={{ r: 7, fill: '#7D3C3A' }}
-                              name="acumulado"
-                            />
-                            <Line 
-                              type="monotone" 
-                              dataKey="volumen" 
-                              stroke="#60A5FA" 
-                              strokeWidth={2}
-                              strokeDasharray="5 5"
-                              dot={{ fill: '#60A5FA', strokeWidth: 2, r: 4 }}
-                              name="volumen"
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-                      <div className="flex items-center justify-center gap-4 sm:gap-6 mt-2 text-xs flex-wrap">
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-0.5 bg-[#994B49]"></div>
-                          <span className="text-gray-600">Acumulado</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-0.5 bg-blue-400" style={{borderBottom: '2px dashed'}}></div>
-                          <span className="text-gray-600">Semanal</span>
-                        </div>
-                        {proyecto.volumen_total_planeado > 0 && (
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-0.5 bg-green-500" style={{borderBottom: '2px dashed'}}></div>
-                            <span className="text-gray-600">Meta</span>
-                          </div>
-                        )}
-                      </div>
+                            if (proyeccionAcumulado >= metaVolumen) break;
+                          }
+                          
+                          // Agregar punto de conexión para la proyección
+                          if (chartData.length > sortedAvances.length && sortedAvances.length > 0) {
+                            chartData[sortedAvances.length - 1].proyeccion = totalExcavado;
+                          }
+                        }
+
+                        return (
+                          <>
+                            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                              <div className="flex items-center space-x-2">
+                                <Database className="h-4 sm:h-5 w-4 sm:w-5 text-[#994B49]" />
+                                <h5 className="font-semibold text-gray-900 text-sm sm:text-base">Progresión de Excavación</h5>
+                              </div>
+                              <div className="flex items-center gap-3 text-xs">
+                                {metaVolumen > 0 && (
+                                  <div className="text-gray-500">
+                                    Meta: <span className="font-semibold text-green-600">{metaVolumen.toLocaleString()} m³</span>
+                                  </div>
+                                )}
+                                {ritmoSemanal > 0 && semanasRestantes > 0 && (
+                                  <div className="text-gray-500 bg-orange-50 px-2 py-1 rounded">
+                                    📈 Ritmo: <span className="font-semibold text-orange-600">{ritmoSemanal.toLocaleString(undefined, {maximumFractionDigits: 0})} m³/sem</span>
+                                    <span className="mx-1">•</span>
+                                    Meta en: <span className="font-semibold text-orange-600">~{semanasRestantes} sem</span>
+                                  </div>
+                                )}
+                                {totalExcavado >= metaVolumen && metaVolumen > 0 && (
+                                  <div className="text-green-600 bg-green-50 px-2 py-1 rounded font-semibold">
+                                    ✅ Meta alcanzada
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="h-[180px] sm:h-[220px]">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={chartData}>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                                  <XAxis dataKey="semana" stroke="#6B7280" fontSize={11} />
+                                  <YAxis 
+                                    stroke="#6B7280" 
+                                    fontSize={11} 
+                                    domain={[0, metaVolumen > 0 ? metaVolumen * 1.05 : 'auto']}
+                                    tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : v.toLocaleString()}
+                                    label={{ value: 'm³', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: 10, fill: '#6B7280' } }}
+                                  />
+                                  <Tooltip 
+                                    formatter={(value, name) => {
+                                      if (value === null) return [null, null];
+                                      const label = name === 'acumulado' ? 'Total Acumulado' : 
+                                                   name === 'proyeccion' ? 'Proyección' : 'Esta Semana';
+                                      return [`${value.toLocaleString(undefined, {maximumFractionDigits: 0})} m³`, label];
+                                    }}
+                                    contentStyle={{ backgroundColor: '#FFF', border: '1px solid #E5E7EB', borderRadius: '8px' }}
+                                  />
+                                  {metaVolumen > 0 && (
+                                    <ReferenceLine 
+                                      y={metaVolumen} 
+                                      stroke="#22C55E" 
+                                      strokeWidth={2}
+                                      strokeDasharray="8 4"
+                                      label={{ value: 'Meta', position: 'right', fill: '#22C55E', fontSize: 10 }}
+                                    />
+                                  )}
+                                  <Line 
+                                    type="monotone" 
+                                    dataKey="acumulado" 
+                                    stroke="#994B49" 
+                                    strokeWidth={3}
+                                    dot={{ fill: '#994B49', strokeWidth: 2, r: 5 }}
+                                    activeDot={{ r: 7, fill: '#7D3C3A' }}
+                                    name="acumulado"
+                                    connectNulls={false}
+                                  />
+                                  <Line 
+                                    type="monotone" 
+                                    dataKey="proyeccion" 
+                                    stroke="#F97316" 
+                                    strokeWidth={2}
+                                    strokeDasharray="6 3"
+                                    dot={{ fill: '#F97316', strokeWidth: 2, r: 4 }}
+                                    name="proyeccion"
+                                    connectNulls={false}
+                                  />
+                                  <Line 
+                                    type="monotone" 
+                                    dataKey="volumen" 
+                                    stroke="#60A5FA" 
+                                    strokeWidth={2}
+                                    strokeDasharray="5 5"
+                                    dot={{ fill: '#60A5FA', strokeWidth: 2, r: 4 }}
+                                    name="volumen"
+                                    connectNulls={false}
+                                  />
+                                </LineChart>
+                              </ResponsiveContainer>
+                            </div>
+                            <div className="flex items-center justify-center gap-3 sm:gap-5 mt-2 text-xs flex-wrap">
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-4 h-0.5 bg-[#994B49]"></div>
+                                <span className="text-gray-600">Acumulado</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-4 h-0.5 bg-blue-400"></div>
+                                <span className="text-gray-600">Semanal</span>
+                              </div>
+                              {ritmoSemanal > 0 && semanasRestantes > 0 && (
+                                <div className="flex items-center gap-1.5">
+                                  <div className="w-4 h-0.5 bg-orange-500"></div>
+                                  <span className="text-gray-600">Proyección</span>
+                                </div>
+                              )}
+                              {metaVolumen > 0 && (
+                                <div className="flex items-center gap-1.5">
+                                  <div className="w-4 h-0.5 bg-green-500"></div>
+                                  <span className="text-gray-600">Meta</span>
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 )}
