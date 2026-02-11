@@ -562,7 +562,7 @@ async def asignar_clientes_proyecto(proyecto_id: str, cliente_ids: List[str]):
     
     # Verificar que todos los clientes existen
     for cliente_id in cliente_ids:
-        cliente = await db.users.find_one({"id": cliente_id})
+        cliente = await db.usuarios.find_one({"id": cliente_id})
         if not cliente:
             raise HTTPException(status_code=404, detail=f"Cliente {cliente_id} no encontrado")
     
