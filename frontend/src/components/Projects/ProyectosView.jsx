@@ -94,6 +94,50 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
     }
   };
 
+  const handleOpenAssignModal = async (proyecto) => {
+    setSelectedProjectForAssign(proyecto);
+    setSelectedClients(proyecto.clientes_asignados || []);
+    setShowAssignModal(true);
+    setLoadingClients(true);
+    
+    try {
+      const response = await axios.get(`${API}/users`);
+      // Filtrar solo clientes activos
+      const clients = response.data.filter(u => u.rol === 'client' && u.activo);
+      setAvailableClients(clients);
+    } catch (err) {
+      console.error('Error cargando clientes:', err);
+    } finally {
+      setLoadingClients(false);
+    }
+  };
+
+  const handleToggleClient = (clientId) => {
+    setSelectedClients(prev => 
+      prev.includes(clientId) 
+        ? prev.filter(id => id !== clientId)
+        : [...prev, clientId]
+    );
+  };
+
+  const handleSaveAssignment = async () => {
+    if (!selectedProjectForAssign) return;
+    setSavingAssignment(true);
+    
+    try {
+      await axios.post(`${API}/proyectos/${selectedProjectForAssign.id}/asignar-clientes`, selectedClients);
+      setShowAssignModal(false);
+      setSelectedProjectForAssign(null);
+      if (onShowSuccess) onShowSuccess(`Clientes asignados al proyecto "${selectedProjectForAssign.nombre}"`);
+      await onRefresh();
+    } catch (err) {
+      console.error('Error asignando clientes:', err);
+      alert(err.response?.data?.detail || 'Error al asignar clientes');
+    } finally {
+      setSavingAssignment(false);
+    }
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
