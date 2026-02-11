@@ -488,11 +488,22 @@ async def crear_proyecto(proyecto: ProyectoCreate):
     return proyecto_obj
 
 @api_router.get("/proyectos", response_model=List[Proyecto])
-async def listar_proyectos():
-    proyectos = await db.proyectos.find({}, {"_id": 0}).to_list(1000)
+async def listar_proyectos(cliente_id: Optional[str] = None):
+    """
+    Listar proyectos. Si se proporciona cliente_id, filtra por proyectos asignados a ese cliente.
+    """
+    query = {}
+    if cliente_id:
+        # Filtrar proyectos donde el cliente está en la lista de asignados
+        query = {"clientes_asignados": cliente_id}
+    
+    proyectos = await db.proyectos.find(query, {"_id": 0}).to_list(1000)
     for p in proyectos:
         if isinstance(p.get('created_at'), str):
             p['created_at'] = datetime.fromisoformat(p['created_at'])
+        # Asegurar que clientes_asignados existe
+        if 'clientes_asignados' not in p:
+            p['clientes_asignados'] = []
     return proyectos
 
 @api_router.get("/proyectos/{proyecto_id}", response_model=Proyecto)
