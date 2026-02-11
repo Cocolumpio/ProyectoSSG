@@ -165,6 +165,11 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
   - Campo de entrada con botones de guardar y cancelar
   - Recálculo automático del porcentaje de avance del proyecto
   - Actualización instantánea del gráfico de progresión
+- [x] **COMPLETADO (Feb 2025):** Proyección automática de excavación
+  - Cálculo del ritmo semanal promedio basado en datos históricos
+  - Línea de proyección naranja que muestra la tendencia hacia la meta
+  - Indicador de "Meta en: ~X semanas" con estimación de tiempo
+  - Se muestra "✅ Meta alcanzada" cuando se completa el volumen planeado
 
 ## Backlog (P2)
 - [x] **COMPLETADO:** Vista Admin para Solicitudes de Vuelo
