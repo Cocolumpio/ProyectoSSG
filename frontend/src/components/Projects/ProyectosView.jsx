@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Building2, Plus, Eye, Trash2, Pencil, Layers, X, FileText } from 'lucide-react';
+import { Building2, Plus, Eye, Trash2, Pencil, Layers, X, FileText, Users, UserPlus } from 'lucide-react';
 import { ProjectFormContent } from './ProjectFormContent';
 import { AvancesSemanalesModal } from './AvancesSemanalesModal';
 
@@ -12,6 +12,12 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
   const [editingProject, setEditingProject] = useState(null);
   const [showAvancesModal, setShowAvancesModal] = useState(false);
   const [selectedProjectForAvances, setSelectedProjectForAvances] = useState(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedProjectForAssign, setSelectedProjectForAssign] = useState(null);
+  const [availableClients, setAvailableClients] = useState([]);
+  const [selectedClients, setSelectedClients] = useState([]);
+  const [loadingClients, setLoadingClients] = useState(false);
+  const [savingAssignment, setSavingAssignment] = useState(false);
   const [formData, setFormData] = useState({
     nombre: '', ubicacion: '', direccion: '', coordenadas: { lat: 0, lng: 0 },
     fecha_inicio: '', fecha_fin_planeada: '', descripcion: '', avance_actual: 0,
