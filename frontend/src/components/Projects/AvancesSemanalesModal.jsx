@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { Database, Upload, Plus, Trash2, Calendar, Layers, X, Download, Image, FileArchive, Pencil, Link, Check } from 'lucide-react';
+import { Database, Upload, Plus, Trash2, Calendar, Layers, X, Download, Image, FileArchive, Pencil, Link, Check, Cube, Cloud } from 'lucide-react';
+import { PointCloudViewer } from './PointCloudViewer';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -18,6 +19,8 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
   const [editingVolumen, setEditingVolumen] = useState(false);
   const [editVolumenValue, setEditVolumenValue] = useState(0);
   const [savingVolumen, setSavingVolumen] = useState(false);
+  const [uploadingModel, setUploadingModel] = useState(false);
+  const [viewerMode, setViewerMode] = useState('auto'); // 'auto', 'local', 'pix4d'
   const [formData, setFormData] = useState({
     semana: 1,
     fecha: '',
