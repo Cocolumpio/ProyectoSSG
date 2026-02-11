@@ -656,35 +656,94 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                   </div>
                 )}
 
-                {/* Visor 3D */}
+                {/* Visor 3D - Nube de Puntos */}
                 <div className="p-2 sm:p-4 flex-shrink-0">
                   <div className="bg-white rounded-xl overflow-hidden shadow-sm">
-                    {/* Header del visor con botón de editar link */}
-                    <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100 bg-gray-50">
+                    {/* Header del visor con tabs y controles */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-3 py-2 border-b border-gray-100 bg-gray-50 gap-2">
                       <div className="flex items-center space-x-2">
-                        <Link className="h-4 w-4 text-gray-500" />
-                        <span className="text-xs text-gray-500 truncate max-w-[200px] sm:max-w-[400px]">
-                          {selectedAvance.pix4d_url || 'Sin URL de Pix4D'}
-                        </span>
+                        <Cube className="h-4 w-4 text-[#994B49]" />
+                        <span className="text-sm font-medium text-gray-700">Modelo 3D</span>
+                        
+                        {/* Tabs para cambiar entre visores */}
+                        {(selectedAvance.modelo_3d_url || selectedAvance.pix4d_url) && (
+                          <div className="flex items-center bg-gray-200 rounded-lg p-0.5 ml-2">
+                            {selectedAvance.modelo_3d_url && (
+                              <button
+                                onClick={() => setViewerMode('local')}
+                                className={`flex items-center space-x-1 px-2 py-1 text-xs rounded-md transition-colors ${
+                                  getActiveViewer() === 'local' 
+                                    ? 'bg-white text-[#994B49] shadow-sm' 
+                                    : 'text-gray-600 hover:text-gray-900'
+                                }`}
+                              >
+                                <Cube className="h-3 w-3" />
+                                <span>Local</span>
+                              </button>
+                            )}
+                            {selectedAvance.pix4d_url && (
+                              <button
+                                onClick={() => setViewerMode('pix4d')}
+                                className={`flex items-center space-x-1 px-2 py-1 text-xs rounded-md transition-colors ${
+                                  getActiveViewer() === 'pix4d' 
+                                    ? 'bg-white text-[#994B49] shadow-sm' 
+                                    : 'text-gray-600 hover:text-gray-900'
+                                }`}
+                              >
+                                <Cloud className="h-3 w-3" />
+                                <span>Pix4D</span>
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
+                      
                       {!readOnly && (
-                        <button
-                          onClick={handleEditLinkClick}
-                          className="flex items-center space-x-1 px-2 py-1 text-xs text-[#994B49] hover:bg-[#994B49]/10 rounded transition-colors"
-                          title="Editar link de Pix4D"
-                          data-testid="edit-pix4d-link-btn"
-                        >
-                          <Pencil className="h-3 w-3" />
-                          <span className="hidden sm:inline">Editar Link</span>
-                        </button>
+                        <div className="flex items-center gap-2">
+                          {/* Subir modelo local */}
+                          <label className="flex items-center space-x-1 px-2 py-1.5 text-xs bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] cursor-pointer transition-colors">
+                            <Upload className="h-3 w-3" />
+                            <span>{uploadingModel ? 'Subiendo...' : 'Subir PLY'}</span>
+                            <input
+                              type="file"
+                              accept=".ply,.xyz,.pts,.pcd"
+                              onChange={handleModel3DUpload}
+                              disabled={uploadingModel}
+                              className="hidden"
+                              data-testid="upload-model3d-input"
+                            />
+                          </label>
+                          
+                          {/* Eliminar modelo local */}
+                          {selectedAvance.modelo_3d_url && (
+                            <button
+                              onClick={handleDeleteModel3D}
+                              className="flex items-center space-x-1 px-2 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Eliminar modelo local"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          )}
+                          
+                          {/* Editar link Pix4D */}
+                          <button
+                            onClick={handleEditLinkClick}
+                            className="flex items-center space-x-1 px-2 py-1.5 text-xs text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+                            title="Configurar URL de Pix4D (respaldo)"
+                            data-testid="edit-pix4d-link-btn"
+                          >
+                            <Link className="h-3 w-3" />
+                            <span className="hidden sm:inline">Pix4D URL</span>
+                          </button>
+                        </div>
                       )}
                     </div>
                     
-                    {/* Modal de edición de link */}
+                    {/* Modal de edición de link Pix4D */}
                     {editingLink && (
                       <div className="px-3 py-3 bg-blue-50 border-b border-blue-100">
                         <label className="block text-xs font-medium text-blue-700 mb-1">
-                          URL del Modelo Pix4D
+                          URL del Modelo Pix4D (respaldo)
                         </label>
                         <div className="flex items-center space-x-2">
                           <input
@@ -719,9 +778,20 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                       </div>
                     )}
                     
-                    {/* Iframe del modelo */}
-                    <div className="h-[200px] sm:h-[280px] md:h-[350px]">
-                      {selectedAvance.pix4d_url ? (
+                    {/* Área del visor 3D */}
+                    <div className="h-[250px] sm:h-[320px] md:h-[400px]">
+                      {getActiveViewer() === 'local' ? (
+                        <PointCloudViewer 
+                          modelUrl={selectedAvance.modelo_3d_url}
+                          onError={(msg) => {
+                            console.error(msg);
+                            // Si falla el local, intentar con Pix4D
+                            if (selectedAvance.pix4d_url) {
+                              setViewerMode('pix4d');
+                            }
+                          }}
+                        />
+                      ) : getActiveViewer() === 'pix4d' ? (
                         <iframe
                           src={selectedAvance.pix4d_url}
                           className="w-full h-full border-0"
@@ -729,17 +799,32 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                           allowFullScreen
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
-                          <div className="text-center">
-                            <Layers className="h-12 w-12 mx-auto mb-2" />
-                            <p className="text-sm">No hay modelo 3D configurado</p>
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 text-gray-400">
+                          <div className="text-center p-6">
+                            <Cube className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                            <p className="text-lg font-medium text-gray-500 mb-2">Sin modelo 3D</p>
+                            <p className="text-sm text-gray-400 mb-4">Sube una nube de puntos (.ply) o configura una URL de Pix4D</p>
                             {!readOnly && (
-                              <button
-                                onClick={handleEditLinkClick}
-                                className="mt-2 text-[#994B49] hover:underline text-sm"
-                              >
-                                Agregar URL de Pix4D
-                              </button>
+                              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                                <label className="flex items-center space-x-2 px-4 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] cursor-pointer transition-colors">
+                                  <Upload className="h-4 w-4" />
+                                  <span>Subir archivo PLY</span>
+                                  <input
+                                    type="file"
+                                    accept=".ply,.xyz,.pts,.pcd"
+                                    onChange={handleModel3DUpload}
+                                    disabled={uploadingModel}
+                                    className="hidden"
+                                  />
+                                </label>
+                                <button
+                                  onClick={handleEditLinkClick}
+                                  className="flex items-center space-x-2 px-4 py-2 text-[#994B49] border border-[#994B49] rounded-lg hover:bg-[#994B49]/10 transition-colors"
+                                >
+                                  <Link className="h-4 w-4" />
+                                  <span>Usar URL Pix4D</span>
+                                </button>
+                              </div>
                             )}
                           </div>
                         </div>
