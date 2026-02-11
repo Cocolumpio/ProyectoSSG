@@ -202,7 +202,8 @@ class Proyecto(BaseModel):
     coordenadas: Coordinates
     fecha_inicio: str
     fecha_fin_planeada: str
-    avance_actual: float = 0.0  # Porcentaje 0-100
+    avance_actual: float = 0.0  # Porcentaje 0-100 (calculado automáticamente)
+    volumen_total_planeado: float = 0.0  # Volumen total estimado a excavar en m³
     descripcion: Optional[str] = None
     pix4d_url: Optional[str] = None  # URL del modelo 3D
     volumetria: Optional[Volumetria] = None  # Volumetrías del proyecto
@@ -221,6 +222,7 @@ class ProyectoCreate(BaseModel):
     descripcion: Optional[str] = None
     pix4d_url: Optional[str] = None
     avance_actual: float = 0.0
+    volumen_total_planeado: float = 0.0  # Volumen total estimado a excavar en m³
     volumetria: Optional[Volumetria] = None
     # Configuración de flotilla
     capacidad_camion: float = 25.0
@@ -234,6 +236,7 @@ class ProyectoUpdate(BaseModel):
     fecha_inicio: Optional[str] = None
     fecha_fin_planeada: Optional[str] = None
     avance_actual: Optional[float] = None
+    volumen_total_planeado: Optional[float] = None
     descripcion: Optional[str] = None
     pix4d_url: Optional[str] = None
     volumetria: Optional[Volumetria] = None
