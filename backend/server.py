@@ -327,6 +327,50 @@ class Avance(BaseModel):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
+# ==================== HELPER FUNCTIONS ====================
+
+async def recalcular_avance_proyecto(proyecto_id: str):
+    """
+    Recalcula el porcentaje de avance de un proyecto basándose en:
+    - Volumen total planeado (estimado por el cliente)
+    - Suma de volúmenes excavados en los avances semanales
+    
+    Fórmula: avance_actual = (volumen_excavado_total / volumen_total_planeado) * 100
+    """
+    # Obtener el proyecto
+    proyecto = await db.proyectos.find_one({"id": proyecto_id}, {"_id": 0})
+    if not proyecto:
+        return
+    
+    volumen_total_planeado = proyecto.get('volumen_total_planeado', 0) or 0
+    
+    # Si no hay volumen planeado, no se puede calcular el avance
+    if volumen_total_planeado <= 0:
+        return
+    
+    # Sumar todos los volúmenes de excavación de los avances semanales
+    avances = await db.avances_semanales.find(
+        {"proyecto_id": proyecto_id}, 
+        {"volumen_excavacion": 1}
+    ).to_list(1000)
+    
+    volumen_excavado_total = sum(
+        (a.get('volumen_excavacion', 0) or 0) for a in avances
+    )
+    
+    # Calcular el porcentaje de avance (máximo 100%)
+    nuevo_avance = min((volumen_excavado_total / volumen_total_planeado) * 100, 100)
+    nuevo_avance = round(nuevo_avance, 2)
+    
+    # Actualizar el proyecto
+    await db.proyectos.update_one(
+        {"id": proyecto_id},
+        {"$set": {"avance_actual": nuevo_avance}}
+    )
+    
+    return nuevo_avance
+
+
 # ==================== ROUTES ====================
 
 @api_router.get("/")
