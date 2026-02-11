@@ -167,7 +167,9 @@ class AvanceSemanal(BaseModel):
     proyecto_id: str
     semana: int  # Número de semana (1, 2, 3, etc.)
     fecha: str  # Fecha del avance
-    pix4d_url: str  # URL del modelo 3D de Pix4D
+    pix4d_url: Optional[str] = None  # URL del modelo 3D de Pix4D (opcional ahora)
+    modelo_3d_url: Optional[str] = None  # URL del modelo 3D local (PLY)
+    modelo_3d_tipo: Optional[str] = None  # 'local' o 'pix4d'
     descripcion: Optional[str] = None
     porcentaje_avance: Optional[float] = None  # Porcentaje de avance en esa semana
     volumen_excavacion: Optional[float] = None  # Volumen quitado en m³
@@ -177,7 +179,7 @@ class AvanceSemanal(BaseModel):
 class AvanceSemanalCreate(BaseModel):
     semana: int
     fecha: str
-    pix4d_url: str
+    pix4d_url: Optional[str] = None  # Ahora opcional
     descripcion: Optional[str] = None
     porcentaje_avance: Optional[float] = None
     volumen_excavacion: Optional[float] = None  # Volumen quitado en m³
@@ -188,6 +190,8 @@ class AvanceSemanalUpdate(BaseModel):
     semana: Optional[int] = None
     fecha: Optional[str] = None
     pix4d_url: Optional[str] = None
+    modelo_3d_url: Optional[str] = None
+    modelo_3d_tipo: Optional[str] = None
     descripcion: Optional[str] = None
     porcentaje_avance: Optional[float] = None
     volumen_excavacion: Optional[float] = None
