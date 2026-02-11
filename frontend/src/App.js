@@ -47,8 +47,13 @@ function AppContent() {
 
   const fetchData = useCallback(async () => {
     try {
+      // Si el usuario es cliente, filtrar proyectos por su ID
+      const proyectosUrl = user?.rol === 'client' 
+        ? `${API}/proyectos?cliente_id=${user.id}`
+        : `${API}/proyectos`;
+      
       const [proyectosRes, vuelosRes, estadisticasRes] = await Promise.all([
-        axios.get(`${API}/proyectos`),
+        axios.get(proyectosUrl),
         axios.get(`${API}/vuelos`),
         axios.get(`${API}/estadisticas/resumen`)
       ]);
@@ -71,7 +76,7 @@ function AppContent() {
     } catch (err) {
       console.error('Error fetching data:', err);
     }
-  }, [selectedProyecto]);
+  }, [selectedProyecto, user]);
 
   useEffect(() => {
     if (isAuthenticated) {
