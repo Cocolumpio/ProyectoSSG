@@ -214,6 +214,7 @@ class Proyecto(BaseModel):
     # Configuración de flotilla de camiones
     capacidad_camion: float = 25.0  # m³ por camión (default 25 m³)
     costo_m3: float = 150.0  # Costo por metro cúbico en MXN (default $150)
+    clientes_asignados: List[str] = []  # Lista de IDs de clientes asignados
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ProyectoCreate(BaseModel):
@@ -231,6 +232,7 @@ class ProyectoCreate(BaseModel):
     # Configuración de flotilla
     capacidad_camion: float = 25.0
     costo_m3: float = 150.0  # Costo por metro cúbico en MXN
+    clientes_asignados: List[str] = []  # Lista de IDs de clientes asignados
 
 class ProyectoUpdate(BaseModel):
     nombre: Optional[str] = None
@@ -247,6 +249,7 @@ class ProyectoUpdate(BaseModel):
     # Configuración de flotilla
     capacidad_camion: Optional[float] = None
     costo_m3: Optional[float] = None
+    clientes_asignados: Optional[List[str]] = None  # Lista de IDs de clientes asignados
 
 # Modelo para solicitud de vuelo programado
 class SolicitudVuelo(BaseModel):
