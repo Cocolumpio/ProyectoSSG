@@ -586,7 +586,7 @@ async def obtener_clientes_asignados(proyecto_id: str):
     # Obtener información de los clientes
     clientes = []
     for cliente_id in clientes_ids:
-        cliente = await db.users.find_one({"id": cliente_id}, {"_id": 0, "hashed_password": 0})
+        cliente = await db.usuarios.find_one({"id": cliente_id}, {"_id": 0, "password_hash": 0})
         if cliente:
             clientes.append(cliente)
     
