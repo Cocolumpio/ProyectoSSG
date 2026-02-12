@@ -294,6 +294,8 @@ class Vuelo(BaseModel):
     pix4d_url: Optional[str] = None  # URL del iframe de Pix4D
     estado: str = "completado"  # completado, procesando, fallido
     notas: Optional[str] = None
+    semana: Optional[int] = None  # Número de semana relacionada
+    avance_semanal_id: Optional[str] = None  # ID del avance semanal relacionado
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class VueloCreate(BaseModel):
@@ -305,6 +307,7 @@ class VueloCreate(BaseModel):
     volumetria: Volumetria
     pix4d_url: Optional[str] = None
     notas: Optional[str] = None
+    semana: Optional[int] = None  # Número de semana relacionada
 
 class VueloUpdate(BaseModel):
     proyecto_id: Optional[str] = None
@@ -316,6 +319,7 @@ class VueloUpdate(BaseModel):
     pix4d_url: Optional[str] = None
     notas: Optional[str] = None
     estado: Optional[str] = None
+    semana: Optional[int] = None  # Número de semana relacionada
 
 class AvanceHito(BaseModel):
     nombre: str
