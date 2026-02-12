@@ -140,6 +140,37 @@ export function VuelosView({ vuelos, proyectos, onDelete, onRefresh }) {
                   <input type="date" name="fecha_vuelo" value={formData.fecha_vuelo} onChange={handleInputChange} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]" data-testid="vuelo-fecha-input" />
                 </div>
               </div>
+              
+              {/* Selector de Semana */}
+              <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Calendar className="h-4 w-4 text-orange-600" />
+                  <label className="text-sm font-medium text-orange-800">Vincular a Avance Semanal</label>
+                </div>
+                <select 
+                  name="semana" 
+                  value={formData.semana || ''} 
+                  onChange={handleInputChange} 
+                  className="w-full px-4 py-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white" 
+                  data-testid="vuelo-semana-select"
+                >
+                  <option value="">Sin vincular</option>
+                  {avancesSemanales.length > 0 ? (
+                    avancesSemanales.map((a) => (
+                      <option key={a.id} value={a.semana}>Semana {a.semana} - {a.fecha}</option>
+                    ))
+                  ) : (
+                    // Generar opciones de semana 1-12 si no hay avances
+                    [...Array(12)].map((_, i) => (
+                      <option key={i + 1} value={i + 1}>Semana {i + 1} (Nueva)</option>
+                    ))
+                  )}
+                </select>
+                <p className="text-xs text-orange-600 mt-1">
+                  Al vincular, el volumen excavado se sincronizará con el avance semanal correspondiente
+                </p>
+              </div>
+              
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Duración (min) *</label>
