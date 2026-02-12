@@ -546,6 +546,10 @@ async def actualizar_proyecto(proyecto_id: str, proyecto_update: ProyectoUpdate)
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
     
+    # Recalcular el avance si se actualizó el volumen planeado
+    if 'volumen_total_planeado' in update_data:
+        await recalcular_avance_proyecto(proyecto_id)
+    
     # Retornar el proyecto actualizado
     proyecto = await db.proyectos.find_one({"id": proyecto_id}, {"_id": 0})
     if isinstance(proyecto.get('created_at'), str):
