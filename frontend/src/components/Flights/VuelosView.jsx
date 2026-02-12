@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Plane, Plus, Trash2, Pencil, X } from 'lucide-react';
+import { Plane, Plus, Trash2, Pencil, X, Calendar } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -8,9 +8,11 @@ export function VuelosView({ vuelos, proyectos, onDelete, onRefresh }) {
   const [filtroProyecto, setFiltroProyecto] = useState('todos');
   const [showForm, setShowForm] = useState(false);
   const [editingVuelo, setEditingVuelo] = useState(null);
+  const [avancesSemanales, setAvancesSemanales] = useState([]);
   const [formData, setFormData] = useState({
     proyecto_id: '', fecha_vuelo: '', duracion_minutos: 30, area_cubierta: 1000, num_imagenes: 100,
-    volumetria: { excavacion: 0, relleno: 0, materiales: 0 }, pix4d_url: '', notas: '', estado: 'completado'
+    volumetria: { volumen_excavado: 0, volumen_relleno: 0, corte: 0 }, pix4d_url: '', notas: '', estado: 'completado',
+    semana: null
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -18,11 +20,30 @@ export function VuelosView({ vuelos, proyectos, onDelete, onRefresh }) {
   const vuelosFiltrados = filtroProyecto === 'todos' ? vuelos : vuelos.filter(v => v.proyecto_id === filtroProyecto);
   const getProyectoNombre = (proyectoId) => proyectos.find(p => p.id === proyectoId)?.nombre || 'Proyecto desconocido';
 
+  // Cargar avances semanales cuando cambia el proyecto seleccionado
+  useEffect(() => {
+    const fetchAvances = async () => {
+      if (formData.proyecto_id) {
+        try {
+          const res = await axios.get(`${API}/proyectos/${formData.proyecto_id}/avances-semanales`);
+          setAvancesSemanales(res.data);
+        } catch (err) {
+          console.error('Error cargando avances:', err);
+          setAvancesSemanales([]);
+        }
+      } else {
+        setAvancesSemanales([]);
+      }
+    };
+    fetchAvances();
+  }, [formData.proyecto_id]);
+
   const resetForm = () => {
     setFormData({
       proyecto_id: proyectos.length > 0 ? proyectos[0].id : '', fecha_vuelo: new Date().toISOString().split('T')[0],
       duracion_minutos: 30, area_cubierta: 1000, num_imagenes: 100,
-      volumetria: { excavacion: 0, relleno: 0, materiales: 0 }, pix4d_url: '', notas: '', estado: 'completado'
+      volumetria: { volumen_excavado: 0, volumen_relleno: 0, corte: 0 }, pix4d_url: '', notas: '', estado: 'completado',
+      semana: null
     });
   };
 
@@ -32,8 +53,9 @@ export function VuelosView({ vuelos, proyectos, onDelete, onRefresh }) {
       proyecto_id: vuelo.proyecto_id || '', fecha_vuelo: vuelo.fecha_vuelo || '',
       duracion_minutos: vuelo.duracion_minutos || 30, area_cubierta: vuelo.area_cubierta || 1000,
       num_imagenes: vuelo.num_imagenes || 100,
-      volumetria: vuelo.volumetria || { excavacion: 0, relleno: 0, materiales: 0 },
-      pix4d_url: vuelo.pix4d_url || '', notas: vuelo.notas || '', estado: vuelo.estado || 'completado'
+      volumetria: vuelo.volumetria || { volumen_excavado: 0, volumen_relleno: 0, corte: 0 },
+      pix4d_url: vuelo.pix4d_url || '', notas: vuelo.notas || '', estado: vuelo.estado || 'completado',
+      semana: vuelo.semana || null
     });
     setShowForm(true);
     setError(null);
@@ -62,7 +84,7 @@ export function VuelosView({ vuelos, proyectos, onDelete, onRefresh }) {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: name === 'semana' ? (value ? parseInt(value) : null) : value }));
   };
 
   const handleVolumetriaChange = (field, value) => {
