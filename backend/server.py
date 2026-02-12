@@ -683,6 +683,11 @@ async def actualizar_vuelo(vuelo_id: str, vuelo_update: VueloUpdate):
     if not update_data:
         raise HTTPException(status_code=400, detail="No se proporcionaron campos para actualizar")
     
+    # Obtener el vuelo actual
+    vuelo_actual = await db.vuelos.find_one({"id": vuelo_id})
+    if not vuelo_actual:
+        raise HTTPException(status_code=404, detail="Vuelo no encontrado")
+    
     # Convertir volumetria a dict si existe
     if 'volumetria' in update_data and update_data['volumetria']:
         if hasattr(update_data['volumetria'], 'model_dump'):
@@ -693,8 +698,57 @@ async def actualizar_vuelo(vuelo_id: str, vuelo_update: VueloUpdate):
         {"$set": update_data}
     )
     
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Vuelo no encontrado")
+    # Si se actualizó la volumetría o la semana, sincronizar con el avance semanal
+    proyecto_id = update_data.get('proyecto_id', vuelo_actual.get('proyecto_id'))
+    semana = update_data.get('semana', vuelo_actual.get('semana'))
+    
+    if semana and proyecto_id:
+        volumen_excavacion = 0
+        if 'volumetria' in update_data:
+            volumen_excavacion = update_data['volumetria'].get('volumen_excavado', 0)
+        elif vuelo_actual.get('volumetria'):
+            volumen_excavacion = vuelo_actual['volumetria'].get('volumen_excavado', 0)
+        
+        # Buscar o crear el avance semanal
+        avance = await db.avances_semanales.find_one({
+            "proyecto_id": proyecto_id,
+            "semana": semana
+        })
+        
+        if avance:
+            # Actualizar el volumen del avance
+            await db.avances_semanales.update_one(
+                {"id": avance['id']},
+                {"$set": {"volumen_excavacion": volumen_excavacion}}
+            )
+            # Actualizar el vuelo con la referencia al avance
+            await db.vuelos.update_one(
+                {"id": vuelo_id},
+                {"$set": {"avance_semanal_id": avance['id']}}
+            )
+        else:
+            # Crear un nuevo avance semanal
+            fecha_vuelo = update_data.get('fecha_vuelo', vuelo_actual.get('fecha_vuelo', ''))
+            nuevo_avance_id = str(uuid.uuid4())
+            nuevo_avance = {
+                "id": nuevo_avance_id,
+                "proyecto_id": proyecto_id,
+                "semana": semana,
+                "fecha": fecha_vuelo,
+                "volumen_excavacion": volumen_excavacion,
+                "pix4d_url": update_data.get('pix4d_url', vuelo_actual.get('pix4d_url')),
+                "descripcion": f"Avance creado desde vuelo",
+                "imagenes": [],
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.avances_semanales.insert_one(nuevo_avance)
+            await db.vuelos.update_one(
+                {"id": vuelo_id},
+                {"$set": {"avance_semanal_id": nuevo_avance_id}}
+            )
+        
+        # Recalcular el avance del proyecto
+        await recalcular_avance_proyecto(proyecto_id)
     
     vuelo = await db.vuelos.find_one({"id": vuelo_id}, {"_id": 0})
     if isinstance(vuelo.get('created_at'), str):
