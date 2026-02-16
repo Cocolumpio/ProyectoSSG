@@ -202,21 +202,28 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
   - **Prioridad:** Archivos PLY locales tienen prioridad sobre Pix4D
   - **Fix:** Corregido bug de re-renders infinitos usando `selectedProyecto?.id` como dependencia
 - [x] **COMPLETADO (Feb 2025):** Generación automática de thumbnails para modelos PLY
-  - Backend: Genera miniatura PNG al subir archivo PLY usando matplotlib y plyfile
+  - Backend: Genera miniatura PNG con **3 vistas** (perspectiva, superior, frontal) usando matplotlib y plyfile
   - Endpoint para regenerar thumbnails: POST `/api/proyectos/{id}/avances-semanales/{avance_id}/regenerar-thumbnail`
   - Frontend: Muestra thumbnail con overlay de hover para ver modelo completo
   - Modal de visor 3D con PointCloudViewer para modelo completo
+- [x] **COMPLETADO (Feb 2025):** Refactorización del Backend
+  - Creados módulos en `/backend/models/schemas.py` con todos los modelos Pydantic
+  - Creados servicios en `/backend/services/`:
+    - `database.py` - Conexión MongoDB y colecciones
+    - `auth.py` - Autenticación JWT y funciones de usuario
+    - `thumbnails.py` - Generación de thumbnails para modelos PLY
+  - Limpiada colección obsoleta `users` de MongoDB (ahora solo usa `usuarios`)
 
 ## Backlog (P2)
 - [x] **COMPLETADO:** Vista Admin para Solicitudes de Vuelo
 - [x] **COMPLETADO:** Notificación al cliente cuando se confirma un vuelo
 - [x] **COMPLETADO:** Funcionalidad DELETE para Vuelos (ya existía en backend y frontend)
 - [x] **COMPLETADO:** Gestión de usuarios desde panel admin
-- [x] **COMPLETADO:** Estructura de carpetas preparada para refactorización gradual del backend
-  - `/backend/models/` - Modelos Pydantic
-  - `/backend/services/` - Database, Auth services
+- [x] **COMPLETADO:** Estructura de carpetas y módulos para el backend
+  - `/backend/models/` - Modelos Pydantic (`schemas.py`)
+  - `/backend/services/` - Database, Auth, Thumbnails services
   - `/backend/routes/` - Rutas de API (estructura lista)
-- [ ] Completar migración gradual de server.py a módulos
+- [ ] Migrar endpoints de `server.py` a módulos de rutas (opcional, baja prioridad)
 - [ ] Funcionalidad de carga de archivos LAZ/LAS para archivo
 
 ## API Endpoints
