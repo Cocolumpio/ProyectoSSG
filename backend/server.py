@@ -21,6 +21,7 @@ import io
 import resend
 from passlib.context import CryptContext
 from jose import JWTError, jwt
+from concurrent.futures import ThreadPoolExecutor
 
 # PDF Generation
 from reportlab.lib import colors
@@ -31,6 +32,9 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.graphics.shapes import Drawing, Rect
 from reportlab.graphics.charts.barcharts import VerticalBarChart
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+
+# Thread pool for CPU-intensive tasks
+thumbnail_executor = ThreadPoolExecutor(max_workers=2)
 
 
 ROOT_DIR = Path(__file__).parent
