@@ -4,6 +4,11 @@ import { KPICard } from '../common/KPICard';
 import { MapRecenter } from '../common/MapRecenter';
 
 export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onProyectoClick, mapCenter }) {
+  // Vuelos del proyecto seleccionado
+  const vuelosDelProyecto = selectedProyecto
+    ? vuelos.filter(v => v.proyecto_id === selectedProyecto.id)
+    : [];
+
   // Calcular el volumen total excavado de todos los proyectos
   const volumenTotalExcavado = proyectos.reduce((total, p) => {
     const volPlaneado = p.volumen_total_planeado || 0;
