@@ -181,6 +181,15 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
   - Filtrado automático de proyectos por cliente asignado
   - Indicador visual de clientes asignados en tarjetas de proyecto
   - Vista de cliente solo muestra proyectos donde está asignado
+- [x] **COMPLETADO (Feb 2025):** Corrección del cálculo de porcentaje de avance
+  - Recálculo automático cuando se actualiza el volumen planeado del proyecto
+  - El porcentaje ahora se limita a 100% cuando se excede la meta
+  - Sincronización correcta entre avances semanales y porcentaje del proyecto
+- [x] **COMPLETADO (Feb 2025):** Vinculación de vuelos con avances semanales
+  - Selector de semana en el formulario de vuelos
+  - Sincronización automática del volumen excavado entre vuelo y avance semanal
+  - Columna "Semana" en la tabla de vuelos
+  - Al crear/editar un vuelo vinculado, se actualiza el avance semanal correspondiente
 
 ## Backlog (P2)
 - [x] **COMPLETADO:** Vista Admin para Solicitudes de Vuelo
