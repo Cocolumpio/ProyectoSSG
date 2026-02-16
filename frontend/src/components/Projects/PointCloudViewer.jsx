@@ -55,13 +55,33 @@ export function PointCloudViewer({ modelUrl, onError }) {
     gridHelper.rotation.x = Math.PI / 2;
     scene.add(gridHelper);
 
-    // Load PLY
+    // Load PLY with timeout detection
     const loader = new PLYLoader();
     const fullUrl = modelUrl.startsWith('http') ? modelUrl : `${process.env.REACT_APP_BACKEND_URL}${modelUrl}`;
+    
+    let lastProgress = 0;
+    let stuckCounter = 0;
+    const STUCK_THRESHOLD = 15; // 15 seconds without progress
+    
+    const progressChecker = setInterval(() => {
+      if (progress === lastProgress && progress < 100) {
+        stuckCounter++;
+        if (stuckCounter >= STUCK_THRESHOLD) {
+          clearInterval(progressChecker);
+          console.warn('Model loading stalled, triggering error callback');
+          setLoading(false);
+          if (onError) onError('Timeout: El modelo es demasiado grande');
+        }
+      } else {
+        stuckCounter = 0;
+        lastProgress = progress;
+      }
+    }, 1000);
     
     loader.load(
       fullUrl,
       (geometry) => {
+        clearInterval(progressChecker);
         // Center the geometry
         geometry.computeBoundingBox();
         const center = new THREE.Vector3();
@@ -113,6 +133,7 @@ export function PointCloudViewer({ modelUrl, onError }) {
         }
       },
       (error) => {
+        clearInterval(progressChecker);
         console.error('Error loading PLY:', error);
         setLoading(false);
         if (onError) onError('Error cargando el modelo 3D');
