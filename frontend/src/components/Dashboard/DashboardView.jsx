@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { Building2, Plane, TrendingUp, Database, Map as MapIcon, Box, Calendar, Truck, DollarSign, BarChart3, Layers } from 'lucide-react';
+import { Building2, Plane, TrendingUp, Database, Map as MapIcon, Box, Calendar, Truck, DollarSign, BarChart3, Layers, ExternalLink } from 'lucide-react';
 import { KPICard } from '../common/KPICard';
 import { MapRecenter } from '../common/MapRecenter';
 import { PointCloudViewer } from '../Projects/PointCloudViewer';
@@ -11,6 +11,7 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onProyectoClick, mapCenter }) {
   const [avancesSemanales, setAvancesSemanales] = useState([]);
   const [loadingAvances, setLoadingAvances] = useState(false);
+  const [model3dError, setModel3dError] = useState(false);
   
   // Vuelos del proyecto seleccionado
   const vuelosDelProyecto = selectedProyecto
