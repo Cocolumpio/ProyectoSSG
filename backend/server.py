@@ -62,6 +62,76 @@ db = client[os.environ['DB_NAME']]
 UPLOAD_DIR = ROOT_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
+# Thumbnail generation function
+def generate_ply_thumbnail(ply_path: str, output_path: str, width: int = 400, height: int = 300) -> bool:
+    """
+    Genera una miniatura de una nube de puntos PLY usando Open3D.
+    Ejecutar en thread separado para no bloquear el event loop.
+    """
+    try:
+        import open3d as o3d
+        
+        # Leer la nube de puntos
+        pcd = o3d.io.read_point_cloud(str(ply_path))
+        
+        if pcd.is_empty():
+            logging.warning(f"Nube de puntos vacía: {ply_path}")
+            return False
+        
+        # Submuestrear si hay muchos puntos (para rendimiento)
+        num_points = len(pcd.points)
+        if num_points > 500000:
+            # Reducir a ~500k puntos para el thumbnail
+            ratio = 500000 / num_points
+            pcd = pcd.random_down_sample(ratio)
+        
+        # Centrar la geometría
+        pcd.translate(-pcd.get_center())
+        
+        # Si no tiene colores, asignar color por defecto
+        if not pcd.has_colors():
+            pcd.paint_uniform_color([0.6, 0.3, 0.29])  # Color rojo ladrillo similar al tema
+        
+        # Configurar el renderizador offscreen
+        vis = o3d.visualization.Visualizer()
+        vis.create_window(visible=False, width=width, height=height)
+        vis.add_geometry(pcd)
+        
+        # Configurar la vista
+        ctr = vis.get_view_control()
+        ctr.set_zoom(0.7)
+        ctr.set_front([0.5, 0.5, 0.5])
+        ctr.set_lookat([0, 0, 0])
+        ctr.set_up([0, 0, 1])
+        
+        # Configurar render options
+        opt = vis.get_render_option()
+        opt.background_color = np.array([0.1, 0.1, 0.18])  # Fondo oscuro
+        opt.point_size = 2.0
+        
+        # Renderizar y guardar
+        vis.poll_events()
+        vis.update_renderer()
+        vis.capture_screen_image(str(output_path), do_render=True)
+        vis.destroy_window()
+        
+        logging.info(f"Thumbnail generado: {output_path}")
+        return True
+        
+    except Exception as e:
+        logging.error(f"Error generando thumbnail: {e}")
+        return False
+
+async def generate_thumbnail_async(ply_path: str, output_path: str) -> bool:
+    """Wrapper async para generar thumbnail en thread pool"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        thumbnail_executor, 
+        generate_ply_thumbnail, 
+        ply_path, 
+        output_path
+    )
+
 # Create the main app without a prefix
 app = FastAPI()
 
