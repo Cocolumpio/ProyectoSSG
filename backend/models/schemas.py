@@ -154,6 +154,57 @@ class ProyectoUpdate(BaseModel):
     costo_m3: Optional[float] = None
 
 
+# --- Frentes y Cronograma Models ---
+class Actividad(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    descripcion: str
+    num_pilas: int = 0
+    num_anclas: int = 0
+    fecha_inicio: str
+    fecha_fin: str
+    fecha_descabece: Optional[str] = None
+    dias: int = 0
+    pilas_completadas: int = 0
+    anclas_instaladas: int = 0
+    estado: str = "pendiente"  # pendiente, en_progreso, completada
+
+
+class Frente(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    proyecto_id: str
+    nombre: str
+    descripcion: Optional[str] = None
+    actividades: List[Actividad] = []
+    orden: int = 1
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class FrenteCreate(BaseModel):
+    nombre: str
+    descripcion: Optional[str] = None
+    actividades: List[Actividad] = []
+    orden: int = 1
+
+
+class AnalisisFotoIA(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    proyecto_id: str
+    avance_id: str
+    semana: int
+    fecha_analisis: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    pilas_detectadas: int = 0
+    anclas_detectadas: int = 0
+    pilas_en_proceso: int = 0
+    porcentaje_avance_estimado: float = 0.0
+    estado_proyecto: str = "EN_TIEMPO"  # EN_TIEMPO, ADELANTADO, RETRASADO
+    confianza_deteccion: str = "MEDIA"  # ALTA, MEDIA, BAJA
+    observaciones: Optional[str] = None
+    recomendaciones: Optional[str] = None
+    imagen_url: Optional[str] = None
+
+
+
+
 # --- Flight Models ---
 class Vuelo(BaseModel):
     model_config = ConfigDict(extra="ignore")
