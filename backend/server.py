@@ -244,6 +244,7 @@ class AvanceSemanal(BaseModel):
     pix4d_url: Optional[str] = None  # URL del modelo 3D de Pix4D (opcional ahora)
     modelo_3d_url: Optional[str] = None  # URL del modelo 3D local (PLY)
     modelo_3d_tipo: Optional[str] = None  # 'local' o 'pix4d'
+    thumbnail_url: Optional[str] = None  # URL de la miniatura del modelo 3D
     descripcion: Optional[str] = None
     porcentaje_avance: Optional[float] = None  # Porcentaje de avance en esa semana
     volumen_excavacion: Optional[float] = None  # Volumen quitado en m³
