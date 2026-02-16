@@ -65,63 +65,52 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 # Thumbnail generation function
 def generate_ply_thumbnail(ply_path: str, output_path: str, width: int = 400, height: int = 300) -> bool:
     """
-    Genera una miniatura de una nube de puntos PLY usando matplotlib.
-    Más eficiente que Open3D para archivos grandes.
+    Genera una miniatura de una nube de puntos PLY usando matplotlib y plyfile.
+    Maneja tanto formato ASCII como binario.
     """
     try:
         import matplotlib
         matplotlib.use('Agg')  # Backend sin GUI
         import matplotlib.pyplot as plt
-        from mpl_toolkits.mplot3d import Axes3D
+        from plyfile import PlyData
         
-        # Leer el archivo PLY manualmente para eficiencia
-        points = []
-        colors = []
-        with open(ply_path, 'rb') as f:
-            # Leer header
-            header_lines = []
-            while True:
-                line = f.readline().decode('utf-8', errors='ignore').strip()
-                header_lines.append(line)
-                if line == 'end_header':
-                    break
-            
-            # Parsear header para obtener número de vértices
-            num_vertices = 0
-            has_color = False
-            for line in header_lines:
-                if line.startswith('element vertex'):
-                    num_vertices = int(line.split()[-1])
-                if 'red' in line or 'r ' in line:
-                    has_color = True
-            
-            # Leer solo una muestra de puntos (máximo 50,000 para el thumbnail)
-            sample_rate = max(1, num_vertices // 50000)
-            
-            for i in range(num_vertices):
-                line = f.readline()
-                if i % sample_rate == 0:
-                    try:
-                        # Formato típico: x y z [r g b] ...
-                        parts = line.decode('utf-8', errors='ignore').strip().split()
-                        if len(parts) >= 3:
-                            x, y, z = float(parts[0]), float(parts[1]), float(parts[2])
-                            points.append([x, y, z])
-                            if has_color and len(parts) >= 6:
-                                r, g, b = int(parts[3]), int(parts[4]), int(parts[5])
-                                colors.append([r/255, g/255, b/255])
-                    except:
-                        continue
+        # Leer el archivo PLY con plyfile (maneja ASCII y binario)
+        plydata = PlyData.read(ply_path)
+        vertex = plydata['vertex']
         
-        if len(points) < 100:
-            logging.warning(f"Muy pocos puntos leídos del archivo PLY: {len(points)}")
-            return False
+        # Extraer coordenadas
+        x = np.array(vertex['x'])
+        y = np.array(vertex['y'])
+        z = np.array(vertex['z'])
         
-        points = np.array(points)
+        num_points = len(x)
+        logging.info(f"Archivo PLY tiene {num_points} puntos")
+        
+        # Submuestrear si hay muchos puntos (máximo 50,000 para el thumbnail)
+        if num_points > 50000:
+            indices = np.random.choice(num_points, 50000, replace=False)
+            x = x[indices]
+            y = y[indices]
+            z = z[indices]
+        
+        # Extraer colores si existen
+        colors = None
+        try:
+            r = np.array(vertex['red']) / 255.0
+            g = np.array(vertex['green']) / 255.0
+            b = np.array(vertex['blue']) / 255.0
+            if num_points > 50000:
+                r = r[indices]
+                g = g[indices]
+                b = b[indices]
+            colors = np.column_stack([r, g, b])
+        except:
+            pass
         
         # Centrar los puntos
-        centroid = np.mean(points, axis=0)
-        points = points - centroid
+        x = x - np.mean(x)
+        y = y - np.mean(y)
+        z = z - np.mean(z)
         
         # Crear la figura
         fig = plt.figure(figsize=(width/100, height/100), dpi=100)
@@ -130,19 +119,17 @@ def generate_ply_thumbnail(ply_path: str, output_path: str, width: int = 400, he
         fig.patch.set_facecolor('#1a1a2e')
         
         # Plotear los puntos
-        if colors and len(colors) == len(points):
-            ax.scatter(points[:, 0], points[:, 1], points[:, 2], 
-                      c=colors, s=0.5, alpha=0.8)
+        if colors is not None:
+            ax.scatter(x, y, z, c=colors, s=0.3, alpha=0.8)
         else:
-            ax.scatter(points[:, 0], points[:, 1], points[:, 2], 
-                      c='#994B49', s=0.5, alpha=0.8)
+            ax.scatter(x, y, z, c='#994B49', s=0.3, alpha=0.8)
         
         # Configurar la vista
         ax.view_init(elev=30, azim=45)
         ax.set_axis_off()
         
         # Ajustar límites para que se vea bien
-        max_range = np.max(np.abs(points)) * 1.1
+        max_range = max(np.max(np.abs(x)), np.max(np.abs(y)), np.max(np.abs(z))) * 1.1
         ax.set_xlim([-max_range, max_range])
         ax.set_ylim([-max_range, max_range])
         ax.set_zlim([-max_range, max_range])
@@ -152,7 +139,7 @@ def generate_ply_thumbnail(ply_path: str, output_path: str, width: int = 400, he
                    facecolor='#1a1a2e', edgecolor='none')
         plt.close(fig)
         
-        logging.info(f"Thumbnail generado: {output_path} ({len(points)} puntos)")
+        logging.info(f"Thumbnail generado: {output_path} ({len(x)} puntos)")
         return True
         
     except Exception as e:
