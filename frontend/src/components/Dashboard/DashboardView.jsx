@@ -225,37 +225,75 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                 </div>
                 <div className="h-[300px] rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
                   {loadingAvances ? (
-                    <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-full h-full flex items-center justify-center bg-[#1a1a2e]">
                       <div className="w-8 h-8 border-4 border-[#994B49] border-t-transparent rounded-full animate-spin" />
                     </div>
-                  ) : ultimoAvance?.pix4d_url || ultimoAvance?.modelo_3d_url ? (
+                  ) : ultimoAvance?.modelo_3d_url ? (
+                    // Prioridad al modelo PLY local
+                    <div className="w-full h-full relative group">
+                      {ultimoAvance.thumbnail_url ? (
+                        // Si hay thumbnail, mostrarlo con opción de ver el visor completo
+                        <>
+                          <img
+                            src={`${process.env.REACT_APP_BACKEND_URL}${ultimoAvance.thumbnail_url}`}
+                            alt={`Modelo 3D Semana ${ultimoAvance.semana}`}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button
+                              onClick={() => setShowFullViewer(true)}
+                              className="flex items-center gap-2 bg-[#994B49] hover:bg-[#B85C5A] text-white px-4 py-2 rounded-lg transition-colors"
+                            >
+                              <Maximize2 className="h-4 w-4" />
+                              Ver Modelo 3D
+                            </button>
+                          </div>
+                          <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                            Semana {ultimoAvance.semana}
+                          </div>
+                        </>
+                      ) : (
+                        // Si no hay thumbnail, mostrar placeholder con botón
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1a1a2e] to-[#2d2d44]">
+                          <div className="text-center p-6">
+                            <Box className="h-16 w-16 mx-auto mb-4 text-[#994B49]" />
+                            <h4 className="text-white font-semibold mb-2">Modelo 3D Local</h4>
+                            <p className="text-gray-400 text-sm mb-4">
+                              Semana {ultimoAvance.semana} - {ultimoAvance.fecha}
+                            </p>
+                            <button
+                              onClick={() => setShowFullViewer(true)}
+                              className="inline-flex items-center gap-2 bg-[#994B49] hover:bg-[#B85C5A] text-white px-4 py-2 rounded-lg transition-colors"
+                            >
+                              <Maximize2 className="h-4 w-4" />
+                              Ver Modelo 3D
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : ultimoAvance?.pix4d_url ? (
+                    // Fallback a Pix4D si no hay modelo local
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1a1a2e] to-[#2d2d44]">
                       <div className="text-center p-6">
                         <Box className="h-16 w-16 mx-auto mb-4 text-[#994B49]" />
-                        <h4 className="text-white font-semibold mb-2">Modelo 3D Disponible</h4>
+                        <h4 className="text-white font-semibold mb-2">Modelo 3D en Pix4D</h4>
                         <p className="text-gray-400 text-sm mb-4">
                           Semana {ultimoAvance.semana} - {ultimoAvance.fecha}
                         </p>
-                        {ultimoAvance.pix4d_url && (
-                          <a
-                            href={ultimoAvance.pix4d_url.replace('/embed/', '/dataset/')}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 bg-[#994B49] hover:bg-[#B85C5A] text-white px-4 py-2 rounded-lg transition-colors"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                            Ver en Pix4D
-                          </a>
-                        )}
-                        {ultimoAvance.modelo_3d_url && !ultimoAvance.pix4d_url && (
-                          <p className="text-gray-500 text-xs mt-2">
-                            Modelo local disponible en Avances Semanales
-                          </p>
-                        )}
+                        <a
+                          href={ultimoAvance.pix4d_url.replace('/embed/', '/dataset/')}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 bg-[#994B49] hover:bg-[#B85C5A] text-white px-4 py-2 rounded-lg transition-colors"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          Ver en Pix4D
+                        </a>
                       </div>
                     </div>
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                    <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
                       <div className="text-center">
                         <Layers className="h-12 w-12 mx-auto mb-2 text-gray-300" />
                         <p className="text-sm">Sin modelo 3D disponible</p>
