@@ -233,11 +233,8 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                       title="Modelo 3D Pix4D"
                       allowFullScreen
                     />
-                  ) : ultimoAvance?.modelo_3d_url && !model3dError ? (
-                    <PointCloudViewer 
-                      modelUrl={ultimoAvance.modelo_3d_url} 
-                      onError={() => setModel3dError(true)}
-                    />
+                  ) : ultimoAvance?.modelo_3d_url ? (
+                    <PointCloudViewer modelUrl={ultimoAvance.modelo_3d_url} />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400">
                       <div className="text-center">
