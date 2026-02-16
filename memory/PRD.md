@@ -192,13 +192,20 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
   - Al crear/editar un vuelo vinculado, se actualiza el avance semanal correspondiente
 - [x] **COMPLETADO (Feb 2025):** Vista detallada de proyecto en Dashboard
   - Al seleccionar un proyecto, se muestra una sección expandida con:
-    - Modelo 3D: Enlace para abrir en Pix4D (el iframe tiene restricciones CSP)
+    - **Thumbnail del modelo 3D** generado automáticamente al subir archivo PLY
+    - Visor 3D completo en modal al hacer clic en "Ver Modelo 3D"
     - Volumen excavado vs. planeado con barra de progreso
     - Semanas trabajadas / total semanas
     - Viajes de camión estimados
     - Costo total de flotilla ($150/m³ por defecto)
     - Bitácora de vuelos del proyecto
+  - **Prioridad:** Archivos PLY locales tienen prioridad sobre Pix4D
   - **Fix:** Corregido bug de re-renders infinitos usando `selectedProyecto?.id` como dependencia
+- [x] **COMPLETADO (Feb 2025):** Generación automática de thumbnails para modelos PLY
+  - Backend: Genera miniatura PNG al subir archivo PLY usando matplotlib y plyfile
+  - Endpoint para regenerar thumbnails: POST `/api/proyectos/{id}/avances-semanales/{avance_id}/regenerar-thumbnail`
+  - Frontend: Muestra thumbnail con overlay de hover para ver modelo completo
+  - Modal de visor 3D con PointCloudViewer para modelo completo
 
 ## Backlog (P2)
 - [x] **COMPLETADO:** Vista Admin para Solicitudes de Vuelo
