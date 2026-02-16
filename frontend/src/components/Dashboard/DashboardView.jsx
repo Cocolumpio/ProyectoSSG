@@ -26,7 +26,7 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
   // Cargar avances semanales del proyecto seleccionado
   useEffect(() => {
     const fetchAvances = async () => {
-      if (!selectedProyecto) {
+      if (!selectedProyecto?.id) {
         setAvancesSemanales([]);
         return;
       }
@@ -46,7 +46,8 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
     };
     
     fetchAvances();
-  }, [selectedProyecto]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProyecto?.id]);
 
   // Calcular estadísticas del proyecto seleccionado
   const calcularEstadisticasProyecto = () => {
