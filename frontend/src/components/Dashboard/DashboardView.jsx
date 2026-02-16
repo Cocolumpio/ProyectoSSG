@@ -1,21 +1,15 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Building2, Plane, TrendingUp, Database, Map as MapIcon } from 'lucide-react';
 import { KPICard } from '../common/KPICard';
 import { MapRecenter } from '../common/MapRecenter';
-import VisorPix4D from '../VisorPix4D';
 
 export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onProyectoClick, mapCenter }) {
-  const vuelosDelProyecto = selectedProyecto
-    ? vuelos.filter(v => v.proyecto_id === selectedProyecto.id)
-    : [];
-
-  const volumetriaData = vuelosDelProyecto.map((v, idx) => ({
-    nombre: `Vuelo ${idx + 1}`,
-    excavacion: v.volumetria.excavacion,
-    relleno: v.volumetria.relleno,
-    materiales: v.volumetria.materiales
-  }));
+  // Calcular el volumen total excavado de todos los proyectos
+  const volumenTotalExcavado = proyectos.reduce((total, p) => {
+    const volPlaneado = p.volumen_total_planeado || 0;
+    const avance = p.avance_actual || 0;
+    return total + (volPlaneado * avance / 100);
+  }, 0);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -45,7 +39,7 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
         <KPICard
           icon={Database}
           label="Vol. Excavación Total"
-          value={`${Math.round(estadisticas?.volumetria_total?.excavacion || 0)} m³`}
+          value={`${Math.round(volumenTotalExcavado).toLocaleString()} m³`}
           color="brick"
           testId="kpi-volumetria"
         />
