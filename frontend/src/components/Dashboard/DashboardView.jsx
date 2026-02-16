@@ -34,6 +34,7 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
       }
       
       setLoadingAvances(true);
+      setModel3dError(false); // Reset error when project changes
       try {
         const res = await axios.get(`${API}/proyectos/${selectedProyecto.id}/avances-semanales`);
         // Ordenar por semana descendente para obtener el último primero
