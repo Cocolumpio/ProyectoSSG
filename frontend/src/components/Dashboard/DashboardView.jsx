@@ -1,9 +1,17 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { Building2, Plane, TrendingUp, Database, Map as MapIcon } from 'lucide-react';
+import { Building2, Plane, TrendingUp, Database, Map as MapIcon, Box, Calendar, Truck, DollarSign, BarChart3, Layers } from 'lucide-react';
 import { KPICard } from '../common/KPICard';
 import { MapRecenter } from '../common/MapRecenter';
+import { PointCloudViewer } from '../Projects/PointCloudViewer';
+
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onProyectoClick, mapCenter }) {
+  const [avancesSemanales, setAvancesSemanales] = useState([]);
+  const [loadingAvances, setLoadingAvances] = useState(false);
+  
   // Vuelos del proyecto seleccionado
   const vuelosDelProyecto = selectedProyecto
     ? vuelos.filter(v => v.proyecto_id === selectedProyecto.id)
@@ -15,6 +23,62 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
     const avance = p.avance_actual || 0;
     return total + (volPlaneado * avance / 100);
   }, 0);
+
+  // Cargar avances semanales del proyecto seleccionado
+  useEffect(() => {
+    const fetchAvances = async () => {
+      if (!selectedProyecto) {
+        setAvancesSemanales([]);
+        return;
+      }
+      
+      setLoadingAvances(true);
+      try {
+        const res = await axios.get(`${API}/proyectos/${selectedProyecto.id}/avances-semanales`);
+        // Ordenar por semana descendente para obtener el último primero
+        const sorted = res.data.sort((a, b) => b.semana - a.semana);
+        setAvancesSemanales(sorted);
+      } catch (err) {
+        console.error('Error cargando avances:', err);
+        setAvancesSemanales([]);
+      } finally {
+        setLoadingAvances(false);
+      }
+    };
+    
+    fetchAvances();
+  }, [selectedProyecto]);
+
+  // Calcular estadísticas del proyecto seleccionado
+  const calcularEstadisticasProyecto = () => {
+    if (!selectedProyecto || avancesSemanales.length === 0) return null;
+    
+    const volumenPlaneado = selectedProyecto.volumen_total_planeado || 0;
+    const volumenExcavado = avancesSemanales.reduce((sum, a) => sum + (a.volumen_excavacion || 0), 0);
+    const semanasTrabajas = avancesSemanales.filter(a => a.volumen_excavacion > 0).length;
+    const costoM3 = selectedProyecto.costo_m3 || 150;
+    const capacidadCamion = selectedProyecto.capacidad_camion || 25;
+    const costoFlotilla = volumenExcavado * costoM3;
+    const viajesCamion = Math.ceil(volumenExcavado / capacidadCamion);
+    const porcentajeAvance = volumenPlaneado > 0 ? Math.min((volumenExcavado / volumenPlaneado) * 100, 100) : 0;
+    const volumenRestante = Math.max(volumenPlaneado - volumenExcavado, 0);
+    
+    return {
+      volumenPlaneado,
+      volumenExcavado,
+      volumenRestante,
+      semanasTrabajas,
+      totalSemanas: avancesSemanales.length,
+      costoFlotilla,
+      viajesCamion,
+      porcentajeAvance,
+      costoM3,
+      capacidadCamion
+    };
+  };
+
+  const stats = calcularEstadisticasProyecto();
+  const ultimoAvance = avancesSemanales.length > 0 ? avancesSemanales[0] : null;
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -130,11 +194,170 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
         </div>
       </div>
 
+      {/* Detalles del Proyecto Seleccionado */}
+      {selectedProyecto && (
+        <div className="bg-gradient-to-r from-[#994B49]/5 to-white rounded-xl border-2 border-[#994B49]/20 overflow-hidden">
+          {/* Header del proyecto */}
+          <div className="bg-[#994B49] text-white px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold">{selectedProyecto.nombre}</h2>
+                <p className="text-white/80 text-sm">{selectedProyecto.direccion || selectedProyecto.ubicacion}</p>
+              </div>
+              <div className="text-right">
+                <div className="text-3xl sm:text-4xl font-bold">{stats?.porcentajeAvance?.toFixed(1) || 0}%</div>
+                <div className="text-white/80 text-sm">Avance Total</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Modelo 3D - Último Avance */}
+              <div>
+                <div className="flex items-center space-x-2 mb-3">
+                  <Box className="h-5 w-5 text-[#994B49]" />
+                  <h3 className="font-semibold text-gray-900">
+                    Modelo 3D - {ultimoAvance ? `Semana ${ultimoAvance.semana}` : 'Sin datos'}
+                  </h3>
+                </div>
+                <div className="h-[300px] rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                  {loadingAvances ? (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="w-8 h-8 border-4 border-[#994B49] border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  ) : ultimoAvance?.modelo_3d_url ? (
+                    <PointCloudViewer modelUrl={ultimoAvance.modelo_3d_url} />
+                  ) : ultimoAvance?.pix4d_url ? (
+                    <iframe
+                      src={ultimoAvance.pix4d_url}
+                      className="w-full h-full border-0"
+                      title="Modelo 3D"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      <div className="text-center">
+                        <Layers className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                        <p className="text-sm">Sin modelo 3D disponible</p>
+                        <p className="text-xs text-gray-400">Sube un modelo en Avances Semanales</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {ultimoAvance && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Última actualización: {ultimoAvance.fecha} • Volumen: {(ultimoAvance.volumen_excavacion || 0).toLocaleString()} m³
+                  </p>
+                )}
+              </div>
+
+              {/* Estadísticas del Proyecto */}
+              <div>
+                <div className="flex items-center space-x-2 mb-3">
+                  <BarChart3 className="h-5 w-5 text-[#994B49]" />
+                  <h3 className="font-semibold text-gray-900">Resumen del Proyecto</h3>
+                </div>
+                
+                {stats ? (
+                  <div className="space-y-4">
+                    {/* Volumen */}
+                    <div className="bg-white rounded-lg p-4 border border-gray-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-gray-600">Volumen Excavado vs Planeado</span>
+                        <span className="text-sm font-medium text-[#994B49]">{stats.porcentajeAvance.toFixed(1)}%</span>
+                      </div>
+                      <div className="flex items-end justify-between mb-2">
+                        <div>
+                          <span className="text-2xl font-bold text-gray-900">{stats.volumenExcavado.toLocaleString()}</span>
+                          <span className="text-sm text-gray-500 ml-1">m³</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm text-gray-500">de </span>
+                          <span className="text-lg font-semibold text-gray-700">{stats.volumenPlaneado.toLocaleString()}</span>
+                          <span className="text-sm text-gray-500 ml-1">m³</span>
+                        </div>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div
+                          className="bg-gradient-to-r from-[#994B49] to-[#B85C5A] h-3 rounded-full transition-all"
+                          style={{ width: `${stats.porcentajeAvance}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Restante: <span className="font-medium">{stats.volumenRestante.toLocaleString()} m³</span>
+                      </p>
+                    </div>
+
+                    {/* Semanas y Viajes */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Calendar className="h-4 w-4 text-blue-600" />
+                          <span className="text-xs font-medium text-blue-800">Semanas Trabajadas</span>
+                        </div>
+                        <div className="text-2xl font-bold text-blue-700">
+                          {stats.semanasTrabajas}
+                          <span className="text-sm font-normal text-blue-500"> / {stats.totalSemanas}</span>
+                        </div>
+                      </div>
+                      <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Truck className="h-4 w-4 text-amber-600" />
+                          <span className="text-xs font-medium text-amber-800">Viajes de Camión</span>
+                        </div>
+                        <div className="text-2xl font-bold text-amber-700">
+                          {stats.viajesCamion.toLocaleString()}
+                          <span className="text-xs font-normal text-amber-500 block">({stats.capacidadCamion} m³/viaje)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Costo de Flotilla */}
+                    <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <DollarSign className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium text-green-800">Costo Total de Flotilla</span>
+                        </div>
+                        <span className="text-xs text-green-600">${stats.costoM3}/m³</span>
+                      </div>
+                      <div className="text-3xl font-bold text-green-700">
+                        ${stats.costoFlotilla.toLocaleString()}
+                        <span className="text-sm font-normal text-green-500 ml-1">MXN</span>
+                      </div>
+                      <p className="text-xs text-green-600 mt-1">
+                        Basado en {stats.volumenExcavado.toLocaleString()} m³ excavados
+                      </p>
+                    </div>
+
+                    {/* Fechas */}
+                    <div className="flex items-center justify-between text-sm text-gray-600 px-1">
+                      <div>
+                        <span className="text-gray-400">Inicio:</span> {selectedProyecto.fecha_inicio}
+                      </div>
+                      <div>
+                        <span className="text-gray-400">Fin planeado:</span> {selectedProyecto.fecha_fin_planeada}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-400">
+                    <BarChart3 className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                    <p>Sin datos de avance registrados</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Vuelos Recientes */}
       {selectedProyecto && vuelosDelProyecto.length > 0 && (
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            Vuelos Recientes - {selectedProyecto.nombre}
+            Bitácora de Vuelos - {selectedProyecto.nombre}
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-left" data-testid="vuelos-table">
