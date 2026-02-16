@@ -25,6 +25,11 @@ from .auth import (
     ALGORITHM,
     ACCESS_TOKEN_EXPIRE_MINUTES,
 )
+from .thumbnails import (
+    generate_ply_thumbnail,
+    generate_thumbnail_async,
+    thumbnail_executor,
+)
 
 __all__ = [
     # Database
@@ -49,4 +54,8 @@ __all__ = [
     "SECRET_KEY",
     "ALGORITHM",
     "ACCESS_TOKEN_EXPIRE_MINUTES",
+    # Thumbnails
+    "generate_ply_thumbnail",
+    "generate_thumbnail_async",
+    "thumbnail_executor",
 ]
