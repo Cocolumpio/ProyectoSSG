@@ -11,6 +11,8 @@ export function PointCloudViewer({ modelUrl, onError }) {
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
   const animationRef = useRef(null);
+  const progressRef = useRef(0);
+  const timeoutRef = useRef(null);
 
   useEffect(() => {
     if (!containerRef.current || !modelUrl) return;
