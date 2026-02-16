@@ -65,61 +65,100 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 # Thumbnail generation function
 def generate_ply_thumbnail(ply_path: str, output_path: str, width: int = 400, height: int = 300) -> bool:
     """
-    Genera una miniatura de una nube de puntos PLY usando Open3D.
-    Ejecutar en thread separado para no bloquear el event loop.
+    Genera una miniatura de una nube de puntos PLY usando matplotlib.
+    Más eficiente que Open3D para archivos grandes.
     """
     try:
-        import open3d as o3d
+        import matplotlib
+        matplotlib.use('Agg')  # Backend sin GUI
+        import matplotlib.pyplot as plt
+        from mpl_toolkits.mplot3d import Axes3D
         
-        # Leer la nube de puntos
-        pcd = o3d.io.read_point_cloud(str(ply_path))
+        # Leer el archivo PLY manualmente para eficiencia
+        points = []
+        colors = []
+        with open(ply_path, 'rb') as f:
+            # Leer header
+            header_lines = []
+            while True:
+                line = f.readline().decode('utf-8', errors='ignore').strip()
+                header_lines.append(line)
+                if line == 'end_header':
+                    break
+            
+            # Parsear header para obtener número de vértices
+            num_vertices = 0
+            has_color = False
+            for line in header_lines:
+                if line.startswith('element vertex'):
+                    num_vertices = int(line.split()[-1])
+                if 'red' in line or 'r ' in line:
+                    has_color = True
+            
+            # Leer solo una muestra de puntos (máximo 50,000 para el thumbnail)
+            sample_rate = max(1, num_vertices // 50000)
+            
+            for i in range(num_vertices):
+                line = f.readline()
+                if i % sample_rate == 0:
+                    try:
+                        # Formato típico: x y z [r g b] ...
+                        parts = line.decode('utf-8', errors='ignore').strip().split()
+                        if len(parts) >= 3:
+                            x, y, z = float(parts[0]), float(parts[1]), float(parts[2])
+                            points.append([x, y, z])
+                            if has_color and len(parts) >= 6:
+                                r, g, b = int(parts[3]), int(parts[4]), int(parts[5])
+                                colors.append([r/255, g/255, b/255])
+                    except:
+                        continue
         
-        if pcd.is_empty():
-            logging.warning(f"Nube de puntos vacía: {ply_path}")
+        if len(points) < 100:
+            logging.warning(f"Muy pocos puntos leídos del archivo PLY: {len(points)}")
             return False
         
-        # Submuestrear si hay muchos puntos (para rendimiento)
-        num_points = len(pcd.points)
-        if num_points > 500000:
-            # Reducir a ~500k puntos para el thumbnail
-            ratio = 500000 / num_points
-            pcd = pcd.random_down_sample(ratio)
+        points = np.array(points)
         
-        # Centrar la geometría
-        pcd.translate(-pcd.get_center())
+        # Centrar los puntos
+        centroid = np.mean(points, axis=0)
+        points = points - centroid
         
-        # Si no tiene colores, asignar color por defecto
-        if not pcd.has_colors():
-            pcd.paint_uniform_color([0.6, 0.3, 0.29])  # Color rojo ladrillo similar al tema
+        # Crear la figura
+        fig = plt.figure(figsize=(width/100, height/100), dpi=100)
+        ax = fig.add_subplot(111, projection='3d')
+        ax.set_facecolor('#1a1a2e')
+        fig.patch.set_facecolor('#1a1a2e')
         
-        # Configurar el renderizador offscreen
-        vis = o3d.visualization.Visualizer()
-        vis.create_window(visible=False, width=width, height=height)
-        vis.add_geometry(pcd)
+        # Plotear los puntos
+        if colors and len(colors) == len(points):
+            ax.scatter(points[:, 0], points[:, 1], points[:, 2], 
+                      c=colors, s=0.5, alpha=0.8)
+        else:
+            ax.scatter(points[:, 0], points[:, 1], points[:, 2], 
+                      c='#994B49', s=0.5, alpha=0.8)
         
         # Configurar la vista
-        ctr = vis.get_view_control()
-        ctr.set_zoom(0.7)
-        ctr.set_front([0.5, 0.5, 0.5])
-        ctr.set_lookat([0, 0, 0])
-        ctr.set_up([0, 0, 1])
+        ax.view_init(elev=30, azim=45)
+        ax.set_axis_off()
         
-        # Configurar render options
-        opt = vis.get_render_option()
-        opt.background_color = np.array([0.1, 0.1, 0.18])  # Fondo oscuro
-        opt.point_size = 2.0
+        # Ajustar límites para que se vea bien
+        max_range = np.max(np.abs(points)) * 1.1
+        ax.set_xlim([-max_range, max_range])
+        ax.set_ylim([-max_range, max_range])
+        ax.set_zlim([-max_range, max_range])
         
-        # Renderizar y guardar
-        vis.poll_events()
-        vis.update_renderer()
-        vis.capture_screen_image(str(output_path), do_render=True)
-        vis.destroy_window()
+        plt.tight_layout(pad=0)
+        plt.savefig(output_path, dpi=100, bbox_inches='tight', 
+                   facecolor='#1a1a2e', edgecolor='none')
+        plt.close(fig)
         
-        logging.info(f"Thumbnail generado: {output_path}")
+        logging.info(f"Thumbnail generado: {output_path} ({len(points)} puntos)")
         return True
         
     except Exception as e:
         logging.error(f"Error generando thumbnail: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 async def generate_thumbnail_async(ply_path: str, output_path: str) -> bool:
