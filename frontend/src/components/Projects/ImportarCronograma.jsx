@@ -116,6 +116,17 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
               )}
             </div>
           </label>
+          
+          {/* Link para descargar plantilla */}
+          <div className="mt-4 text-center">
+            <a 
+              href={`${API}/plantilla-cronograma`}
+              download
+              className="text-sm text-purple-600 hover:text-purple-700 underline"
+            >
+              Descargar plantilla de ejemplo
+            </a>
+          </div>
         </div>
       )}
 
