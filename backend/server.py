@@ -2005,6 +2005,20 @@ async def importar_cronograma(file: UploadFile = File(...)):
     return resultado
 
 
+@api_router.get("/plantilla-cronograma")
+async def descargar_plantilla_cronograma():
+    """Descarga la plantilla de Excel para cronogramas"""
+    plantilla_path = UPLOAD_DIR / "plantilla_cronograma.xlsx"
+    if not plantilla_path.exists():
+        raise HTTPException(status_code=404, detail="Plantilla no encontrada")
+    
+    return FileResponse(
+        plantilla_path,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename="plantilla_cronograma_dron.xlsx"
+    )
+
+
 @api_router.post("/proyectos/crear-desde-cronograma")
 async def crear_proyecto_desde_cronograma(data: dict):
     """
