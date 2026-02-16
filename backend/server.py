@@ -1980,6 +1980,248 @@ async def obtener_estadisticas():
         "volumetria_total": vol_total
     }
 
+# --- Cronograma y Frentes ---
+@api_router.post("/proyectos/importar-cronograma")
+async def importar_cronograma(file: UploadFile = File(...)):
+    """
+    Importa un archivo Excel con el cronograma del proyecto.
+    Parsea automáticamente los frentes y actividades.
+    """
+    from services.cronograma_ai import parse_excel_cronograma
+    
+    # Verificar extensión
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="El archivo debe ser Excel (.xlsx o .xls)")
+    
+    # Leer contenido
+    content = await file.read()
+    
+    # Parsear cronograma
+    resultado = parse_excel_cronograma(content)
+    
+    if not resultado.get("success"):
+        raise HTTPException(status_code=400, detail=resultado.get("error", "Error parseando archivo"))
+    
+    return resultado
+
+
+@api_router.post("/proyectos/crear-desde-cronograma")
+async def crear_proyecto_desde_cronograma(data: dict):
+    """
+    Crea un proyecto completo a partir de datos de cronograma parseados.
+    """
+    try:
+        # Crear proyecto
+        proyecto_id = str(uuid.uuid4())
+        resumen = data.get("resumen", {})
+        
+        proyecto = {
+            "id": proyecto_id,
+            "nombre": data.get("nombre", "Nuevo Proyecto"),
+            "ubicacion": data.get("ubicacion", ""),
+            "direccion": data.get("direccion", ""),
+            "coordenadas": data.get("coordenadas", {"lat": 0, "lng": 0}),
+            "fecha_inicio": resumen.get("fecha_inicio", datetime.now(timezone.utc).strftime("%Y-%m-%d")),
+            "fecha_fin_planeada": resumen.get("fecha_fin", ""),
+            "avance_actual": 0.0,
+            "volumen_total_planeado": 0,
+            "semanas_planeadas": resumen.get("semanas_estimadas", 0),
+            "total_pilas_planeadas": resumen.get("total_pilas", 0),
+            "total_anclas_planeadas": data.get("total_anclas", 0),
+            "descripcion": data.get("descripcion", ""),
+            "capacidad_camion": 25.0,
+            "costo_m3": 150.0,
+            "clientes_asignados": [],
+            "created_at": datetime.now(timezone.utc)
+        }
+        
+        await db.proyectos.insert_one(proyecto)
+        
+        # Crear frentes
+        frentes_data = data.get("frentes", [])
+        for idx, frente_data in enumerate(frentes_data):
+            frente = {
+                "id": str(uuid.uuid4()),
+                "proyecto_id": proyecto_id,
+                "nombre": frente_data.get("nombre", f"Frente {idx + 1}"),
+                "descripcion": frente_data.get("descripcion", ""),
+                "actividades": frente_data.get("actividades", []),
+                "orden": idx + 1,
+                "created_at": datetime.now(timezone.utc)
+            }
+            await db.frentes.insert_one(frente)
+        
+        # Crear avances semanales vacíos para cada semana planeada
+        semanas = resumen.get("semanas_estimadas", 12)
+        fecha_inicio = datetime.strptime(resumen.get("fecha_inicio", datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d")
+        
+        for semana in range(1, semanas + 1):
+            fecha_semana = fecha_inicio + timedelta(weeks=semana - 1)
+            avance = {
+                "id": str(uuid.uuid4()),
+                "proyecto_id": proyecto_id,
+                "semana": semana,
+                "fecha": fecha_semana.strftime("%Y-%m-%d"),
+                "descripcion": f"Semana {semana}",
+                "volumen_excavacion": 0,
+                "pilas_planeadas": 0,
+                "pilas_completadas": 0,
+                "anclas_planeadas": 0,
+                "anclas_instaladas": 0,
+                "imagenes": [],
+                "created_at": datetime.now(timezone.utc)
+            }
+            await db.avances_semanales.insert_one(avance)
+        
+        return {
+            "success": True,
+            "proyecto_id": proyecto_id,
+            "mensaje": f"Proyecto creado con {len(frentes_data)} frentes y {semanas} semanas de avance"
+        }
+        
+    except Exception as e:
+        logging.error(f"Error creando proyecto desde cronograma: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/proyectos/{proyecto_id}/frentes")
+async def obtener_frentes(proyecto_id: str):
+    """Obtiene todos los frentes de un proyecto"""
+    frentes = await db.frentes.find({"proyecto_id": proyecto_id}, {"_id": 0}).to_list(100)
+    return sorted(frentes, key=lambda x: x.get("orden", 0))
+
+
+@api_router.post("/proyectos/{proyecto_id}/frentes")
+async def crear_frente(proyecto_id: str, frente: dict):
+    """Crea un nuevo frente para el proyecto"""
+    frente_data = {
+        "id": str(uuid.uuid4()),
+        "proyecto_id": proyecto_id,
+        "nombre": frente.get("nombre", "Nuevo Frente"),
+        "descripcion": frente.get("descripcion", ""),
+        "actividades": frente.get("actividades", []),
+        "orden": frente.get("orden", 1),
+        "created_at": datetime.now(timezone.utc)
+    }
+    await db.frentes.insert_one(frente_data)
+    del frente_data["_id"] if "_id" in frente_data else None
+    return frente_data
+
+
+@api_router.post("/avances/{avance_id}/analizar-foto")
+async def analizar_foto_avance(avance_id: str, data: dict):
+    """
+    Analiza una foto de avance usando IA para detectar pilas y anclas.
+    """
+    from services.cronograma_ai import analizar_foto_avance as analizar_ia
+    
+    avance = await db.avances_semanales.find_one({"id": avance_id})
+    if not avance:
+        raise HTTPException(status_code=404, detail="Avance no encontrado")
+    
+    imagen_base64 = data.get("imagen_base64")
+    if not imagen_base64:
+        raise HTTPException(status_code=400, detail="Se requiere imagen en base64")
+    
+    # Obtener imagen de semana anterior para comparación
+    imagen_anterior = None
+    if avance.get("semana", 1) > 1:
+        avance_anterior = await db.avances_semanales.find_one({
+            "proyecto_id": avance["proyecto_id"],
+            "semana": avance["semana"] - 1
+        })
+        if avance_anterior and avance_anterior.get("imagenes"):
+            # Podríamos cargar la imagen anterior aquí
+            pass
+    
+    # Obtener proyecto para pilas planeadas
+    proyecto = await db.proyectos.find_one({"id": avance["proyecto_id"]})
+    pilas_planeadas = proyecto.get("total_pilas_planeadas", 0) if proyecto else 0
+    
+    # Analizar con IA
+    resultado = await analizar_ia(
+        imagen_base64=imagen_base64,
+        imagen_anterior_base64=imagen_anterior,
+        pilas_planeadas=pilas_planeadas,
+        semana_actual=avance.get("semana", 1)
+    )
+    
+    if resultado.get("success"):
+        # Guardar análisis
+        analisis = {
+            "id": str(uuid.uuid4()),
+            "proyecto_id": avance["proyecto_id"],
+            "avance_id": avance_id,
+            "semana": avance.get("semana", 1),
+            "fecha_analisis": datetime.now(timezone.utc),
+            "pilas_detectadas": resultado.get("pilas_detectadas", 0),
+            "anclas_detectadas": resultado.get("anclas_detectadas", 0),
+            "pilas_en_proceso": resultado.get("pilas_en_proceso", 0),
+            "porcentaje_avance_estimado": resultado.get("porcentaje_avance_estimado", 0),
+            "estado_proyecto": resultado.get("estado_proyecto", "EN_TIEMPO"),
+            "confianza_deteccion": resultado.get("confianza_deteccion", "MEDIA"),
+            "observaciones": resultado.get("observaciones", ""),
+            "recomendaciones": resultado.get("recomendaciones", "")
+        }
+        await db.analisis_fotos.insert_one(analisis)
+        
+        # Actualizar avance con datos detectados
+        await db.avances_semanales.update_one(
+            {"id": avance_id},
+            {"$set": {
+                "pilas_detectadas_ia": resultado.get("pilas_detectadas", 0),
+                "anclas_detectadas_ia": resultado.get("anclas_detectadas", 0),
+                "estado_ia": resultado.get("estado_proyecto", "EN_TIEMPO")
+            }}
+        )
+    
+    return resultado
+
+
+@api_router.get("/proyectos/{proyecto_id}/analisis-ia")
+async def obtener_analisis_ia(proyecto_id: str):
+    """Obtiene todos los análisis de IA de un proyecto"""
+    analisis = await db.analisis_fotos.find(
+        {"proyecto_id": proyecto_id}, 
+        {"_id": 0}
+    ).sort("semana", 1).to_list(100)
+    return analisis
+
+
+@api_router.post("/proyectos/{proyecto_id}/generar-reporte-ia")
+async def generar_reporte_ia(proyecto_id: str):
+    """Genera un reporte de progreso usando IA"""
+    from services.cronograma_ai import generar_reporte_progreso
+    
+    proyecto = await db.proyectos.find_one({"id": proyecto_id})
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    # Obtener último análisis
+    ultimo_analisis = await db.analisis_fotos.find_one(
+        {"proyecto_id": proyecto_id},
+        sort=[("semana", -1)]
+    )
+    
+    # Obtener historial
+    historial = await db.analisis_fotos.find(
+        {"proyecto_id": proyecto_id},
+        {"_id": 0, "semana": 1, "pilas_detectadas": 1, "anclas_detectadas": 1}
+    ).sort("semana", 1).to_list(100)
+    
+    resultado = await generar_reporte_progreso(
+        proyecto_nombre=proyecto.get("nombre", "Proyecto"),
+        semana_actual=ultimo_analisis.get("semana", 1) if ultimo_analisis else 1,
+        pilas_planeadas=proyecto.get("total_pilas_planeadas", 0),
+        pilas_detectadas=ultimo_analisis.get("pilas_detectadas", 0) if ultimo_analisis else 0,
+        anclas_planeadas=proyecto.get("total_anclas_planeadas", 0),
+        anclas_detectadas=ultimo_analisis.get("anclas_detectadas", 0) if ultimo_analisis else 0,
+        historial_semanas=historial
+    )
+    
+    return resultado
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
