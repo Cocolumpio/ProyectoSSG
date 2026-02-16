@@ -360,8 +360,11 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                         </div>
                         <div className="text-2xl font-bold text-blue-700">
                           {stats.semanasTrabajas}
-                          <span className="text-sm font-normal text-blue-500"> / {stats.totalSemanas}</span>
+                          <span className="text-sm font-normal text-blue-500"> / {stats.semanasPlaneadas}</span>
                         </div>
+                        <p className="text-xs text-blue-600 mt-1">
+                          {stats.totalSemanas} avances registrados
+                        </p>
                       </div>
                       <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
                         <div className="flex items-center space-x-2 mb-2">
