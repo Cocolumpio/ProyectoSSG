@@ -243,10 +243,10 @@ export function VuelosView({ vuelos, proyectos, onDelete, onRefresh }) {
               <tr className="text-gray-700 text-sm">
                 <th className="text-left py-3 px-4 sm:py-4 sm:px-6">Proyecto</th>
                 <th className="text-left py-3 px-4 sm:py-4 sm:px-6">Fecha</th>
+                <th className="text-left py-3 px-4 sm:py-4 sm:px-6">Semana</th>
                 <th className="text-left py-3 px-4 sm:py-4 sm:px-6 hidden sm:table-cell">Duración</th>
                 <th className="text-left py-3 px-4 sm:py-4 sm:px-6 hidden md:table-cell">Área</th>
-                <th className="text-left py-3 px-4 sm:py-4 sm:px-6 hidden md:table-cell">Imágenes</th>
-                <th className="text-left py-3 px-4 sm:py-4 sm:px-6 hidden lg:table-cell">Excavación</th>
+                <th className="text-left py-3 px-4 sm:py-4 sm:px-6 hidden lg:table-cell">Vol. Excavado</th>
                 <th className="text-left py-3 px-4 sm:py-4 sm:px-6">Estado</th>
                 <th className="text-left py-3 px-4 sm:py-4 sm:px-6">Acciones</th>
               </tr>
@@ -256,10 +256,18 @@ export function VuelosView({ vuelos, proyectos, onDelete, onRefresh }) {
                 <tr key={vuelo.id} className="border-b border-gray-100 hover:bg-gray-50">
                   <td className="py-3 px-4 sm:py-4 sm:px-6"><div className="font-medium truncate max-w-[120px] sm:max-w-none">{getProyectoNombre(vuelo.proyecto_id)}</div></td>
                   <td className="py-3 px-4 sm:py-4 sm:px-6">{vuelo.fecha_vuelo}</td>
+                  <td className="py-3 px-4 sm:py-4 sm:px-6">
+                    {vuelo.semana ? (
+                      <span className="px-2 py-1 rounded text-xs bg-orange-100 text-orange-700 font-medium">
+                        Sem. {vuelo.semana}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 text-xs">—</span>
+                    )}
+                  </td>
                   <td className="py-3 px-4 sm:py-4 sm:px-6 hidden sm:table-cell">{vuelo.duracion_minutos} min</td>
-                  <td className="py-3 px-4 sm:py-4 sm:px-6 hidden md:table-cell">{vuelo.area_cubierta.toLocaleString()} m²</td>
-                  <td className="py-3 px-4 sm:py-4 sm:px-6 hidden md:table-cell">{vuelo.num_imagenes}</td>
-                  <td className="py-3 px-4 sm:py-4 sm:px-6 hidden lg:table-cell">{vuelo.volumetria.excavacion.toLocaleString()} m³</td>
+                  <td className="py-3 px-4 sm:py-4 sm:px-6 hidden md:table-cell">{vuelo.area_cubierta?.toLocaleString() || 0} m²</td>
+                  <td className="py-3 px-4 sm:py-4 sm:px-6 hidden lg:table-cell">{(vuelo.volumetria?.volumen_excavado || vuelo.volumetria?.excavacion || 0).toLocaleString()} m³</td>
                   <td className="py-3 px-4 sm:py-4 sm:px-6">
                     <span className={`px-2 py-1 rounded text-xs ${vuelo.estado === 'completado' ? 'bg-green-100 text-green-700' : vuelo.estado === 'procesando' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
                       {vuelo.estado}
