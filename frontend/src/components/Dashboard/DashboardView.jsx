@@ -125,41 +125,6 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
         </div>
       </div>
 
-      {/* Visor 3D - Pix4D */}
-      {selectedProyecto && (selectedProyecto.pix4d_url || vuelosDelProyecto.length > 0) && (
-        <VisorPix4D 
-          vuelo={vuelosDelProyecto[0]} 
-          proyectoPix4dUrl={selectedProyecto.pix4d_url}
-          onUpdateUrl={(url) => console.log('Nueva URL:', url)}
-        />
-      )}
-
-      {/* Volumetría del Proyecto Seleccionado */}
-      {selectedProyecto && volumetriaData.length > 0 && (
-        <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-sm">
-          <h2 className="text-base sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
-            Volumetrías - {selectedProyecto.nombre}
-          </h2>
-          <div className="h-[200px] sm:h-[300px]" data-testid="volumetria-chart">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={volumetriaData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis dataKey="nombre" stroke="#6B7280" fontSize={12} />
-                <YAxis stroke="#6B7280" fontSize={12} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB' }}
-                  labelStyle={{ color: '#111827' }}
-                />
-                <Legend />
-                <Bar dataKey="excavacion" fill="#994B49" name="Excavación (m³)" />
-                <Bar dataKey="relleno" fill="#10b981" name="Relleno (m³)" />
-                <Bar dataKey="materiales" fill="#6B7280" name="Materiales (m³)" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
-
       {/* Vuelos Recientes */}
       {selectedProyecto && vuelosDelProyecto.length > 0 && (
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
@@ -173,7 +138,7 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                   <th className="pb-3 pr-4">Fecha</th>
                   <th className="pb-3 pr-4">Duración</th>
                   <th className="pb-3 pr-4">Área</th>
-                  <th className="pb-3 pr-4">Imágenes</th>
+                  <th className="pb-3 pr-4">Fotos</th>
                   <th className="pb-3">Estado</th>
                 </tr>
               </thead>
@@ -182,8 +147,8 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                   <tr key={vuelo.id} className="border-b border-gray-100">
                     <td className="py-3 pr-4">{vuelo.fecha_vuelo}</td>
                     <td className="py-3 pr-4">{vuelo.duracion_minutos} min</td>
-                    <td className="py-3 pr-4">{vuelo.area_cubierta.toLocaleString()} m²</td>
-                    <td className="py-3 pr-4">{vuelo.num_imagenes}</td>
+                    <td className="py-3 pr-4">{vuelo.area_cubierta?.toLocaleString() || 0} m²</td>
+                    <td className="py-3 pr-4">{vuelo.num_imagenes || 0}</td>
                     <td className="py-3">
                       <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm">
                         {vuelo.estado}
