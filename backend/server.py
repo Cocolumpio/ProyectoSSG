@@ -606,47 +606,10 @@ async def eliminar_proyecto(proyecto_id: str):
 # --- Vuelos ---
 @api_router.post("/vuelos", response_model=Vuelo)
 async def crear_vuelo(vuelo: VueloCreate):
+    """Crear un nuevo registro de vuelo (bitácora)"""
     vuelo_obj = Vuelo(**vuelo.model_dump())
     doc = vuelo_obj.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
-    
-    # Si se especifica una semana, buscar o crear el avance semanal correspondiente
-    if vuelo.semana and vuelo.proyecto_id:
-        avance = await db.avances_semanales.find_one({
-            "proyecto_id": vuelo.proyecto_id,
-            "semana": vuelo.semana
-        })
-        
-        if avance:
-            # Vincular el vuelo con el avance existente
-            doc['avance_semanal_id'] = avance['id']
-            # Actualizar el volumen del avance con el del vuelo
-            volumen_excavacion = vuelo.volumetria.volumen_excavado if vuelo.volumetria else 0
-            await db.avances_semanales.update_one(
-                {"id": avance['id']},
-                {"$set": {"volumen_excavacion": volumen_excavacion}}
-            )
-            # Recalcular el avance del proyecto
-            await recalcular_avance_proyecto(vuelo.proyecto_id)
-        else:
-            # Crear un nuevo avance semanal
-            nuevo_avance_id = str(uuid.uuid4())
-            nuevo_avance = {
-                "id": nuevo_avance_id,
-                "proyecto_id": vuelo.proyecto_id,
-                "semana": vuelo.semana,
-                "fecha": vuelo.fecha_vuelo,
-                "volumen_excavacion": vuelo.volumetria.volumen_excavado if vuelo.volumetria else 0,
-                "pix4d_url": vuelo.pix4d_url,
-                "descripcion": f"Avance creado desde vuelo del {vuelo.fecha_vuelo}",
-                "imagenes": [],
-                "created_at": datetime.now(timezone.utc).isoformat()
-            }
-            await db.avances_semanales.insert_one(nuevo_avance)
-            doc['avance_semanal_id'] = nuevo_avance_id
-            # Recalcular el avance del proyecto
-            await recalcular_avance_proyecto(vuelo.proyecto_id)
-    
     await db.vuelos.insert_one(doc)
     return vuelo_obj
 
