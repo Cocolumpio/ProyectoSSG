@@ -197,18 +197,24 @@ export function VuelosView({ vuelos, proyectos, onDelete, onRefresh }) {
                 <h4 className="font-medium text-gray-900 mb-3">Volumetría del Vuelo (m³)</h4>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">Excavación</label>
-                    <input type="number" step="0.1" min="0" value={formData.volumetria.excavacion} onChange={(e) => handleVolumetriaChange('excavacion', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]" data-testid="vuelo-vol-excavacion-input" />
+                    <label className="block text-sm text-gray-600 mb-1">Vol. Excavado</label>
+                    <input type="number" step="0.1" min="0" value={formData.volumetria.volumen_excavado || 0} onChange={(e) => handleVolumetriaChange('volumen_excavado', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]" data-testid="vuelo-vol-excavacion-input" />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">Relleno</label>
-                    <input type="number" step="0.1" min="0" value={formData.volumetria.relleno} onChange={(e) => handleVolumetriaChange('relleno', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]" data-testid="vuelo-vol-relleno-input" />
+                    <label className="block text-sm text-gray-600 mb-1">Vol. Relleno</label>
+                    <input type="number" step="0.1" min="0" value={formData.volumetria.volumen_relleno || 0} onChange={(e) => handleVolumetriaChange('volumen_relleno', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]" data-testid="vuelo-vol-relleno-input" />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">Materiales</label>
-                    <input type="number" step="0.1" min="0" value={formData.volumetria.materiales} onChange={(e) => handleVolumetriaChange('materiales', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]" data-testid="vuelo-vol-materiales-input" />
+                    <label className="block text-sm text-gray-600 mb-1">Corte</label>
+                    <input type="number" step="0.1" min="0" value={formData.volumetria.corte || 0} onChange={(e) => handleVolumetriaChange('corte', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]" data-testid="vuelo-vol-materiales-input" />
                   </div>
                 </div>
+                {formData.semana && (
+                  <p className="text-xs text-green-600 mt-2 flex items-center">
+                    <Calendar className="h-3 w-3 mr-1" />
+                    Este volumen se sincronizará con la Semana {formData.semana}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">URL Modelo 3D (Pix4D)</label>
