@@ -446,6 +446,30 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
           </div>
         </div>
       )}
+
+      {/* Modal del Visor 3D Completo */}
+      {showFullViewer && ultimoAvance?.modelo_3d_url && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80" onClick={() => setShowFullViewer(false)}>
+          <div 
+            className="relative w-[90vw] h-[80vh] bg-[#1a1a2e] rounded-xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="absolute top-4 left-4 z-10 bg-black/60 text-white px-3 py-2 rounded-lg">
+              <h3 className="font-semibold">{selectedProyecto?.nombre}</h3>
+              <p className="text-sm text-gray-300">Semana {ultimoAvance.semana} - {ultimoAvance.fecha}</p>
+            </div>
+            <button
+              onClick={() => setShowFullViewer(false)}
+              className="absolute top-4 right-4 z-10 bg-[#994B49] hover:bg-[#B85C5A] text-white p-2 rounded-lg transition-colors"
+            >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <PointCloudViewer modelUrl={ultimoAvance.modelo_3d_url} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
