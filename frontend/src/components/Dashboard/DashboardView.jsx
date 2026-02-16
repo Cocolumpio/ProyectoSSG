@@ -228,31 +228,18 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                     <div className="w-full h-full flex items-center justify-center">
                       <div className="w-8 h-8 border-4 border-[#994B49] border-t-transparent rounded-full animate-spin" />
                     </div>
+                  ) : ultimoAvance?.pix4d_url ? (
+                    <iframe
+                      src={ultimoAvance.pix4d_url}
+                      className="w-full h-full border-0"
+                      title="Modelo 3D Pix4D"
+                      allowFullScreen
+                    />
                   ) : ultimoAvance?.modelo_3d_url && !model3dError ? (
                     <PointCloudViewer 
                       modelUrl={ultimoAvance.modelo_3d_url} 
                       onError={() => setModel3dError(true)}
                     />
-                  ) : ultimoAvance?.pix4d_url ? (
-                    <div className="w-full h-full flex flex-col">
-                      {model3dError && (
-                        <div className="bg-amber-50 border-b border-amber-200 px-3 py-2 text-xs text-amber-700 flex items-center justify-between">
-                          <span>El modelo local es muy grande. Usando Pix4D como alternativa.</span>
-                          <button 
-                            onClick={() => setModel3dError(false)}
-                            className="text-amber-800 hover:text-amber-900 underline"
-                          >
-                            Reintentar
-                          </button>
-                        </div>
-                      )}
-                      <iframe
-                        src={ultimoAvance.pix4d_url}
-                        className="w-full flex-1 border-0"
-                        title="Modelo 3D Pix4D"
-                        allowFullScreen
-                      />
-                    </div>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400">
                       <div className="text-center">
