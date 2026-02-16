@@ -110,6 +110,7 @@ class Proyecto(BaseModel):
     fecha_fin_planeada: str
     avance_actual: float = 0.0
     volumen_total_planeado: Optional[float] = None
+    semanas_planeadas: int = 0
     descripcion: Optional[str] = None
     pix4d_url: Optional[str] = None
     volumetria: Optional[Volumetria] = None
@@ -128,6 +129,7 @@ class ProyectoCreate(BaseModel):
     fecha_fin_planeada: str
     avance_actual: float = 0.0
     volumen_total_planeado: Optional[float] = None
+    semanas_planeadas: int = 0
     descripcion: Optional[str] = None
     pix4d_url: Optional[str] = None
     volumetria: Optional[Volumetria] = None
