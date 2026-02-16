@@ -163,6 +163,7 @@ export function PointCloudViewer({ modelUrl, onError }) {
 
     // Cleanup
     return () => {
+      if (timeoutRef.current) clearInterval(timeoutRef.current);
       window.removeEventListener('resize', handleResize);
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
