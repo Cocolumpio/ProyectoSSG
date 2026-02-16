@@ -10,7 +10,6 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
   const suggestionsRef = useRef(null);
 
   useEffect(() => {
-    // Set initial address from formData
     if (formData.direccion) {
       setAddressInput(formData.direccion);
     } else if (formData.ubicacion && !addressInput) {
@@ -18,7 +17,6 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
     }
   }, [formData.direccion, formData.ubicacion]);
 
-  // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (suggestionsRef.current && !suggestionsRef.current.contains(event.target)) {
@@ -34,13 +32,6 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleVolumetriaChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      volumetria: { ...prev.volumetria, [field]: parseFloat(value) || 0 }
-    }));
-  };
-
   const searchAddress = async (query) => {
     if (query.length < 3) {
       setAddressSuggestions([]);
@@ -49,14 +40,9 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
 
     setSearchingAddress(true);
     try {
-      // Using Nominatim (OpenStreetMap) for geocoding - free service
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=mx&limit=5`,
-        {
-          headers: {
-            'Accept-Language': 'es'
-          }
-        }
+        { headers: { 'Accept-Language': 'es' } }
       );
       const data = await response.json();
       setAddressSuggestions(data);
@@ -73,7 +59,6 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
     const value = e.target.value;
     setAddressInput(value);
     
-    // Debounce search
     if (searchTimeout.current) {
       clearTimeout(searchTimeout.current);
     }
@@ -92,7 +77,7 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
     setFormData(prev => ({
       ...prev,
       direccion: displayName,
-      ubicacion: displayName.split(',').slice(0, 2).join(',').trim(), // Short version for display
+      ubicacion: displayName.split(',').slice(0, 2).join(',').trim(),
       coordenadas: { lat, lng }
     }));
     setShowSuggestions(false);
@@ -250,64 +235,6 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
             </div>
           </div>
         )}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          URL del Modelo 3D (Pix4D)
-        </label>
-        <input
-          type="url"
-          name="pix4d_url"
-          value={formData.pix4d_url}
-          onChange={handleInputChange}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-          placeholder="https://cloud.pix4d.com/embed/..."
-          data-testid="project-pix4d-input"
-        />
-      </div>
-
-      {/* Volumetría Section */}
-      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-        <h4 className="font-medium text-gray-900 mb-3">📊 Volumetría del Proyecto (m³)</h4>
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Excavación</label>
-            <input
-              type="number"
-              step="0.1"
-              min="0"
-              value={formData.volumetria.excavacion}
-              onChange={(e) => handleVolumetriaChange('excavacion', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-              data-testid="project-vol-excavacion-input"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Relleno</label>
-            <input
-              type="number"
-              step="0.1"
-              min="0"
-              value={formData.volumetria.relleno}
-              onChange={(e) => handleVolumetriaChange('relleno', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-              data-testid="project-vol-relleno-input"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Materiales</label>
-            <input
-              type="number"
-              step="0.1"
-              min="0"
-              value={formData.volumetria.materiales}
-              onChange={(e) => handleVolumetriaChange('materiales', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-              data-testid="project-vol-materiales-input"
-            />
-          </div>
-        </div>
       </div>
 
       {/* Fleet Configuration Section */}
