@@ -223,6 +223,17 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
   - `/backend/models/` - Modelos Pydantic (`schemas.py`)
   - `/backend/services/` - Database, Auth, Thumbnails services
   - `/backend/routes/` - Rutas de API (estructura lista)
+- [x] **COMPLETADO (Feb 2025):** Importación de Cronograma desde Excel
+  - Parsea automáticamente archivos Excel con cronogramas de obra
+  - Detecta Frentes, Actividades, Pilas, Fechas
+  - Crea proyecto completo con avances semanales automáticos
+  - Nuevo campo "Semanas Planeadas" en proyectos
+- [x] **COMPLETADO (Feb 2025):** Análisis de Fotos con IA (Gemini Vision)
+  - Detecta número de pilas visibles en fotos aéreas
+  - Detecta anclas instaladas
+  - Compara con semana anterior
+  - Evalúa si el proyecto va en tiempo, adelantado o retrasado
+  - Genera recomendaciones automáticas
 - [ ] Migrar endpoints de `server.py` a módulos de rutas (opcional, baja prioridad)
 - [ ] Funcionalidad de carga de archivos LAZ/LAS para archivo
 
