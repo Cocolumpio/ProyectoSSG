@@ -1,34 +1,57 @@
 """
-Configuración de base de datos y servicios para DrON Topografía
+Servicio de conexión a MongoDB para DrON Topografía
 """
 import os
-from pathlib import Path
+import logging
 from motor.motor_asyncio import AsyncIOMotorClient
-from passlib.context import CryptContext
 from dotenv import load_dotenv
 
-ROOT_DIR = Path(__file__).parent.parent
-load_dotenv(ROOT_DIR / '.env')
+load_dotenv()
 
-# MongoDB Configuration
-MONGO_URL = os.environ.get('MONGO_URL')
-DB_NAME = os.environ.get('DB_NAME', 'drone_dashboard')
+# MongoDB connection
+mongo_url = os.environ.get("MONGO_URL")
+db_name = os.environ.get("DB_NAME", "dron_topografia")
 
-client = AsyncIOMotorClient(MONGO_URL)
-db = client[DB_NAME]
+if not mongo_url:
+    raise ValueError("MONGO_URL environment variable is not set")
 
-# JWT Configuration
-SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'dron-topografia-secret-key-2025-super-secure')
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 días
+client = AsyncIOMotorClient(mongo_url)
+db = client[db_name]
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Collections
+usuarios_collection = db.usuarios
+proyectos_collection = db.proyectos
+vuelos_collection = db.vuelos
+avances_collection = db.avances_semanales
+solicitudes_collection = db.solicitudes_vuelo
 
-# Resend Configuration
-RESEND_API_KEY = os.environ.get('RESEND_API_KEY')
-ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'ianalejandrogn@gmail.com')
+logging.info(f"Connected to MongoDB database: {db_name}")
 
-# Upload directory
-UPLOAD_DIR = ROOT_DIR / "uploads"
-UPLOAD_DIR.mkdir(exist_ok=True)
+
+async def get_db():
+    """Dependency to get database instance"""
+    return db
+
+
+async def init_db():
+    """Initialize database with indexes"""
+    # Create indexes
+    await usuarios_collection.create_index("email", unique=True)
+    await proyectos_collection.create_index("nombre")
+    await vuelos_collection.create_index("proyecto_id")
+    await avances_collection.create_index([("proyecto_id", 1), ("semana", 1)])
+    await solicitudes_collection.create_index("cliente_id")
+    logging.info("Database indexes created")
+
+
+async def cleanup_obsolete_collections():
+    """Remove obsolete collections (like 'users' which was replaced by 'usuarios')"""
+    try:
+        collections = await db.list_collection_names()
+        if "users" in collections:
+            await db.users.drop()
+            logging.info("Dropped obsolete 'users' collection")
+            return True
+    except Exception as e:
+        logging.error(f"Error cleaning up obsolete collections: {e}")
+    return False
