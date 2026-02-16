@@ -444,8 +444,7 @@ function VuelosViewReadOnly({ vuelos, proyectos }) {
                 <th className="text-left py-3 px-4 sm:py-4 sm:px-6">Fecha</th>
                 <th className="text-left py-3 px-4 sm:py-4 sm:px-6 hidden sm:table-cell">Duración</th>
                 <th className="text-left py-3 px-4 sm:py-4 sm:px-6 hidden md:table-cell">Área</th>
-                <th className="text-left py-3 px-4 sm:py-4 sm:px-6 hidden md:table-cell">Imágenes</th>
-                <th className="text-left py-3 px-4 sm:py-4 sm:px-6 hidden lg:table-cell">Excavación</th>
+                <th className="text-left py-3 px-4 sm:py-4 sm:px-6 hidden md:table-cell">Fotos</th>
                 <th className="text-left py-3 px-4 sm:py-4 sm:px-6">Estado</th>
               </tr>
             </thead>
@@ -455,9 +454,8 @@ function VuelosViewReadOnly({ vuelos, proyectos }) {
                   <td className="py-3 px-4 sm:py-4 sm:px-6"><div className="font-medium truncate max-w-[120px] sm:max-w-none">{getProyectoNombre(vuelo.proyecto_id)}</div></td>
                   <td className="py-3 px-4 sm:py-4 sm:px-6">{vuelo.fecha_vuelo}</td>
                   <td className="py-3 px-4 sm:py-4 sm:px-6 hidden sm:table-cell">{vuelo.duracion_minutos} min</td>
-                  <td className="py-3 px-4 sm:py-4 sm:px-6 hidden md:table-cell">{vuelo.area_cubierta.toLocaleString()} m²</td>
-                  <td className="py-3 px-4 sm:py-4 sm:px-6 hidden md:table-cell">{vuelo.num_imagenes}</td>
-                  <td className="py-3 px-4 sm:py-4 sm:px-6 hidden lg:table-cell">{vuelo.volumetria.excavacion.toLocaleString()} m³</td>
+                  <td className="py-3 px-4 sm:py-4 sm:px-6 hidden md:table-cell">{vuelo.area_cubierta?.toLocaleString() || 0} m²</td>
+                  <td className="py-3 px-4 sm:py-4 sm:px-6 hidden md:table-cell">{vuelo.num_imagenes || 0}</td>
                   <td className="py-3 px-4 sm:py-4 sm:px-6">
                     <span className={`px-2 py-1 rounded text-xs ${vuelo.estado === 'completado' ? 'bg-green-100 text-green-700' : vuelo.estado === 'procesando' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
                       {vuelo.estado}
