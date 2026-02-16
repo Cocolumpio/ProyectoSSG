@@ -289,13 +289,10 @@ class Vuelo(BaseModel):
     duracion_minutos: int
     area_cubierta: float  # m²
     num_imagenes: int
-    volumetria: Volumetria
     archivo_nube_puntos: Optional[str] = None
     pix4d_url: Optional[str] = None  # URL del iframe de Pix4D
     estado: str = "completado"  # completado, procesando, fallido
     notas: Optional[str] = None
-    semana: Optional[int] = None  # Número de semana relacionada
-    avance_semanal_id: Optional[str] = None  # ID del avance semanal relacionado
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class VueloCreate(BaseModel):
@@ -304,10 +301,8 @@ class VueloCreate(BaseModel):
     duracion_minutos: int
     area_cubierta: float
     num_imagenes: int
-    volumetria: Volumetria
     pix4d_url: Optional[str] = None
     notas: Optional[str] = None
-    semana: Optional[int] = None  # Número de semana relacionada
 
 class VueloUpdate(BaseModel):
     proyecto_id: Optional[str] = None
@@ -315,11 +310,9 @@ class VueloUpdate(BaseModel):
     duracion_minutos: Optional[int] = None
     area_cubierta: Optional[float] = None
     num_imagenes: Optional[int] = None
-    volumetria: Optional[Volumetria] = None
     pix4d_url: Optional[str] = None
     notas: Optional[str] = None
     estado: Optional[str] = None
-    semana: Optional[int] = None  # Número de semana relacionada
 
 class AvanceHito(BaseModel):
     nombre: str
