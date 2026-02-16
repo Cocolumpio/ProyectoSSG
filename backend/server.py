@@ -1629,7 +1629,7 @@ def generar_google_calendar_link(titulo, fecha, hora, descripcion, ubicacion="")
             hora_dt = datetime.strptime(hora, "%H:%M")
             fecha_inicio = fecha_dt.replace(hour=hora_dt.hour, minute=hora_dt.minute)
             fecha_fin = fecha_inicio.replace(hour=hora_dt.hour + 2)  # 2 horas de duración
-        except:
+        except ValueError:
             fecha_inicio = fecha_dt.replace(hour=9, minute=0)
             fecha_fin = fecha_dt.replace(hour=11, minute=0)
     else:
