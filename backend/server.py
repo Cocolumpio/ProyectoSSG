@@ -2104,7 +2104,7 @@ async def crear_frente(proyecto_id: str, frente: dict):
         "created_at": datetime.now(timezone.utc)
     }
     await db.frentes.insert_one(frente_data)
-    del frente_data["_id"] if "_id" in frente_data else None
+    frente_data.pop("_id", None)
     return frente_data
 
 
