@@ -1217,10 +1217,10 @@ async def subir_modelo_3d(proyecto_id: str, avance_id: str, file: UploadFile = F
 
 @api_router.get("/modelos3d/{proyecto_id}/{avance_id}/{filename}")
 async def obtener_modelo_3d(proyecto_id: str, avance_id: str, filename: str):
-    """Obtener un modelo 3D de un avance semanal"""
+    """Obtener un modelo 3D o thumbnail de un avance semanal"""
     file_path = UPLOAD_DIR / "modelos3d" / proyecto_id / avance_id / filename
     if not file_path.exists():
-        raise HTTPException(status_code=404, detail="Modelo 3D no encontrado")
+        raise HTTPException(status_code=404, detail="Archivo no encontrado")
     
     # Determinar el content-type basado en la extensión
     extension = Path(filename).suffix.lower()
@@ -1228,7 +1228,10 @@ async def obtener_modelo_3d(proyecto_id: str, avance_id: str, filename: str):
         '.ply': 'application/octet-stream',
         '.xyz': 'text/plain',
         '.pts': 'text/plain',
-        '.pcd': 'application/octet-stream'
+        '.pcd': 'application/octet-stream',
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg'
     }
     content_type = content_types.get(extension, 'application/octet-stream')
     
