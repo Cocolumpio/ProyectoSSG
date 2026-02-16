@@ -46,11 +46,13 @@ def parse_excel_cronograma(file_content: bytes) -> Dict[str, Any]:
         total_dias = 0
         
         for idx, row in df.iterrows():
-            # Detectar encabezado de frente
+            # Detectar encabezado de frente (primera columna contiene "FRENTE")
             first_cell = str(row.iloc[0]).strip().upper() if pd.notna(row.iloc[0]) else ""
+            second_cell = str(row.iloc[1]).strip().upper() if pd.notna(row.iloc[1]) else ""
             
-            if first_cell.startswith("FRENTE"):
-                # Nuevo frente encontrado
+            # Si es header de frente
+            if first_cell.startswith("FRENTE") and ("#PILAS" in second_cell or "PILAS" in second_cell):
+                # Guardar frente anterior si existe
                 if current_frente:
                     frentes.append(current_frente)
                 
@@ -58,33 +60,55 @@ def parse_excel_cronograma(file_content: bytes) -> Dict[str, Any]:
                     "nombre": first_cell,
                     "actividades": []
                 }
-            elif current_frente and first_cell and not first_cell.startswith("#") and "PILAS" not in first_cell:
-                # Es una actividad del frente actual
+                continue
+            
+            # Si tenemos un frente activo y la segunda columna tiene un número (pilas)
+            if current_frente:
                 try:
-                    actividad = {
-                        "descripcion": str(row.iloc[0]).strip() if pd.notna(row.iloc[0]) else "",
-                        "num_pilas": int(row.iloc[1]) if pd.notna(row.iloc[1]) else 0,
-                        "fecha_inicio": excel_date_to_string(row.iloc[2]) if pd.notna(row.iloc[2]) else "",
-                        "fecha_fin": excel_date_to_string(row.iloc[3]) if pd.notna(row.iloc[3]) else "",
-                        "fecha_descabece": excel_date_to_string(row.iloc[4]) if pd.notna(row.iloc[4]) else "",
-                        "dias": int(row.iloc[5]) if pd.notna(row.iloc[5]) else 0
-                    }
-                    
-                    if actividad["descripcion"] and actividad["num_pilas"] > 0:
+                    num_pilas_val = row.iloc[1]
+                    if pd.notna(num_pilas_val) and isinstance(num_pilas_val, (int, float)) and num_pilas_val > 0:
+                        # Es una actividad válida
+                        descripcion = str(row.iloc[0]).strip() if pd.notna(row.iloc[0]) else ""
+                        
+                        # Parsear fechas
+                        fecha_inicio_raw = row.iloc[2]
+                        fecha_fin_raw = row.iloc[3]
+                        fecha_descabece_raw = row.iloc[4] if len(row) > 4 else None
+                        dias_raw = row.iloc[5] if len(row) > 5 else 0
+                        
+                        # Convertir fechas
+                        def parse_fecha(val):
+                            if pd.isna(val):
+                                return ""
+                            if isinstance(val, datetime):
+                                return val.strftime("%Y-%m-%d")
+                            return excel_date_to_string(val)
+                        
+                        actividad = {
+                            "descripcion": descripcion,
+                            "num_pilas": int(num_pilas_val),
+                            "fecha_inicio": parse_fecha(fecha_inicio_raw),
+                            "fecha_fin": parse_fecha(fecha_fin_raw),
+                            "fecha_descabece": parse_fecha(fecha_descabece_raw),
+                            "dias": int(dias_raw) if pd.notna(dias_raw) and isinstance(dias_raw, (int, float)) else 0
+                        }
+                        
                         current_frente["actividades"].append(actividad)
                         total_pilas += actividad["num_pilas"]
                         total_dias += actividad["dias"]
                         
                         # Actualizar fechas del proyecto
                         if actividad["fecha_inicio"]:
-                            act_inicio = actividad["fecha_inicio"]
-                            if not fecha_inicio_proyecto or act_inicio < fecha_inicio_proyecto:
-                                fecha_inicio_proyecto = act_inicio
+                            if not fecha_inicio_proyecto or actividad["fecha_inicio"] < fecha_inicio_proyecto:
+                                fecha_inicio_proyecto = actividad["fecha_inicio"]
                         
                         if actividad["fecha_descabece"]:
-                            act_fin = actividad["fecha_descabece"]
-                            if not fecha_fin_proyecto or act_fin > fecha_fin_proyecto:
-                                fecha_fin_proyecto = act_fin
+                            if not fecha_fin_proyecto or actividad["fecha_descabece"] > fecha_fin_proyecto:
+                                fecha_fin_proyecto = actividad["fecha_descabece"]
+                        elif actividad["fecha_fin"]:
+                            if not fecha_fin_proyecto or actividad["fecha_fin"] > fecha_fin_proyecto:
+                                fecha_fin_proyecto = actividad["fecha_fin"]
+                                
                 except Exception as e:
                     logging.warning(f"Error parseando fila {idx}: {e}")
                     continue
@@ -93,8 +117,16 @@ def parse_excel_cronograma(file_content: bytes) -> Dict[str, Any]:
         if current_frente:
             frentes.append(current_frente)
         
-        # Calcular semanas
-        semanas_estimadas = max(1, total_dias // 7) if total_dias > 0 else len(frentes) * 4
+        # Calcular semanas basado en el rango de fechas
+        semanas_estimadas = 1
+        if fecha_inicio_proyecto and fecha_fin_proyecto:
+            try:
+                inicio = datetime.strptime(fecha_inicio_proyecto, "%Y-%m-%d")
+                fin = datetime.strptime(fecha_fin_proyecto, "%Y-%m-%d")
+                dias_totales = (fin - inicio).days
+                semanas_estimadas = max(1, (dias_totales + 6) // 7)  # Redondear hacia arriba
+            except:
+                semanas_estimadas = max(1, total_dias // 7) if total_dias > 0 else len(frentes) * 4
         
         return {
             "success": True,
@@ -102,6 +134,7 @@ def parse_excel_cronograma(file_content: bytes) -> Dict[str, Any]:
             "resumen": {
                 "total_frentes": len(frentes),
                 "total_pilas": total_pilas,
+                "total_actividades": sum(len(f["actividades"]) for f in frentes),
                 "total_dias": total_dias,
                 "semanas_estimadas": semanas_estimadas,
                 "fecha_inicio": fecha_inicio_proyecto,
@@ -111,6 +144,8 @@ def parse_excel_cronograma(file_content: bytes) -> Dict[str, Any]:
         
     except Exception as e:
         logging.error(f"Error parseando Excel: {e}")
+        import traceback
+        traceback.print_exc()
         return {
             "success": False,
             "error": str(e)
