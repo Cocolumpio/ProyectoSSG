@@ -58,7 +58,10 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
     
     const volumenPlaneado = selectedProyecto.volumen_total_planeado || 0;
     const volumenExcavado = avancesSemanales.reduce((sum, a) => sum + (a.volumen_excavacion || 0), 0);
+    // Semanas con avance registrado (avances semanales reales)
     const semanasTrabajas = avancesSemanales.filter(a => a.volumen_excavacion > 0).length;
+    // Semanas planeadas del cronograma del proyecto
+    const semanasPlaneadas = selectedProyecto.semanas_planeadas || avancesSemanales.length;
     const costoM3 = selectedProyecto.costo_m3 || 150;
     const capacidadCamion = selectedProyecto.capacidad_camion || 25;
     const costoFlotilla = volumenExcavado * costoM3;
@@ -71,6 +74,7 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
       volumenExcavado,
       volumenRestante,
       semanasTrabajas,
+      semanasPlaneadas,
       totalSemanas: avancesSemanales.length,
       costoFlotilla,
       viajesCamion,
