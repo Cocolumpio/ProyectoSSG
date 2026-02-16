@@ -1270,6 +1270,49 @@ async def eliminar_modelo_3d(proyecto_id: str, avance_id: str):
     
     return {"message": "Modelo 3D eliminado"}
 
+@api_router.post("/proyectos/{proyecto_id}/avances-semanales/{avance_id}/regenerar-thumbnail")
+async def regenerar_thumbnail(proyecto_id: str, avance_id: str):
+    """Regenerar thumbnail para un modelo 3D existente"""
+    avance = await db.avances_semanales.find_one({"id": avance_id, "proyecto_id": proyecto_id})
+    if not avance:
+        raise HTTPException(status_code=404, detail="Avance semanal no encontrado")
+    
+    model_url = avance.get('modelo_3d_url')
+    if not model_url:
+        raise HTTPException(status_code=400, detail="No hay modelo 3D para este avance")
+    
+    # Obtener la ruta del archivo PLY
+    filename = model_url.split("/")[-1]
+    models_dir = UPLOAD_DIR / "modelos3d" / proyecto_id / avance_id
+    file_path = models_dir / filename
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Archivo del modelo no encontrado")
+    
+    # Solo generar thumbnail para archivos PLY
+    if not filename.lower().endswith('.ply'):
+        raise HTTPException(status_code=400, detail="Solo se pueden generar thumbnails para archivos PLY")
+    
+    # Generar thumbnail
+    unique_id = filename.replace('.ply', '').replace('.PLY', '')
+    thumbnail_filename = f"{unique_id}_thumb.png"
+    thumbnail_path = models_dir / thumbnail_filename
+    
+    success = await generate_thumbnail_async(str(file_path), str(thumbnail_path))
+    
+    if not success:
+        raise HTTPException(status_code=500, detail="Error generando thumbnail")
+    
+    thumbnail_url = f"/api/modelos3d/{proyecto_id}/{avance_id}/{thumbnail_filename}"
+    
+    # Actualizar en la base de datos
+    await db.avances_semanales.update_one(
+        {"id": avance_id},
+        {"$set": {"thumbnail_url": thumbnail_url}}
+    )
+    
+    return {"thumbnail_url": thumbnail_url, "message": "Thumbnail regenerado exitosamente"}
+
 # --- Reporte Ejecutivo PDF ---
 @api_router.get("/proyectos/{proyecto_id}/reporte-ejecutivo")
 async def generar_reporte_ejecutivo(proyecto_id: str):
