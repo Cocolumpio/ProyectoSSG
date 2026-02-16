@@ -11,7 +11,6 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onProyectoClick, mapCenter }) {
   const [avancesSemanales, setAvancesSemanales] = useState([]);
   const [loadingAvances, setLoadingAvances] = useState(false);
-  const [model3dError, setModel3dError] = useState(false);
   
   // Vuelos del proyecto seleccionado
   const vuelosDelProyecto = selectedProyecto
