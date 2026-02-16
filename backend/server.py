@@ -308,6 +308,7 @@ class Proyecto(BaseModel):
     fecha_fin_planeada: str
     avance_actual: float = 0.0  # Porcentaje 0-100 (calculado automáticamente)
     volumen_total_planeado: float = 0.0  # Volumen total estimado a excavar en m³
+    semanas_planeadas: int = 0  # Número de semanas planeadas de trabajo según cronograma
     descripcion: Optional[str] = None
     pix4d_url: Optional[str] = None  # URL del modelo 3D
     volumetria: Optional[Volumetria] = None  # Volumetrías del proyecto
@@ -328,6 +329,7 @@ class ProyectoCreate(BaseModel):
     pix4d_url: Optional[str] = None
     avance_actual: float = 0.0
     volumen_total_planeado: float = 0.0  # Volumen total estimado a excavar en m³
+    semanas_planeadas: int = 0  # Número de semanas planeadas de trabajo
     volumetria: Optional[Volumetria] = None
     # Configuración de flotilla
     capacidad_camion: float = 25.0
@@ -343,6 +345,7 @@ class ProyectoUpdate(BaseModel):
     fecha_fin_planeada: Optional[str] = None
     avance_actual: Optional[float] = None
     volumen_total_planeado: Optional[float] = None
+    semanas_planeadas: Optional[int] = None  # Número de semanas planeadas
     descripcion: Optional[str] = None
     pix4d_url: Optional[str] = None
     volumetria: Optional[Volumetria] = None
