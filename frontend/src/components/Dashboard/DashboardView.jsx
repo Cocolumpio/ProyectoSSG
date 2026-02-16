@@ -225,15 +225,32 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                     <div className="w-full h-full flex items-center justify-center">
                       <div className="w-8 h-8 border-4 border-[#994B49] border-t-transparent rounded-full animate-spin" />
                     </div>
-                  ) : ultimoAvance?.pix4d_url ? (
-                    <iframe
-                      src={ultimoAvance.pix4d_url}
-                      className="w-full h-full border-0"
-                      title="Modelo 3D Pix4D"
-                      allowFullScreen
-                    />
-                  ) : ultimoAvance?.modelo_3d_url ? (
-                    <PointCloudViewer modelUrl={ultimoAvance.modelo_3d_url} />
+                  ) : ultimoAvance?.pix4d_url || ultimoAvance?.modelo_3d_url ? (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1a1a2e] to-[#2d2d44]">
+                      <div className="text-center p-6">
+                        <Box className="h-16 w-16 mx-auto mb-4 text-[#994B49]" />
+                        <h4 className="text-white font-semibold mb-2">Modelo 3D Disponible</h4>
+                        <p className="text-gray-400 text-sm mb-4">
+                          Semana {ultimoAvance.semana} - {ultimoAvance.fecha}
+                        </p>
+                        {ultimoAvance.pix4d_url && (
+                          <a
+                            href={ultimoAvance.pix4d_url.replace('/embed/', '/dataset/')}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 bg-[#994B49] hover:bg-[#B85C5A] text-white px-4 py-2 rounded-lg transition-colors"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            Ver en Pix4D
+                          </a>
+                        )}
+                        {ultimoAvance.modelo_3d_url && !ultimoAvance.pix4d_url && (
+                          <p className="text-gray-500 text-xs mt-2">
+                            Modelo local disponible en Avances Semanales
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400">
                       <div className="text-center">
