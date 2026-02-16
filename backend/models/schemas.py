@@ -146,6 +146,7 @@ class ProyectoUpdate(BaseModel):
     fecha_fin_planeada: Optional[str] = None
     avance_actual: Optional[float] = None
     volumen_total_planeado: Optional[float] = None
+    semanas_planeadas: Optional[int] = None
     descripcion: Optional[str] = None
     pix4d_url: Optional[str] = None
     volumetria: Optional[Volumetria] = None
