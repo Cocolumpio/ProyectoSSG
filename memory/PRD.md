@@ -190,6 +190,14 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
   - Sincronización automática del volumen excavado entre vuelo y avance semanal
   - Columna "Semana" en la tabla de vuelos
   - Al crear/editar un vuelo vinculado, se actualiza el avance semanal correspondiente
+- [x] **COMPLETADO (Feb 2025):** Vista detallada de proyecto en Dashboard
+  - Al seleccionar un proyecto, se muestra una sección expandida con:
+    - Modelo 3D del último avance semanal (PointCloudViewer o Pix4D iframe)
+    - Volumen excavado vs. planeado con barra de progreso
+    - Semanas trabajadas / total semanas
+    - Viajes de camión estimados
+    - Costo total de flotilla ($150/m³ por defecto)
+    - Bitácora de vuelos del proyecto
 
 ## Backlog (P2)
 - [x] **COMPLETADO:** Vista Admin para Solicitudes de Vuelo
