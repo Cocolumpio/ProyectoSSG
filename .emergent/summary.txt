@@ -20,150 +20,144 @@ PRODUCT REQUIREMENTS:
 **User's preferred language**: Spanish. The next agent MUST respond in Spanish.
 
 **what currently exists?**
-A full-stack application with a React frontend and a FastAPI backend. Key features include:
-- **Authentication:** A complete JWT-based login system for 'admin' and 'client' roles.
-- **Role-Based Views:** The UI adapts based on the user's role. Admins have full control, while clients have read-only access and can only submit/view their own flight requests.
-- **Dashboard:** Displays KPIs, an interactive Leaflet map (using addresses), and project/flight data.
-- **Project Management:** Full CRUD for projects. Project location is now handled via an address search field that uses geocoding (OpenStreetMap/Nominatim). Progress percentage is calculated automatically.
-- **Weekly Progress:** A modal displays weekly reports with a cumulative line chart for excavated volume, an image gallery, and a 3D model viewer. Admins can edit the Pix4D URL for each week.
-- **Admin Panels:** Dedicated views for admins to manage incoming flight requests and to view/manage system users (activate/deactivate, create new users).
-- **PDF & Email:** Functionality to generate PDF reports and send email notifications for flight requests is in place.
-- **Code Structure:** The frontend  has been successfully refactored into smaller components. The backend remains a single  file, although a directory structure for refactoring has been created.
+A full-stack application with a React frontend and a FastAPI backend. In addition to the previously implemented authentication, role-based views, and project management, the following has been added/completed:
+- **Inline Volume Editing:** Admins can now directly edit the excavated volume for each weekly report from the UI.
+- **Enhanced Progress Chart:** The weekly progress chart is now a cumulative line graph showing weekly and total accumulated volume, a reference line for the project goal, and an automatic projection line estimating the completion date based on the current pace.
+- **Local 3D Model Viewer:** The dependency on Pix4D has been reduced. Admins can now upload  point cloud files, which are rendered directly in the browser using a new Three.js component. The Pix4D URL is kept as a fallback.
+- **Project-to-Client Assignment:** A system is in place for admins to assign projects to specific clients. The client's view is now filtered to show only their assigned projects.
+- **Flights as Logbook:** The Flights section has been refactored into a simple flight log (duration, area, photos, etc.), removing all volumetric data to avoid duplicate information, as requested by the user.
+- **Bug Fixes:** Resolved a critical bug where project progress percentage was not updating correctly and fixed a database inconsistency issue where two different collections ( and ) were being used for user data.
 
 **Last working item**:
-- **Last item agent was working:** The agent was implementing the user's request to remove the manual Advance Percentage input from the weekly progress form and, instead, allow admins to directly edit the Excavated Volume for each weekly report. The agent successfully removed the percentage field from the form but was in the middle of adding the UI and logic for inline editing of the volume.
-- **Status:** IN PROGRESS
+- **Last item agent was working:** The user requested a new feature for the dashboard. When an admin clicks on a project from the list, a new section should appear displaying detailed information: the latest 3D model, a comparison of excavated vs. planned volume, number of weeks worked, and total fleet costs. The agent acknowledged the request and was about to begin implementation by modifying .
+- **Status:** NOT STARTED
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** screenshot tool. The agent should log in as an admin, navigate to a project's weekly progress modal, and verify that an edit button appears next to the volume, which then allows for updating the value.
+- **Which testing method agent to use?** screenshot tool
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-  - **Issue 1:** Implement inline editing for excavated volume in the weekly progress view. (P0)
+  - **Issue 1:** Implement a detailed project view section on the Dashboard. (P0)
 
   **Issues Detail:**
   - **Issue 1:**
-     - **Attempted fixes:** The agent correctly identified the target file () and removed the now-obsolete manual percentage input field. The implementation of the new edit functionality was started but not completed.
+     - **Attempted fixes:** None. This is a new feature request.
      - **Next debug checklist:**
-        1. In , add state variables for managing the editing UI (e.g., , ).
-        2. In the JSX where the selected week's details are displayed, add an Edit button next to the  value. This button should only be visible to admins.
-        3. On clicking Edit, replace the volume text with an input field and show Save and Cancel buttons.
-        4. Implement the  function to make a  request to the existing backend endpoint: . This endpoint was already updated to accept partial data, including just the .
-        5. After a successful update, the project's data should be re-fetched to reflect the change in the overall progress percentage automatically.
-     - **Why fix this issue and what will be achieved with the fix?** To give the admin the ability to correct historical volume data, which is critical for ensuring the automatically calculated project progress percentage is accurate.
-     - **Status:** IN PROGRESS
+        1. In , add a state variable (e.g., ) to track the clicked project.
+        2. Modify the project list rendering to set this state .
+        3. When a project is selected, conditionally render a new detailed view section.
+        4. This new section must fetch and display:
+           - The  component, passing the  from the latest weekly report () of the selected project.
+           - Project statistics:
+             - Total excavated volume (sum of weekly reports) vs. Planned volume.
+             - Total number of worked weeks ().
+             - Total fleet cost (calculated as ).
+        5. Ensure the  endpoint returns all necessary data, including the nested .
+     - **Why fix this issue and what will be achieved with the fix?** This will provide admins with a quick, at-a-glance summary of a project's key metrics and latest 3D model directly on the dashboard, improving workflow efficiency.
+     - **Status:** NOT STARTED
      - **Is recurring issue?** N
      - **Should Test frontend/backend/both after fix?** frontend
      - **Blocked on other issue:** None
 
 **In progress Task List**:
-*   None apart from the issue above.
-
-**Upcoming and Future Tasks**
-*   **Upcoming Tasks:**
-    *   **(P1)** Assign Projects to Clients: Implement a mechanism to link projects to specific client users. The client view should then be filtered to show only the projects assigned to them.
-*   **Future Tasks:**
-    *   **(P2)** Refactor Backend (): The monolithic  file should be broken down into the prepared modular structure (, , ). This task was started but aborted to prioritize feature delivery.
-    *   **(P3)** Clarify with the user if the original  file upload functionality is still needed, as it was mentioned in the initial problem statement but has not been implemented.
-
-**Completed work in this session**
-- **Feature:** Implemented a full JWT authentication system with Admin and Client roles.
-- **Feature:** Created role-based UIs, including read-only views for clients and management panels for admins.
-- **Feature:** Built Admin views for managing flight requests and users.
-- **Feature:** Replaced manual coordinate input with an address search field that uses geocoding (OpenStreetMap).
-- **Feature:** Implemented automatic project progress calculation ().
-- **Feature:** Changed the weekly progress chart from a bar chart to a cumulative line chart.
-- **Feature:** Added the ability for admins to edit the Pix4D URL for each weekly report.
-- **Feature:** Changed the project cost model from cost per trip to cost per m³.
-- **Refactoring:** Completed the refactoring of  by extracting  and  into separate components.
-- **UI:** Replaced the default logo with the user's DrON Topografía logo and removed demo credentials from the login page.
-- **Verification:** Confirmed that the initial data migration was successful.
-
-**Earlier issues found/mentioned but not fixed**
 *   None.
 
+**Upcoming and Future Tasks**
+*   **Future Tasks:**
+    *   **(P2)** Refactor Backend (): The monolithic  file should be broken down into the prepared modular structure (, , ). This remains a significant piece of technical debt.
+    *   **(P3)** Clarify with the user if the original  file upload functionality is still needed. A  viewer was implemented and accepted, but this original point was never formally closed.
+
+**Completed work in this session**
+- Implemented inline editing for excavated volume in weekly reports.
+- Corrected and enhanced the weekly progress chart to be a cumulative line graph with a goal line and future projection.
+- Implemented a local 3D point cloud viewer ( files) using Three.js as an alternative to Pix4D, including file upload functionality.
+- **P1 Task:** Completed the assignment of projects to clients, including filtering the client's view.
+- Fixed a bug where project progress wasn't recalculated when the planned volume was edited.
+- Resolved critical database inconsistencies by unifying user collection names ( to ).
+- Refactored the Flights section into a simple logbook, removing volumetric data as requested.
+- Simplified the Project creation/edit form to remove direct input of volumetric data.
+
+**Earlier issues found/mentioned but not fixed**
+- The monolithic  backend file. A directory structure for refactoring exists, but the work has not been done.
+
 **Known issue recurrence from previous fork**
-- The Acuarela project, likely test data from a previous agent, reappeared after the data migration. It was not automatically cleaned up, indicating that a permanent solution to prevent test data pollution is not in place.
+- While not recurring in this session, the root cause of test data pollution (e.g., the Acuarela project) was never addressed. The database was cleaned as a side effect of fixing another bug, but there's no mechanism to prevent test data from persisting across sessions.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Frontend:** React, TailwindCSS, Leaflet, Recharts, Axios
-- **Backend:** FastAPI, Pydantic, Motor (async MongoDB driver), , 
-- **Authentication:** JWT tokens, , 
-- **Geocoding:** OpenStreetMap (Nominatim) API for address lookup
-- **Database:** MongoDB
+- **Frontend:** React, TailwindCSS, Leaflet, Recharts, Axios, **Three.js** (for 3D rendering).
+- **Backend:** FastAPI, Pydantic, Motor (async MongoDB driver), , .
+- **Authentication:** JWT tokens, , .
+- **Geocoding:** OpenStreetMap (Nominatim) API for address lookup.
+- **Database:** MongoDB.
 
 **key DB schema**
 - ** collection:**
-    - :  (new field for address)
-    - :  (new field)
-    - :  (renamed from )
-    - : 
-- ** collection (new):**
-    - : 
-    - : 
-    - :  ('admin' or 'client')
-    - : 
+    - :  (new field, stores assigned client user IDs).
+- ** collection (within ):**
+    - :  (new field, path to the stored .ply file).
+    - :  (new field).
 - ** collection:**
-    - :  (new field to link to a user)
+    - : This entire object has been **removed**.
+- ** collection:** This collection was found to be erroneously used. The correct collection is ****. The  collection should be considered deprecated and removed.
 
 **changes in tech stack**
-- **Added (Backend):** ,  for JWT authentication.
+- **Frontend:** Added  and  for the 3D point cloud viewer.
 
 **All files of reference**
-- : The monolithic backend containing all API logic.
-- : The main frontend component, handles routing and global state.
-- : Manages authentication state and logic.
-- : The component currently being modified.
-- : Contains all admin-specific views.
-- : The application's entry point for authentication.
+- : Contains all API logic, was heavily modified.
+- : Modified to include inline volume editing, the new projection chart, and the new 3D viewer.
+- : New file, contains the Three.js 3D viewer logic.
+- : Modified to add client assignment functionality.
+- : Rewritten to be a simple flight logbook without volumetric data.
+- : Modified to filter projects for clients and remove volumetric data from the dashboard's flight list.
+- : Modified to remove dependencies on flight volumetric data. This file will be the target of the next task.
 
 **Areas that need refactoring**:
-- ****: This is the highest priority for refactoring. The file is over 1500 lines long. A folder structure (, , ) has been created, but the code has not been moved. This should be done to improve maintainability.
+- ****: High priority. The file is now even larger and more complex, making maintenance difficult.
+- **Database Cleanup:** The  collection is now obsolete and should be dropped from the MongoDB database to prevent future confusion with the correct  collection.
 
 **key api endpoints**
-- : Login and receive JWT.
-- : Create a new user (used by admin panel).
-- , : User management endpoints.
-- : Updates a project (now includes , ).
-- : Updates a weekly report. Now supports partial updates (e.g., only  or ).
-- Endpoints for creating/updating/deleting weekly reports now trigger a recalculation of the project's total progress.
+- : (New) Uploads a  model file for a weekly report.
+- : (New) Serves the stored 3D model files.
+- : (New) Assigns or un-assigns clients to a project.
+- : (Modified) Now accepts an optional  query parameter to filter projects for the client view.
+- : (Modified) Now triggers a recalculation of the project's progress when  is changed.
+- , : (Modified) Simplified to remove all logic related to volumetrics.
 
 **Critical Info for New Agent**
-- Your immediate task is to finish the implementation of inline volume editing in  as described in the Last working item section.
-- The application is role-based. Use the provided credentials to test both admin and client flows.
-- The backend refactoring is a significant pending task. The current  is very large and difficult to navigate.
-- Project progress is no longer a manual input but is calculated automatically based on planned and excavated volumes. Any changes to weekly excavated volumes should trigger this recalculation on the backend.
+- **Database Inconsistency:** Be aware that a major issue was caused by two different user collections ( and ). The code has been standardized to use . The old  collection might still exist and should be ignored or removed.
+- **Next Task:** Your immediate task is to implement the project detail view on the Dashboard as requested by the user. This is a frontend-focused task involving state management and component composition in .
+- **Simplified Flights:** Remember that the Flights module is now just a logbook. All volumetric data is managed exclusively within Projects -> Weekly Progress.
 
 **documents and test reports created in this job**
-- 
 -  (updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (LATEST):** remove that I add the percentage of advance here and let me edit the excavated volume of each week, in case something needs to be corrected (PENDING IMPLEMENTATION)
-2.  **User:** Now, I want the volumetrics graph to be linear, not bars, to see the progression of the excavation (COMPLETED)
-3.  **User:** Now, I want the percentage of progress to be real, that this percentage is according to what is planned by the client... (COMPLETED)
-4.  **User:** In the advance percentage part, I want it to be real... (COMPLETED)
-5.  **User:** I like it, lets deploy" (Agent prepared for deployment but user added more requests)
-6.  **User:** "its done (after agent removed demo credentials)
-7.  **User:** remove the demo credentials (COMPLETED)
-8.  **User:** do the pending tasks (COMPLETED - Agent addressed 3 pending items from the plan)
-9.  **User:** Can you change it so that instead of using coordinates for the location of the work we can use addresses? (COMPLETED)
-10. **User:** Instead of cost per trip change it to cost per cubic meter, in the projects part (COMPLETED)
+1.  **User (LATEST):** En la parte de Dashboard, cuando seleccionemos un proyecto quiero que agregues un espacio para mostrar el ultimo modelo 3D... (Requesting the new project detail section on the dashboard). (PENDING IMPLEMENTATION)
+2.  **User:** Quita esta parte del proyecto general... (Request to simplify the project creation form by removing direct volume and Pix4D URL inputs). (COMPLETED)
+3.  **User:** ¡Excelente! El formulario de Registrar Vuelo está completamente simplificado... (Agent summary after simplifying flight form).
+4.  **User:** Quita la funcion de volumen en la parte de vuelos... (Request to turn the Flights section into a simple logbook without volume data). (COMPLETED)
+5.  **User:** Actualice el volumen esperado... pero sigue marcando 29.75%... (Bug report about progress percentage not updating correctly and request to link flights to weeks). (COMPLETED)
+6.  **User:** Continua con las siguentes tareas (Instruction to proceed with the next task, which was P1: Assign Projects to Clients). (COMPLETED)
+7.  **User:** Seria subir la nube de puntos... escoge la opcion menos pesada y mas viable... (Giving go-ahead to implement a local 3D model uploader, preferring the most viable option). (COMPLETED)
+8.  **User:** Pix4D muy pronto dejara de funcionar... me gustaria que los modelos 3D yo los subiera ya procesados... (Requesting an alternative to Pix4D for hosting 3D models). (COMPLETED)
+9.  **User:** Si por favor agregala (Approving the agent's suggestion to add a projection line to the progress chart). (COMPLETED)
+10. **User:** La grafica quiero que sea volumen en metros cubicos vs semana, por que dice 0k? (Bug report about the progress chart's Y-axis being incorrectly formatted). (COMPLETED)
 
 **Project Health Check:**
 - **Broken:** No
 - **Mocked:** None
 
 **3rd Party Integrations**
-- **Pix4D:** Embeds 3D models via .
+- **Pix4D:** Embeds 3D models via . Now used as a fallback option.
 - **Resend:** Sends email notifications. Requires a User API Key.
-- **Google Calendar:** A link is generated for emails; not a direct API integration.
-- **OpenStreetMap (Nominatim):** Used for geocoding addresses to coordinates. Free service, no key required.
+- **OpenStreetMap (Nominatim):** Used for geocoding addresses. No key required.
+- **Three.js:** (New) Used for rendering local  point cloud models in the browser.
 
 **Testing status**
-- **Testing agent used after significant changes:** YES, for the authentication and role-based access feature.
+- **Testing agent used after significant changes:** NO
 - **Troubleshoot agent used after agent stuck in loop:** NO
 - **Test files created:** None
 - **Known regressions:** None
@@ -173,4 +167,5 @@ A full-stack application with a React frontend and a FastAPI backend. Key featur
 - **Client:**  / 
 
 **What agent forgot to execute**
-- The agent started to refactor the monolithic  by creating a new directory structure but then abandoned the effort to prioritize feature requests. The refactoring itself was not completed and remains a key technical debt.</analysis>
+- The major backend refactoring of the monolithic  file is still pending.
+- The agent did not drop the now-obsolete  collection from the database, which could cause confusion for a future developer or agent.</analysis>
