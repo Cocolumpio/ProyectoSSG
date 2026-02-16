@@ -141,15 +141,49 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Proyectos</h2>
-        <button
-          onClick={() => { resetForm(); setShowForm(true); }}
-          className="flex items-center justify-center space-x-2 px-4 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors"
-          data-testid="add-proyecto-btn"
-        >
-          <Plus className="h-5 w-5" />
-          <span>Nuevo Proyecto</span>
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="flex items-center justify-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            data-testid="import-cronograma-btn"
+          >
+            <FileSpreadsheet className="h-5 w-5" />
+            <span>Importar Excel</span>
+          </button>
+          <button
+            onClick={() => { resetForm(); setShowForm(true); }}
+            className="flex items-center justify-center space-x-2 px-4 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors"
+            data-testid="add-proyecto-btn"
+          >
+            <Plus className="h-5 w-5" />
+            <span>Nuevo Proyecto</span>
+          </button>
+        </div>
       </div>
+
+      {/* Modal de Importar Cronograma */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[95vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between z-10">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Importar Cronograma desde Excel</h3>
+              <button onClick={() => setShowImportModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="p-4">
+              <ImportarCronograma 
+                onProyectoCreado={(data) => {
+                  onShowSuccess && onShowSuccess(`Proyecto creado: ${data.mensaje}`);
+                  onRefresh && onRefresh();
+                  setShowImportModal(false);
+                }}
+                onClose={() => setShowImportModal(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Crear Proyecto */}
       {showForm && (
