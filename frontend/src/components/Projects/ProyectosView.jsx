@@ -79,7 +79,23 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
     setSaving(true);
     setError(null);
     try {
-      await axios.post(`${API}/proyectos`, formData);
+      // Construir actividades_tipo basado en las fases seleccionadas
+      const actividades_tipo = [];
+      if (formData.fases?.excavacion) actividades_tipo.push('excavacion');
+      if (formData.fases?.cimentacion) {
+        actividades_tipo.push('pilas');
+        if (formData.anclas_planeadas > 0) actividades_tipo.push('anclas');
+      }
+      if (formData.fases?.edificacion) actividades_tipo.push('muros');
+      
+      const dataToSend = {
+        ...formData,
+        actividades_tipo,
+        fases: undefined // No enviar fases al backend
+      };
+      delete dataToSend.fases;
+      
+      await axios.post(`${API}/proyectos`, dataToSend);
       resetForm();
       setShowForm(false);
       onRefresh();
@@ -96,7 +112,23 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
     setError(null);
     const projectName = formData.nombre;
     try {
-      await axios.put(`${API}/proyectos/${editingProject.id}`, formData);
+      // Construir actividades_tipo basado en las fases seleccionadas
+      const actividades_tipo = [];
+      if (formData.fases?.excavacion) actividades_tipo.push('excavacion');
+      if (formData.fases?.cimentacion) {
+        actividades_tipo.push('pilas');
+        if (formData.anclas_planeadas > 0) actividades_tipo.push('anclas');
+      }
+      if (formData.fases?.edificacion) actividades_tipo.push('muros');
+      
+      const dataToSend = {
+        ...formData,
+        actividades_tipo,
+        fases: undefined
+      };
+      delete dataToSend.fases;
+      
+      await axios.put(`${API}/proyectos/${editingProject.id}`, dataToSend);
       setShowEditForm(false);
       setEditingProject(null);
       resetForm();
