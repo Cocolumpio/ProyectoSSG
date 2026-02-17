@@ -165,6 +165,53 @@ export function MetricasHistoricasView({ proyectos }) {
   const totales = calcularTotales();
   const chartData = prepareChartData();
 
+  // Funciones de exportación
+  const handleExportExcel = async () => {
+    setExporting('excel');
+    try {
+      const response = await axios.get(`${API}/exportar/metricas-excel`, {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `DrON_Metricas_${new Date().toISOString().split('T')[0]}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error exportando a Excel:', err);
+      alert('Error al exportar a Excel');
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    setExporting('pdf');
+    try {
+      const response = await axios.get(`${API}/exportar/metricas-pdf`, {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `DrON_Metricas_${new Date().toISOString().split('T')[0]}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error exportando a PDF:', err);
+      alert('Error al exportar a PDF');
+    } finally {
+      setExporting(null);
+    }
+  };
+
   // Obtener nombres únicos de proyectos para las líneas del gráfico
   const getProjectKeys = () => {
     const keys = new Set();
