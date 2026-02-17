@@ -1431,6 +1431,111 @@ async def regenerar_thumbnail(proyecto_id: str, avance_id: str):
 # --- Comparación de Avances con IA ---
 from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContentWithMimeType
 
+
+async def enviar_alerta_discrepancia(
+    proyecto_nombre: str,
+    proyecto_id: str,
+    discrepancias: list,
+    resumen_ia: str,
+    pdf_nombre: str
+):
+    """
+    Envía una alerta por email cuando se detectan discrepancias críticas (>15%)
+    entre los datos del dron y el reporte del residente.
+    """
+    if not ADMIN_EMAIL or not resend.api_key:
+        logging.warning("No se puede enviar alerta: ADMIN_EMAIL o RESEND_API_KEY no configurados")
+        return
+    
+    # Construir tabla de discrepancias
+    discrepancias_html = ""
+    for d in discrepancias:
+        color = "#dc2626"  # Rojo para discrepancias mayores
+        discrepancias_html += f"""
+        <tr style="background-color: #fef2f2;">
+            <td style="padding: 12px; border-bottom: 1px solid #fecaca;">{d.get('nombre', 'N/A')}</td>
+            <td style="padding: 12px; border-bottom: 1px solid #fecaca; text-align: right;">{d.get('valor_dron', 0):,.2f} {d.get('unidad', '')}</td>
+            <td style="padding: 12px; border-bottom: 1px solid #fecaca; text-align: right;">{d.get('valor_residente', 0):,.2f} {d.get('unidad', '')}</td>
+            <td style="padding: 12px; border-bottom: 1px solid #fecaca; text-align: right; color: {color}; font-weight: bold;">
+                {d.get('diferencia_porcentaje', 0):+.1f}%
+            </td>
+        </tr>
+        """
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+    </head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #994B49 0%, #B85C5A 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">⚠️ Alerta de Discrepancia</h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">DrON Topografía - Sistema de Monitoreo</p>
+        </div>
+        
+        <div style="background: #fff; padding: 30px; border: 1px solid #e5e5e5; border-top: none; border-radius: 0 0 10px 10px;">
+            <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                <strong style="color: #dc2626;">Se detectaron discrepancias críticas (&gt;15%)</strong>
+                <p style="margin: 5px 0 0 0; color: #7f1d1d;">
+                    El análisis del reporte del residente muestra diferencias significativas con los datos del dron.
+                </p>
+            </div>
+            
+            <h2 style="color: #994B49; border-bottom: 2px solid #994B49; padding-bottom: 10px; margin-top: 0;">
+                📋 Proyecto: {proyecto_nombre}
+            </h2>
+            
+            <p><strong>Archivo analizado:</strong> {pdf_nombre}</p>
+            <p><strong>Fecha:</strong> {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')} UTC</p>
+            
+            <h3 style="color: #dc2626; margin-top: 25px;">🔴 Discrepancias Detectadas</h3>
+            
+            <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                <thead>
+                    <tr style="background: #f3f4f6;">
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e5e5;">Métrica</th>
+                        <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e5e5;">Dron</th>
+                        <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e5e5;">Residente</th>
+                        <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e5e5;">Diferencia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {discrepancias_html}
+                </tbody>
+            </table>
+            
+            <h3 style="color: #994B49; margin-top: 25px;">🤖 Análisis de IA</h3>
+            <div style="background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <p style="margin: 0; white-space: pre-wrap;">{resumen_ia[:800]}{'...' if len(resumen_ia) > 800 else ''}</p>
+            </div>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e5e5;">
+                <p style="color: #6b7280; font-size: 12px; margin: 0;">
+                    Esta alerta se generó automáticamente al detectar diferencias mayores al 15% entre los datos del sistema de drones y el reporte del residente de obra. 
+                    Se recomienda revisar ambas fuentes para identificar la causa de la discrepancia.
+                </p>
+            </div>
+        </div>
+        
+        <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 12px;">
+            <p>DrON Topografía © 2025</p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    params = {
+        "from": "DrON Topografía <onboarding@resend.dev>",
+        "to": [ADMIN_EMAIL],
+        "subject": f"⚠️ Alerta: Discrepancias críticas en {proyecto_nombre}",
+        "html": html_content
+    }
+    
+    await asyncio.to_thread(resend.Emails.send, params)
+    logging.info(f"Alerta de discrepancia enviada a {ADMIN_EMAIL} para proyecto {proyecto_nombre}")
+
+
 @api_router.post("/proyectos/{proyecto_id}/comparar-avance")
 async def comparar_avance_con_residente(
     proyecto_id: str,
