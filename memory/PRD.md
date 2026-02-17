@@ -99,11 +99,29 @@ Permite comparar automáticamente los avances registrados por el sistema de dron
 - ✅ UI de comparación con métricas, discrepancias y análisis IA
 - ✅ Alertas automáticas por email (Resend) cuando discrepancias >15%
 - ✅ Prueba E2E del sistema de 3 fases (Proyecto E2E 3 Fases Test creado)
+- ✅ Reporte semanal automático cada viernes a las 18:00
+- ✅ Botón para enviar reporte semanal manualmente
+- ✅ Desglose de costos de flotilla por proyecto en reportes
+- ✅ Verificación de la interfaz de Análisis de Fotos con IA
 
 ## Tareas Pendientes
-- (P1) Probar funcionalidad de análisis de fotos con AI (UI integrada, flujo completo pendiente)
-- (P2) Refactorización del archivo `server.py` monolítico
+- (P2) Refactorización del archivo `server.py` monolítico (~2900 líneas)
 - (P3) Clarificar requisito de archivos `.laz`
+
+## Funcionalidades del Sistema
+
+### Reporte Semanal Automático
+- **Programación**: Cada viernes a las 18:00
+- **Contenido**:
+  - KPIs: Total proyectos, volumen excavado, gasto total flotillas
+  - Tabla resumen por proyecto: Avance, volumen semana, costo semana/total
+  - Desglose de costos de flotilla: Volumen, viajes, costo por proyecto
+- **Envío manual**: Botón "Enviar Reporte Semanal" en dashboard (solo admin)
+
+### Análisis de Fotos con IA
+- Ubicación: Modal de Avances Semanales → Detalle de semana → "Analizar Fotos con IA"
+- Detecta: Pilas, anclas, estado del proyecto
+- Modelo: Gemini 2.5 Flash via Emergent LLM Key
 
 ## Notas Técnicas
 - La comparación de avances usa comparación ACUMULADA del proyecto
