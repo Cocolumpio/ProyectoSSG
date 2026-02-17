@@ -22,6 +22,8 @@ import resend
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from concurrent.futures import ThreadPoolExecutor
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 # PDF Generation
 from reportlab.lib import colors
@@ -35,6 +37,9 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 
 # Thread pool for CPU-intensive tasks
 thumbnail_executor = ThreadPoolExecutor(max_workers=2)
+
+# Scheduler for weekly reports
+scheduler = AsyncIOScheduler()
 
 
 ROOT_DIR = Path(__file__).parent
