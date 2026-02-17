@@ -276,6 +276,21 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
                   </div>
                 </div>
 
+                {/* Banner de alerta enviada */}
+                {selectedComparacion.alerta_enviada && (
+                  <div className="bg-orange-50 rounded-xl p-4 border border-orange-200 flex items-center gap-3">
+                    <div className="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                      <span className="text-xl">📧</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-orange-800">Alerta Enviada al Administrador</h4>
+                      <p className="text-sm text-orange-600">
+                        Se detectaron discrepancias críticas (&gt;15%) y se envió una notificación por email.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Tabla de comparación */}
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                   <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
