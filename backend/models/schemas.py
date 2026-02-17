@@ -36,7 +36,7 @@ class UserResponse(BaseModel):
     email: str
     nombre: str
     rol: str
-    activo: bool
+    is_active: bool = True
 
 
 class LoginRequest(BaseModel):
