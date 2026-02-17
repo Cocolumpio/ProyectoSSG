@@ -5,6 +5,7 @@ import { Building2, Plane, TrendingUp, Database, Map as MapIcon, Box, Calendar, 
 import { KPICard } from '../common/KPICard';
 import { MapRecenter } from '../common/MapRecenter';
 import { PointCloudViewer } from '../Projects/PointCloudViewer';
+import { GanttChart } from './GanttChart';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
