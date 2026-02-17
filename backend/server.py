@@ -2788,6 +2788,248 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+# --- Reporte Semanal Automático ---
+async def generar_reporte_semanal():
+    """
+    Genera y envía un reporte semanal con el resumen de avance de todos los proyectos.
+    Se ejecuta automáticamente cada viernes a las 18:00.
+    """
+    if not ADMIN_EMAIL or not resend.api_key:
+        logging.warning("No se puede enviar reporte semanal: ADMIN_EMAIL o RESEND_API_KEY no configurados")
+        return
+    
+    try:
+        logging.info("Iniciando generación de reporte semanal...")
+        
+        # Obtener todos los proyectos activos
+        proyectos = await db.proyectos.find({}, {"_id": 0}).to_list(100)
+        
+        if not proyectos:
+            logging.info("No hay proyectos para incluir en el reporte")
+            return
+        
+        # Calcular métricas por proyecto
+        proyectos_data = []
+        total_costo_flotilla = 0
+        total_volumen_excavado = 0
+        
+        for proyecto in proyectos:
+            proyecto_id = proyecto.get('id')
+            
+            # Obtener avances semanales del proyecto
+            avances = await db.avances_semanales.find(
+                {"proyecto_id": proyecto_id},
+                {"_id": 0}
+            ).to_list(100)
+            
+            # Calcular totales
+            volumen_excavado = sum((a.get('volumen_excavacion', 0) or 0) for a in avances)
+            pilas_completadas = sum((a.get('pilas_completadas', 0) or 0) for a in avances)
+            anclas_instaladas = sum((a.get('anclas_instaladas', 0) or 0) for a in avances)
+            muros_completados = sum((a.get('muros_completados', 0) or 0) for a in avances)
+            
+            # Calcular costo de flotilla
+            costo_m3 = proyecto.get('costo_m3', 150.0) or 150.0
+            capacidad_camion = proyecto.get('capacidad_camion', 25.0) or 25.0
+            costo_flotilla = volumen_excavado * costo_m3
+            viajes_totales = int(volumen_excavado / capacidad_camion) if capacidad_camion > 0 else 0
+            
+            total_costo_flotilla += costo_flotilla
+            total_volumen_excavado += volumen_excavado
+            
+            # Obtener avances de esta semana (últimos 7 días)
+            hace_7_dias = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+            avances_semana = [a for a in avances if a.get('fecha', '') >= hace_7_dias[:10]]
+            volumen_semana = sum((a.get('volumen_excavacion', 0) or 0) for a in avances_semana)
+            costo_semana = volumen_semana * costo_m3
+            
+            proyectos_data.append({
+                'nombre': proyecto.get('nombre', 'Sin nombre'),
+                'avance': proyecto.get('avance_actual', 0) or 0,
+                'volumen_total': volumen_excavado,
+                'volumen_semana': volumen_semana,
+                'pilas': pilas_completadas,
+                'anclas': anclas_instaladas,
+                'muros': muros_completados,
+                'costo_flotilla_total': costo_flotilla,
+                'costo_flotilla_semana': costo_semana,
+                'viajes_totales': viajes_totales,
+                'semanas_registradas': len(avances),
+                'ubicacion': proyecto.get('ubicacion', 'N/A')
+            })
+        
+        # Ordenar por avance descendente
+        proyectos_data.sort(key=lambda x: x['avance'], reverse=True)
+        
+        # Generar HTML del reporte
+        fecha_reporte = datetime.now(timezone.utc).strftime('%d/%m/%Y')
+        semana_num = datetime.now(timezone.utc).isocalendar()[1]
+        
+        # Tabla de proyectos
+        proyectos_rows = ""
+        for p in proyectos_data:
+            avance_color = "#22c55e" if p['avance'] >= 75 else ("#eab308" if p['avance'] >= 50 else "#ef4444")
+            proyectos_rows += f"""
+            <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e5e5;">
+                    <strong>{p['nombre']}</strong>
+                    <br><span style="font-size: 12px; color: #6b7280;">{p['ubicacion']}</span>
+                </td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; text-align: center;">
+                    <span style="background: {avance_color}; color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold;">
+                        {p['avance']:.1f}%
+                    </span>
+                </td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; text-align: right; font-family: monospace;">
+                    {p['volumen_semana']:,.0f} m³
+                </td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; text-align: right; font-family: monospace;">
+                    ${p['costo_flotilla_semana']:,.2f}
+                </td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; text-align: right; font-family: monospace;">
+                    ${p['costo_flotilla_total']:,.2f}
+                </td>
+            </tr>
+            """
+        
+        # Tabla de desglose de flotillas
+        flotilla_rows = ""
+        for p in proyectos_data:
+            if p['volumen_total'] > 0:
+                flotilla_rows += f"""
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #e5e5e5;">{p['nombre']}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #e5e5e5; text-align: right;">{p['volumen_total']:,.0f} m³</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #e5e5e5; text-align: right;">{p['viajes_totales']:,}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #e5e5e5; text-align: right; font-weight: bold;">${p['costo_flotilla_total']:,.2f}</td>
+                </tr>
+                """
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #994B49 0%, #B85C5A 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                <h1 style="color: white; margin: 0; font-size: 28px;">📊 Reporte Semanal</h1>
+                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">
+                    DrON Topografía - Semana {semana_num} ({fecha_reporte})
+                </p>
+            </div>
+            
+            <div style="background: #fff; padding: 30px; border: 1px solid #e5e5e5; border-top: none;">
+                
+                <!-- KPIs Principales -->
+                <div style="display: flex; gap: 20px; margin-bottom: 30px;">
+                    <div style="flex: 1; background: #f0fdf4; padding: 20px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 32px; font-weight: bold; color: #16a34a;">{len(proyectos_data)}</div>
+                        <div style="color: #166534; font-size: 14px;">Proyectos Activos</div>
+                    </div>
+                    <div style="flex: 1; background: #fef3c7; padding: 20px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 32px; font-weight: bold; color: #d97706;">{total_volumen_excavado:,.0f}</div>
+                        <div style="color: #92400e; font-size: 14px;">m³ Excavados Total</div>
+                    </div>
+                    <div style="flex: 1; background: #fee2e2; padding: 20px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 32px; font-weight: bold; color: #dc2626;">${total_costo_flotilla:,.0f}</div>
+                        <div style="color: #991b1b; font-size: 14px;">Gasto Total Flotillas</div>
+                    </div>
+                </div>
+                
+                <!-- Tabla de Proyectos -->
+                <h2 style="color: #994B49; border-bottom: 2px solid #994B49; padding-bottom: 10px;">
+                    📋 Resumen por Proyecto
+                </h2>
+                
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                    <thead>
+                        <tr style="background: #f3f4f6;">
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e5e5;">Proyecto</th>
+                            <th style="padding: 12px; text-align: center; border-bottom: 2px solid #e5e5e5;">Avance</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e5e5;">Vol. Semana</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e5e5;">Costo Semana</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e5e5;">Costo Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {proyectos_rows}
+                    </tbody>
+                </table>
+                
+                <!-- Desglose de Flotillas -->
+                <h2 style="color: #994B49; border-bottom: 2px solid #994B49; padding-bottom: 10px;">
+                    🚛 Desglose de Costos de Flotilla
+                </h2>
+                
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                    <thead>
+                        <tr style="background: #fef2f2;">
+                            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #fecaca;">Proyecto</th>
+                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid #fecaca;">Volumen</th>
+                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid #fecaca;">Viajes</th>
+                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid #fecaca;">Costo Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {flotilla_rows}
+                        <tr style="background: #fee2e2; font-weight: bold;">
+                            <td style="padding: 10px;">TOTAL</td>
+                            <td style="padding: 10px; text-align: right;">{total_volumen_excavado:,.0f} m³</td>
+                            <td style="padding: 10px; text-align: right;">-</td>
+                            <td style="padding: 10px; text-align: right; color: #dc2626;">${total_costo_flotilla:,.2f}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 30px; padding: 15px; background: #f9fafb; border-radius: 8px; border-left: 4px solid #994B49;">
+                    <p style="margin: 0; color: #6b7280; font-size: 12px;">
+                        Este reporte se genera automáticamente cada viernes a las 18:00 hrs.
+                        Los costos de flotilla se calculan con base en el volumen excavado y el costo por m³ configurado en cada proyecto.
+                    </p>
+                </div>
+            </div>
+            
+            <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 12px;">
+                <p>DrON Topografía © 2025</p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Enviar email
+        params = {
+            "from": "DrON Topografía <onboarding@resend.dev>",
+            "to": [ADMIN_EMAIL],
+            "subject": f"📊 Reporte Semanal - Semana {semana_num} - DrON Topografía",
+            "html": html_content
+        }
+        
+        await asyncio.to_thread(resend.Emails.send, params)
+        logging.info(f"Reporte semanal enviado exitosamente a {ADMIN_EMAIL}")
+        
+    except Exception as e:
+        logging.error(f"Error generando reporte semanal: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Inicia el scheduler para reportes automáticos"""
+    # Programar reporte semanal cada viernes a las 18:00
+    scheduler.add_job(
+        generar_reporte_semanal,
+        CronTrigger(day_of_week='fri', hour=18, minute=0),
+        id='reporte_semanal',
+        replace_existing=True
+    )
+    scheduler.start()
+    logging.info("Scheduler iniciado - Reporte semanal programado para viernes 18:00")
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    scheduler.shutdown()
     client.close()
