@@ -103,25 +103,38 @@ Permite comparar automáticamente los avances registrados por el sistema de dron
 - ✅ Botón para enviar reporte semanal manualmente
 - ✅ Desglose de costos de flotilla por proyecto en reportes
 - ✅ Verificación de la interfaz de Análisis de Fotos con IA
+- ✅ Dashboard de Métricas Históricas con gráficas interactivas
+- ✅ Reportes actualizados con pilas, anclas y muros por proyecto
 
 ## Tareas Pendientes
-- (P2) Refactorización del archivo `server.py` monolítico (~2900 líneas)
+- (P2) Refactorización del archivo `server.py` monolítico (~3000 líneas)
 - (P3) Clarificar requisito de archivos `.laz`
 
 ## Funcionalidades del Sistema
 
-### Reporte Semanal Automático
-- **Programación**: Cada viernes a las 18:00
-- **Contenido**:
-  - KPIs: Total proyectos, volumen excavado, gasto total flotillas
-  - Tabla resumen por proyecto: Avance, volumen semana, costo semana/total
-  - Desglose de costos de flotilla: Volumen, viajes, costo por proyecto
-- **Envío manual**: Botón "Enviar Reporte Semanal" en dashboard (solo admin)
+### Dashboard de Métricas Históricas (NUEVO)
+- **Ubicación**: Pestaña "Métricas" en la navegación principal
+- **KPIs Totales**:
+  - Excavación Total (m³)
+  - Pilas Totales
+  - Anclas Totales
+  - Muros Totales
+- **Gráfica de Evolución**: AreaChart mostrando avance por semana de todos los proyectos
+- **Selector de Vista**: Avance Total, Excavación, Cimentación, Edificación
+- **Comparativa**: BarChart horizontal comparando avance entre proyectos
+- **Tabla de Detalle**: Métricas completas por proyecto
 
-### Análisis de Fotos con IA
-- Ubicación: Modal de Avances Semanales → Detalle de semana → "Analizar Fotos con IA"
-- Detecta: Pilas, anclas, estado del proyecto
-- Modelo: Gemini 2.5 Flash via Emergent LLM Key
+### Reporte Semanal Automático (ACTUALIZADO)
+- **Programación**: Cada viernes a las 18:00
+- **KPIs del Reporte**:
+  - Proyectos Activos
+  - m³ Excavados Total
+  - Gasto Total Flotillas
+  - Pilas Totales (NUEVO)
+  - Anclas Totales (NUEVO)
+  - Muros Totales (NUEVO)
+- **Por Proyecto**: Muestra pilas, anclas, muros ejecutados vs planeados + incremento semanal
+- **Envío manual**: Botón "Enviar Reporte Semanal" en dashboard
 
 ## Notas Técnicas
 - La comparación de avances usa comparación ACUMULADA del proyecto
