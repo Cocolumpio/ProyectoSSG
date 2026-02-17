@@ -373,6 +373,74 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                       </p>
                     </div>
 
+                    {/* Métricas por Tipo de Actividad - Condicionales */}
+                    {stats.tiposActividades && stats.tiposActividades.length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {/* Pilas */}
+                        {stats.tiposActividades.includes('pilas') && stats.pilasPlaneadas > 0 && (
+                          <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <Columns3 className="h-4 w-4 text-blue-600" />
+                              <span className="text-xs font-medium text-blue-800">Pilas</span>
+                              <span className="text-xs text-blue-600 ml-auto">{stats.porcentajePilas.toFixed(0)}%</span>
+                            </div>
+                            <div className="flex items-end justify-between mb-1">
+                              <span className="text-xl font-bold text-blue-700">{stats.pilasEjecutadas}</span>
+                              <span className="text-sm text-blue-500">/ {stats.pilasPlaneadas}</span>
+                            </div>
+                            <div className="w-full bg-blue-200 rounded-full h-2">
+                              <div
+                                className="bg-blue-600 h-2 rounded-full transition-all"
+                                style={{ width: `${stats.porcentajePilas}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Muros */}
+                        {stats.tiposActividades.includes('muros') && stats.murosPlaneados > 0 && (
+                          <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <Building2 className="h-4 w-4 text-purple-600" />
+                              <span className="text-xs font-medium text-purple-800">Muros</span>
+                              <span className="text-xs text-purple-600 ml-auto">{stats.porcentajeMuros.toFixed(0)}%</span>
+                            </div>
+                            <div className="flex items-end justify-between mb-1">
+                              <span className="text-xl font-bold text-purple-700">{stats.murosEjecutados}</span>
+                              <span className="text-sm text-purple-500">/ {stats.murosPlaneados}</span>
+                            </div>
+                            <div className="w-full bg-purple-200 rounded-full h-2">
+                              <div
+                                className="bg-purple-600 h-2 rounded-full transition-all"
+                                style={{ width: `${stats.porcentajeMuros}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Anclas */}
+                        {stats.tiposActividades.includes('anclas') && stats.anclasPlaneadas > 0 && (
+                          <div className="bg-teal-50 rounded-lg p-3 border border-teal-200">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <Anchor className="h-4 w-4 text-teal-600" />
+                              <span className="text-xs font-medium text-teal-800">Anclas</span>
+                              <span className="text-xs text-teal-600 ml-auto">{stats.porcentajeAnclas.toFixed(0)}%</span>
+                            </div>
+                            <div className="flex items-end justify-between mb-1">
+                              <span className="text-xl font-bold text-teal-700">{stats.anclasEjecutadas}</span>
+                              <span className="text-sm text-teal-500">/ {stats.anclasPlaneadas}</span>
+                            </div>
+                            <div className="w-full bg-teal-200 rounded-full h-2">
+                              <div
+                                className="bg-teal-600 h-2 rounded-full transition-all"
+                                style={{ width: `${stats.porcentajeAnclas}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Semanas y Viajes */}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
