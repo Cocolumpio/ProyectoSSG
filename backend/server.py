@@ -2077,10 +2077,23 @@ async def crear_proyecto_desde_cronograma(data: dict):
             "fecha_inicio": resumen.get("fecha_inicio", datetime.now(timezone.utc).strftime("%Y-%m-%d")),
             "fecha_fin_planeada": resumen.get("fecha_fin", ""),
             "avance_actual": 0.0,
-            "volumen_total_planeado": 0,
+            # Tipos de actividades detectadas
+            "actividades_tipo": resumen.get("tipos_actividades", ["pilas"]),
+            # Métricas planeadas
+            "volumen_total_planeado": resumen.get("total_excavacion", 0),
+            "pilas_planeadas": resumen.get("total_pilas", 0),
+            "muros_planeados": resumen.get("total_muros", 0),
+            "anclas_planeadas": resumen.get("total_anclas", 0),
+            # Métricas ejecutadas (inician en 0)
+            "volumen_ejecutado": 0,
+            "pilas_ejecutadas": 0,
+            "muros_ejecutados": 0,
+            "anclas_ejecutadas": 0,
+            # Cronograma
             "semanas_planeadas": resumen.get("semanas_estimadas", 0),
-            "total_pilas_planeadas": resumen.get("total_pilas", 0),
-            "total_anclas_planeadas": data.get("total_anclas", 0),
+            "semanas_excavacion": resumen.get("semanas_excavacion", 0),
+            "semanas_pilas": resumen.get("semanas_pilas", 0),
+            "semanas_muros": resumen.get("semanas_muros", 0),
             "descripcion": data.get("descripcion", ""),
             "capacidad_camion": 25.0,
             "costo_m3": 150.0,
