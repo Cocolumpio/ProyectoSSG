@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { Building2, Plane, TrendingUp, Database, Map as MapIcon, Box, Calendar, Truck, DollarSign, BarChart3, Layers, ExternalLink, Maximize2, Columns3, Anchor, Shovel } from 'lucide-react';
+import { Building2, Plane, TrendingUp, Database, Map as MapIcon, Box, Calendar, Truck, DollarSign, BarChart3, Layers, ExternalLink, Maximize2, Columns3, Anchor, Shovel, Mail, Loader2 } from 'lucide-react';
 import { KPICard } from '../common/KPICard';
 import { MapRecenter } from '../common/MapRecenter';
 import { PointCloudViewer } from '../Projects/PointCloudViewer';
@@ -9,10 +9,11 @@ import { GanttChart } from './GanttChart';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onProyectoClick, mapCenter }) {
+export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onProyectoClick, mapCenter, onShowSuccess }) {
   const [avancesSemanales, setAvancesSemanales] = useState([]);
   const [loadingAvances, setLoadingAvances] = useState(false);
   const [showFullViewer, setShowFullViewer] = useState(false);
+  const [sendingReport, setSendingReport] = useState(false);
   
   // Vuelos del proyecto seleccionado
   const vuelosDelProyecto = selectedProyecto
