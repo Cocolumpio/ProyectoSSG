@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MapPin, Search, Loader2 } from 'lucide-react';
+import { MapPin, Search, Loader2, Shovel, Columns3, Building2, Anchor, Info } from 'lucide-react';
 
 export function ProjectFormContent({ formData, setFormData, error, saving, isEdit, onSubmit, onClose }) {
   const [searchingAddress, setSearchingAddress] = useState(false);
