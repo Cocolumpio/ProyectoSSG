@@ -1,51 +1,98 @@
 import { useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
-import { Calendar, Flag, Clock } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, LineChart, Line, Area, AreaChart } from 'recharts';
+import { Calendar, Flag, Clock, Columns3, Shovel, Building2, Anchor } from 'lucide-react';
 
 export function GanttChart({ proyecto, avances = [] }) {
+  // Determinar qué tipo de métrica principal usar basado en actividades_tipo
+  const tipoMetrica = useMemo(() => {
+    const tipos = proyecto?.actividades_tipo || [];
+    
+    // Prioridad: pilas > muros > anclas > excavacion
+    if (tipos.includes('pilas')) return 'pilas';
+    if (tipos.includes('muros')) return 'muros';
+    if (tipos.includes('anclas')) return 'anclas';
+    if (tipos.includes('excavacion')) return 'excavacion';
+    
+    // Si no hay tipos definidos, verificar si hay datos de excavación o pilas
+    const tieneExcavacion = proyecto?.volumen_total_planeado > 0;
+    const tienePilas = proyecto?.pilas_planeadas > 0;
+    
+    if (tienePilas) return 'pilas';
+    if (tieneExcavacion) return 'excavacion';
+    
+    return 'pilas'; // Default a pilas
+  }, [proyecto]);
+
   const chartData = useMemo(() => {
     if (!proyecto || avances.length === 0) return [];
 
     const semanasPlaneadas = proyecto.semanas_planeadas || avances.length;
     const sortedAvances = [...avances].sort((a, b) => a.semana - b.semana);
     
-    // Calcular volumen total planeado por semana (distribuido uniformemente)
-    const volumenTotal = proyecto.volumen_total_planeado || 0;
-    const volumenPorSemana = semanasPlaneadas > 0 ? volumenTotal / semanasPlaneadas : 0;
+    // Obtener totales planeados según el tipo de métrica
+    let totalPlaneado = 0;
+    let unidad = '';
+    let campoReal = '';
+    
+    switch (tipoMetrica) {
+      case 'pilas':
+        totalPlaneado = proyecto.pilas_planeadas || 0;
+        unidad = 'pilas';
+        campoReal = 'pilas_completadas';
+        break;
+      case 'muros':
+        totalPlaneado = proyecto.muros_planeados || 0;
+        unidad = 'muros';
+        campoReal = 'muros_completados';
+        break;
+      case 'anclas':
+        totalPlaneado = proyecto.anclas_planeadas || 0;
+        unidad = 'anclas';
+        campoReal = 'anclas_instaladas';
+        break;
+      case 'excavacion':
+      default:
+        totalPlaneado = proyecto.volumen_total_planeado || 0;
+        unidad = 'm³';
+        campoReal = 'volumen_excavacion';
+        break;
+    }
+    
+    // Calcular progreso por semana (distribuido uniformemente)
+    const porSemana = semanasPlaneadas > 0 ? totalPlaneado / semanasPlaneadas : 0;
     
     // Calcular progreso real
     let acumuladoReal = 0;
     let acumuladoPlaneado = 0;
 
     return sortedAvances.map((avance, idx) => {
-      const volReal = avance.volumen_excavacion || 0;
-      acumuladoReal += volReal;
-      acumuladoPlaneado += volumenPorSemana;
+      const valorReal = avance[campoReal] || 0;
+      acumuladoReal += valorReal;
+      acumuladoPlaneado += porSemana;
       
-      const porcentajeReal = volumenTotal > 0 
-        ? Math.min((acumuladoReal / volumenTotal) * 100, 100) 
+      const porcentajeReal = totalPlaneado > 0 
+        ? Math.min((acumuladoReal / totalPlaneado) * 100, 100) 
         : 0;
-      const porcentajePlaneado = volumenTotal > 0 
-        ? Math.min((acumuladoPlaneado / volumenTotal) * 100, 100) 
+      const porcentajePlaneado = totalPlaneado > 0 
+        ? Math.min((acumuladoPlaneado / totalPlaneado) * 100, 100) 
         : ((idx + 1) / semanasPlaneadas) * 100;
 
       return {
         semana: `Sem ${avance.semana}`,
         semanaNum: avance.semana,
         fecha: avance.fecha,
-        volumenReal: volReal,
-        volumenPlaneado: volumenPorSemana,
-        porcentajeReal,
-        porcentajePlaneado,
+        valorReal,
+        valorPlaneado: porSemana,
         acumuladoReal,
         acumuladoPlaneado,
-        // Para el Gantt visual
+        porcentajeReal,
+        porcentajePlaneado,
         planeado: porcentajePlaneado,
         ejecutado: porcentajeReal,
         diferencia: porcentajeReal - porcentajePlaneado
       };
     });
-  }, [proyecto, avances]);
+  }, [proyecto, avances, tipoMetrica]);
 
   // Calcular métricas del proyecto
   const metricas = useMemo(() => {
@@ -55,14 +102,73 @@ export function GanttChart({ proyecto, avances = [] }) {
     const diferencia = ultimaSemana?.diferencia || 0;
     const estado = diferencia >= 0 ? 'adelantado' : diferencia >= -10 ? 'en_tiempo' : 'retrasado';
     
+    // Obtener totales para mostrar
+    let totalPlaneado = 0;
+    let totalEjecutado = 0;
+    let unidad = '';
+    let icono = Columns3;
+    let color = 'blue';
+    
+    switch (tipoMetrica) {
+      case 'pilas':
+        totalPlaneado = proyecto?.pilas_planeadas || 0;
+        totalEjecutado = ultimaSemana?.acumuladoReal || 0;
+        unidad = 'pilas';
+        icono = Columns3;
+        color = 'blue';
+        break;
+      case 'muros':
+        totalPlaneado = proyecto?.muros_planeados || 0;
+        totalEjecutado = ultimaSemana?.acumuladoReal || 0;
+        unidad = 'muros';
+        icono = Building2;
+        color = 'purple';
+        break;
+      case 'anclas':
+        totalPlaneado = proyecto?.anclas_planeadas || 0;
+        totalEjecutado = ultimaSemana?.acumuladoReal || 0;
+        unidad = 'anclas';
+        icono = Anchor;
+        color = 'teal';
+        break;
+      case 'excavacion':
+      default:
+        totalPlaneado = proyecto?.volumen_total_planeado || 0;
+        totalEjecutado = ultimaSemana?.acumuladoReal || 0;
+        unidad = 'm³';
+        icono = Shovel;
+        color = 'amber';
+        break;
+    }
+    
     return {
-      semanasCompletadas: chartData.filter(d => d.volumenReal > 0).length,
+      semanasCompletadas: chartData.filter(d => d.valorReal > 0).length,
       semanasPlaneadas: proyecto?.semanas_planeadas || chartData.length,
       porcentajeActual: ultimaSemana?.porcentajeReal || 0,
       diferencia,
-      estado
+      estado,
+      totalPlaneado,
+      totalEjecutado,
+      unidad,
+      icono,
+      color
     };
-  }, [chartData, proyecto]);
+  }, [chartData, proyecto, tipoMetrica]);
+
+  // Obtener info del tipo de métrica para mostrar
+  const tipoInfo = useMemo(() => {
+    switch (tipoMetrica) {
+      case 'pilas':
+        return { nombre: 'Pilas', icono: Columns3, color: 'blue', colorHex: '#2563EB' };
+      case 'muros':
+        return { nombre: 'Muros', icono: Building2, color: 'purple', colorHex: '#7C3AED' };
+      case 'anclas':
+        return { nombre: 'Anclas', icono: Anchor, color: 'teal', colorHex: '#0D9488' };
+      case 'excavacion':
+      default:
+        return { nombre: 'Excavación', icono: Shovel, color: 'amber', colorHex: '#D97706' };
+    }
+  }, [tipoMetrica]);
 
   if (chartData.length === 0) {
     return (
@@ -73,6 +179,8 @@ export function GanttChart({ proyecto, avances = [] }) {
     );
   }
 
+  const IconoTipo = tipoInfo.icono;
+
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -82,8 +190,9 @@ export function GanttChart({ proyecto, avances = [] }) {
           <p className="text-sm text-gray-500">{data.fecha}</p>
           <div className="mt-2 space-y-1">
             <p className="text-sm">
-              <span className="inline-block w-3 h-3 rounded mr-2 bg-[#994B49]"></span>
+              <span className={`inline-block w-3 h-3 rounded mr-2`} style={{ backgroundColor: tipoInfo.colorHex }}></span>
               Ejecutado: <span className="font-medium">{data.porcentajeReal.toFixed(1)}%</span>
+              <span className="text-gray-400 ml-1">({data.acumuladoReal.toLocaleString()} {metricas?.unidad})</span>
             </p>
             <p className="text-sm">
               <span className="inline-block w-3 h-3 rounded mr-2 bg-gray-300"></span>
@@ -101,17 +210,37 @@ export function GanttChart({ proyecto, avances = [] }) {
 
   return (
     <div className="space-y-4">
+      {/* Badge del tipo de métrica */}
+      <div className="flex items-center gap-2">
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-${tipoInfo.color}-100 text-${tipoInfo.color}-700`}
+          style={{ backgroundColor: `${tipoInfo.colorHex}20`, color: tipoInfo.colorHex }}>
+          <IconoTipo className="h-4 w-4" />
+          Progresión de {tipoInfo.nombre}
+        </span>
+      </div>
+
       {/* Métricas del proyecto */}
       {metricas && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
             <div className="flex items-center gap-2 mb-1">
               <Clock className="h-4 w-4 text-blue-600" />
-              <span className="text-xs font-medium text-blue-800">Progreso Semanal</span>
+              <span className="text-xs font-medium text-blue-800">Semanas</span>
             </div>
             <p className="text-xl font-bold text-blue-700">
               {metricas.semanasCompletadas} / {metricas.semanasPlaneadas}
             </p>
+          </div>
+          
+          <div className="rounded-lg p-3 border" style={{ backgroundColor: `${tipoInfo.colorHex}10`, borderColor: `${tipoInfo.colorHex}40` }}>
+            <div className="flex items-center gap-2 mb-1">
+              <IconoTipo className="h-4 w-4" style={{ color: tipoInfo.colorHex }} />
+              <span className="text-xs font-medium" style={{ color: tipoInfo.colorHex }}>{tipoInfo.nombre}</span>
+            </div>
+            <p className="text-xl font-bold" style={{ color: tipoInfo.colorHex }}>
+              {metricas.totalEjecutado.toLocaleString()} / {metricas.totalPlaneado.toLocaleString()}
+            </p>
+            <p className="text-xs text-gray-500">{metricas.unidad}</p>
           </div>
           
           <div className="bg-[#994B49]/10 rounded-lg p-3 border border-[#994B49]/20">
@@ -148,23 +277,23 @@ export function GanttChart({ proyecto, avances = [] }) {
         </div>
       )}
 
-      {/* Gráfico de barras comparativo */}
+      {/* Gráfico de área - Progresión Acumulada */}
       <div className="bg-white rounded-lg p-4 border border-gray-200">
         <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-[#994B49]" />
-          Progreso Semanal: Planeado vs Ejecutado
+          <IconoTipo className="h-5 w-5" style={{ color: tipoInfo.colorHex }} />
+          Progresión de {tipoInfo.nombre}: Planeado vs Ejecutado
         </h4>
         
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={chartData} barGap={0}>
+        <ResponsiveContainer width="100%" height={220}>
+          <AreaChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
             <XAxis 
               dataKey="semana" 
-              tick={{ fontSize: 12, fill: '#6B7280' }}
+              tick={{ fontSize: 11, fill: '#6B7280' }}
               axisLine={{ stroke: '#D1D5DB' }}
             />
             <YAxis 
-              tick={{ fontSize: 12, fill: '#6B7280' }}
+              tick={{ fontSize: 11, fill: '#6B7280' }}
               domain={[0, 100]}
               tickFormatter={(value) => `${value}%`}
               axisLine={{ stroke: '#D1D5DB' }}
@@ -174,38 +303,24 @@ export function GanttChart({ proyecto, avances = [] }) {
               wrapperStyle={{ paddingTop: '10px' }}
               formatter={(value) => <span className="text-sm text-gray-600">{value}</span>}
             />
-            <Bar 
+            <Area 
+              type="monotone"
               dataKey="planeado" 
               name="Planeado" 
               fill="#D1D5DB" 
-              radius={[4, 4, 0, 0]}
+              stroke="#9CA3AF"
+              fillOpacity={0.3}
             />
-            <Bar 
+            <Area 
+              type="monotone"
               dataKey="ejecutado" 
               name="Ejecutado" 
-              radius={[4, 4, 0, 0]}
-            >
-              {chartData.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={entry.diferencia >= 0 ? '#059669' : '#994B49'} 
-                />
-              ))}
-            </Bar>
-          </BarChart>
+              fill={tipoInfo.colorHex}
+              stroke={tipoInfo.colorHex}
+              fillOpacity={0.5}
+            />
+          </AreaChart>
         </ResponsiveContainer>
-        
-        <div className="flex items-center justify-center gap-6 mt-3 text-xs text-gray-500">
-          <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded bg-gray-300"></span> Planeado
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded bg-green-600"></span> Adelantado
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded bg-[#994B49]"></span> Retrasado
-          </span>
-        </div>
       </div>
 
       {/* Timeline visual estilo Gantt */}
@@ -218,7 +333,7 @@ export function GanttChart({ proyecto, avances = [] }) {
             <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-gray-300 rounded-full transition-all duration-500"
-                style={{ width: `${metricas?.semanasCompletadas / metricas?.semanasPlaneadas * 100 || 0}%` }}
+                style={{ width: `${(metricas?.semanasCompletadas / metricas?.semanasPlaneadas * 100) || 0}%` }}
               />
             </div>
             <span className="text-xs text-gray-600 w-12 text-right">
@@ -231,12 +346,12 @@ export function GanttChart({ proyecto, avances = [] }) {
             <span className="text-xs text-gray-500 w-16">Ejecutado</span>
             <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
               <div 
-                className={`h-full rounded-full transition-all duration-500 ${
-                  metricas?.estado === 'adelantado' ? 'bg-green-500' :
-                  metricas?.estado === 'en_tiempo' ? 'bg-blue-500' :
-                  'bg-[#994B49]'
-                }`}
-                style={{ width: `${metricas?.porcentajeActual || 0}%` }}
+                className="h-full rounded-full transition-all duration-500"
+                style={{ 
+                  width: `${metricas?.porcentajeActual || 0}%`,
+                  backgroundColor: metricas?.estado === 'adelantado' ? '#059669' :
+                                   metricas?.estado === 'en_tiempo' ? '#3B82F6' : '#DC2626'
+                }}
               />
             </div>
             <span className="text-xs text-gray-600 w-12 text-right">
