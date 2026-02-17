@@ -5,6 +5,7 @@ import os
 import logging
 import base64
 import pandas as pd
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Any, Optional
@@ -27,6 +28,28 @@ def excel_date_to_string(excel_date: int) -> str:
         return str(excel_date)
     except Exception:
         return str(excel_date)
+
+
+def detectar_tipo_actividad(descripcion: str) -> Dict[str, Any]:
+    """
+    Detecta el tipo de actividad basado en palabras clave en la descripción.
+    Retorna el tipo y si aplica anclas.
+    """
+    desc_lower = descripcion.lower()
+    
+    # Patrones para detectar tipos
+    if any(word in desc_lower for word in ['pila', 'pilas', 'pilote', 'pilotes']):
+        return {"tipo": "pilas", "tiene_anclas": True}
+    elif any(word in desc_lower for word in ['muro', 'muros', 'muro milan', 'pantalla']):
+        return {"tipo": "muros", "tiene_anclas": True}
+    elif any(word in desc_lower for word in ['excavac', 'excavar', 'terraceria', 'desmonte', 'despalme']):
+        return {"tipo": "excavacion", "tiene_anclas": False}
+    elif any(word in desc_lower for word in ['ciment', 'zapata', 'losa', 'dado']):
+        return {"tipo": "cimentacion", "tiene_anclas": False}
+    elif any(word in desc_lower for word in ['ancla', 'anclas', 'anclaje']):
+        return {"tipo": "anclas", "tiene_anclas": True}
+    else:
+        return {"tipo": "otro", "tiene_anclas": False}
 
 
 def parse_excel_cronograma(file_content: bytes) -> Dict[str, Any]:
