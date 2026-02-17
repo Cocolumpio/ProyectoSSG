@@ -2831,9 +2831,13 @@ async def generar_reporte_semanal():
         proyectos_data = []
         total_costo_flotilla = 0
         total_volumen_excavado = 0
+        total_pilas = 0
+        total_anclas = 0
+        total_muros = 0
         
         for proyecto in proyectos:
             proyecto_id = proyecto.get('id')
+            tipos_actividades = proyecto.get('tipos_actividades', [])
             
             # Obtener avances semanales del proyecto
             avances = await db.avances_semanales.find(
@@ -2855,26 +2859,46 @@ async def generar_reporte_semanal():
             
             total_costo_flotilla += costo_flotilla
             total_volumen_excavado += volumen_excavado
+            total_pilas += pilas_completadas
+            total_anclas += anclas_instaladas
+            total_muros += muros_completados
             
             # Obtener avances de esta semana (últimos 7 días)
             hace_7_dias = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
             avances_semana = [a for a in avances if a.get('fecha', '') >= hace_7_dias[:10]]
             volumen_semana = sum((a.get('volumen_excavacion', 0) or 0) for a in avances_semana)
+            pilas_semana = sum((a.get('pilas_completadas', 0) or 0) for a in avances_semana)
+            anclas_semana = sum((a.get('anclas_instaladas', 0) or 0) for a in avances_semana)
+            muros_semana = sum((a.get('muros_completados', 0) or 0) for a in avances_semana)
             costo_semana = volumen_semana * costo_m3
+            
+            # Metas del proyecto
+            pilas_planeadas = proyecto.get('pilas_planeadas', 0) or 0
+            anclas_planeadas = proyecto.get('anclas_planeadas', 0) or 0
+            muros_planeados = proyecto.get('muros_planeados', 0) or 0
+            volumen_planeado = proyecto.get('volumen_total_planeado', 0) or 0
             
             proyectos_data.append({
                 'nombre': proyecto.get('nombre', 'Sin nombre'),
                 'avance': proyecto.get('avance_actual', 0) or 0,
                 'volumen_total': volumen_excavado,
+                'volumen_planeado': volumen_planeado,
                 'volumen_semana': volumen_semana,
                 'pilas': pilas_completadas,
+                'pilas_planeadas': pilas_planeadas,
+                'pilas_semana': pilas_semana,
                 'anclas': anclas_instaladas,
+                'anclas_planeadas': anclas_planeadas,
+                'anclas_semana': anclas_semana,
                 'muros': muros_completados,
+                'muros_planeados': muros_planeados,
+                'muros_semana': muros_semana,
                 'costo_flotilla_total': costo_flotilla,
                 'costo_flotilla_semana': costo_semana,
                 'viajes_totales': viajes_totales,
                 'semanas_registradas': len(avances),
-                'ubicacion': proyecto.get('ubicacion', 'N/A')
+                'ubicacion': proyecto.get('ubicacion', 'N/A'),
+                'tipos_actividades': tipos_actividades
             })
         
         # Ordenar por avance descendente
