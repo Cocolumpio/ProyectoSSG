@@ -1,107 +1,125 @@
 """
-Rutas de autenticación para DrON Topografía
+Rutas de Autenticación - DrON Topografía
 """
 from fastapi import APIRouter, HTTPException, Depends
+from datetime import datetime, timezone, timedelta
 from typing import List
+import uuid
 
-from models import User, UserCreate, UserLogin, UserResponse, Token
-from services import (
-    db, verify_password, get_password_hash, create_access_token,
-    get_current_user, get_current_admin
+from core.config import (
+    get_db, verify_password, get_password_hash, 
+    create_access_token, get_current_user, get_current_admin,
+    ACCESS_TOKEN_EXPIRE_MINUTES
 )
+from models.schemas import UserCreate, UserLogin, Token, UserResponse
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
 
 
 @router.post("/register", response_model=Token)
 async def register(user_data: UserCreate):
-    """Registrar un nuevo usuario"""
-    existing_user = await db.usuarios.find_one({"email": user_data.email})
+    """Registra un nuevo usuario"""
+    db = get_db()
+    
+    # Verificar si el email ya existe
+    existing_user = await db.users.find_one({"email": user_data.email})
     if existing_user:
         raise HTTPException(status_code=400, detail="El email ya está registrado")
     
-    new_user = User(
-        email=user_data.email,
-        password_hash=get_password_hash(user_data.password),
-        nombre=user_data.nombre,
-        rol=user_data.rol
+    # Crear usuario
+    user_dict = user_data.model_dump()
+    user_dict["id"] = str(uuid.uuid4())
+    user_dict["password"] = get_password_hash(user_data.password)
+    user_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+    user_dict["is_active"] = True
+    
+    await db.users.insert_one(user_dict)
+    
+    # Generar token
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user_dict["id"], "email": user_dict["email"], "rol": user_dict["rol"]},
+        expires_delta=access_token_expires
     )
     
-    user_dict = new_user.model_dump()
-    user_dict['created_at'] = user_dict['created_at'].isoformat()
-    await db.usuarios.insert_one(user_dict)
-    
-    access_token = create_access_token(data={"sub": new_user.id})
-    
-    return Token(
-        access_token=access_token,
-        token_type="bearer",
-        user=UserResponse(
-            id=new_user.id,
-            email=new_user.email,
-            nombre=new_user.nombre,
-            rol=new_user.rol,
-            activo=new_user.activo
-        )
-    )
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user_dict["id"],
+            "email": user_dict["email"],
+            "nombre": user_dict["nombre"],
+            "rol": user_dict["rol"],
+            "is_active": user_dict["is_active"]
+        }
+    }
 
 
 @router.post("/login", response_model=Token)
 async def login(credentials: UserLogin):
-    """Iniciar sesión"""
-    user = await db.usuarios.find_one({"email": credentials.email}, {"_id": 0})
+    """Inicia sesión y devuelve un token JWT"""
+    db = get_db()
     
+    user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
     if not user:
-        raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
+        raise HTTPException(status_code=401, detail="Credenciales incorrectas")
     
-    if not verify_password(credentials.password, user.get("password_hash", "")):
-        raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
+    if not verify_password(credentials.password, user["password"]):
+        raise HTTPException(status_code=401, detail="Credenciales incorrectas")
     
-    if not user.get("activo", True):
+    if not user.get("is_active", True):
         raise HTTPException(status_code=403, detail="Usuario desactivado")
     
-    access_token = create_access_token(data={"sub": user["id"]})
-    
-    return Token(
-        access_token=access_token,
-        token_type="bearer",
-        user=UserResponse(
-            id=user["id"],
-            email=user["email"],
-            nombre=user["nombre"],
-            rol=user["rol"],
-            activo=user.get("activo", True)
-        )
+    # Generar token
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user["id"], "email": user["email"], "rol": user["rol"]},
+        expires_delta=access_token_expires
     )
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user["id"],
+            "email": user["email"],
+            "nombre": user["nombre"],
+            "rol": user["rol"],
+            "is_active": user.get("is_active", True)
+        }
+    }
 
 
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: dict = Depends(get_current_user)):
-    """Obtener información del usuario actual"""
-    return UserResponse(
-        id=current_user["id"],
-        email=current_user["email"],
-        nombre=current_user["nombre"],
-        rol=current_user["rol"],
-        activo=current_user.get("activo", True)
-    )
+    """Obtiene los datos del usuario actual"""
+    return {
+        "id": current_user["id"],
+        "email": current_user["email"],
+        "nombre": current_user["nombre"],
+        "rol": current_user["rol"],
+        "is_active": current_user.get("is_active", True)
+    }
 
 
 @router.get("/users", response_model=List[UserResponse])
 async def list_users(current_user: dict = Depends(get_current_admin)):
-    """Listar todos los usuarios (solo admin)"""
-    users = await db.usuarios.find({}, {"_id": 0, "password_hash": 0}).to_list(100)
-    return [UserResponse(**u) for u in users]
+    """Lista todos los usuarios (solo admin)"""
+    db = get_db()
+    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(100)
+    return users
 
 
 @router.put("/users/{user_id}/toggle-active")
 async def toggle_user_active(user_id: str, current_user: dict = Depends(get_current_admin)):
-    """Activar/desactivar un usuario (solo admin)"""
-    user = await db.usuarios.find_one({"id": user_id})
+    """Activa/desactiva un usuario (solo admin)"""
+    db = get_db()
+    
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     
-    new_status = not user.get("activo", True)
-    await db.usuarios.update_one({"id": user_id}, {"$set": {"activo": new_status}})
+    new_status = not user.get("is_active", True)
+    await db.users.update_one({"id": user_id}, {"$set": {"is_active": new_status}})
     
-    return {"message": f"Usuario {'activado' if new_status else 'desactivado'}", "activo": new_status}
+    return {"id": user_id, "is_active": new_status}
