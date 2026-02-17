@@ -2967,7 +2967,7 @@ async def generar_reporte_semanal():
         <head>
             <meta charset="UTF-8">
         </head>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 20px;">
             <div style="background: linear-gradient(135deg, #994B49 0%, #B85C5A 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
                 <h1 style="color: white; margin: 0; font-size: 28px;">📊 Reporte Semanal</h1>
                 <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">
@@ -2977,19 +2977,35 @@ async def generar_reporte_semanal():
             
             <div style="background: #fff; padding: 30px; border: 1px solid #e5e5e5; border-top: none;">
                 
-                <!-- KPIs Principales -->
-                <div style="display: flex; gap: 20px; margin-bottom: 30px;">
-                    <div style="flex: 1; background: #f0fdf4; padding: 20px; border-radius: 10px; text-align: center;">
-                        <div style="font-size: 32px; font-weight: bold; color: #16a34a;">{len(proyectos_data)}</div>
-                        <div style="color: #166534; font-size: 14px;">Proyectos Activos</div>
+                <!-- KPIs Principales - Primera fila -->
+                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <div style="flex: 1; background: #f0fdf4; padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 28px; font-weight: bold; color: #16a34a;">{len(proyectos_data)}</div>
+                        <div style="color: #166534; font-size: 12px;">Proyectos</div>
                     </div>
-                    <div style="flex: 1; background: #fef3c7; padding: 20px; border-radius: 10px; text-align: center;">
-                        <div style="font-size: 32px; font-weight: bold; color: #d97706;">{total_volumen_excavado:,.0f}</div>
-                        <div style="color: #92400e; font-size: 14px;">m³ Excavados Total</div>
+                    <div style="flex: 1; background: #fef3c7; padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 28px; font-weight: bold; color: #d97706;">{total_volumen_excavado:,.0f}</div>
+                        <div style="color: #92400e; font-size: 12px;">m³ Excavados</div>
                     </div>
-                    <div style="flex: 1; background: #fee2e2; padding: 20px; border-radius: 10px; text-align: center;">
-                        <div style="font-size: 32px; font-weight: bold; color: #dc2626;">${total_costo_flotilla:,.0f}</div>
-                        <div style="color: #991b1b; font-size: 14px;">Gasto Total Flotillas</div>
+                    <div style="flex: 1; background: #fee2e2; padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 28px; font-weight: bold; color: #dc2626;">${total_costo_flotilla:,.0f}</div>
+                        <div style="color: #991b1b; font-size: 12px;">Gasto Flotillas</div>
+                    </div>
+                </div>
+                
+                <!-- KPIs Secundarios - Segunda fila (Pilas, Anclas, Muros) -->
+                <div style="display: flex; gap: 15px; margin-bottom: 30px;">
+                    <div style="flex: 1; background: #dbeafe; padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 28px; font-weight: bold; color: #2563eb;">{total_pilas:,}</div>
+                        <div style="color: #1e40af; font-size: 12px;">🔵 Pilas Totales</div>
+                    </div>
+                    <div style="flex: 1; background: #ccfbf1; padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 28px; font-weight: bold; color: #0d9488;">{total_anclas:,}</div>
+                        <div style="color: #115e59; font-size: 12px;">⚓ Anclas Totales</div>
+                    </div>
+                    <div style="flex: 1; background: #f3e8ff; padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 28px; font-weight: bold; color: #9333ea;">{total_muros:,}</div>
+                        <div style="color: #6b21a8; font-size: 12px;">🧱 Muros Totales</div>
                     </div>
                 </div>
                 
