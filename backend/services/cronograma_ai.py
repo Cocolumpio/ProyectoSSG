@@ -55,6 +55,7 @@ def detectar_tipo_actividad(descripcion: str) -> Dict[str, Any]:
 def parse_excel_cronograma(file_content: bytes) -> Dict[str, Any]:
     """
     Parsea un archivo Excel de cronograma y extrae la información de frentes y actividades.
+    Detecta automáticamente los tipos de actividades (excavación, pilas, muros, anclas).
     Retorna estructura lista para crear proyecto.
     """
     try:
@@ -63,39 +64,59 @@ def parse_excel_cronograma(file_content: bytes) -> Dict[str, Any]:
         
         frentes = []
         current_frente = None
+        # Contadores totales
         total_pilas = 0
+        total_muros = 0
+        total_anclas = 0
+        total_excavacion = 0
+        # Fechas
         fecha_inicio_proyecto = None
         fecha_fin_proyecto = None
         total_dias = 0
+        # Tipos de actividades detectadas
+        tipos_actividades = set()
+        # Semanas por tipo
+        semanas_por_tipo = {"excavacion": 0, "pilas": 0, "muros": 0, "anclas": 0}
         
         for idx, row in df.iterrows():
             # Detectar encabezado de frente (primera columna contiene "FRENTE")
             first_cell = str(row.iloc[0]).strip().upper() if pd.notna(row.iloc[0]) else ""
-            second_cell = str(row.iloc[1]).strip().upper() if pd.notna(row.iloc[1]) else ""
+            second_cell = str(row.iloc[1]).strip().upper() if len(row) > 1 and pd.notna(row.iloc[1]) else ""
             
             # Si es header de frente
-            if first_cell.startswith("FRENTE") and ("#PILAS" in second_cell or "PILAS" in second_cell):
+            is_frente_header = first_cell.startswith("FRENTE") and (
+                "#PILAS" in second_cell or "PILAS" in second_cell or 
+                "#" in second_cell or "CANTIDAD" in second_cell
+            )
+            
+            if is_frente_header:
                 # Guardar frente anterior si existe
                 if current_frente:
                     frentes.append(current_frente)
                 
                 current_frente = {
                     "nombre": first_cell,
-                    "actividades": []
+                    "actividades": [],
+                    "tipo_principal": None
                 }
                 continue
             
-            # Si tenemos un frente activo y la segunda columna tiene un número (pilas)
+            # Si tenemos un frente activo y la segunda columna tiene un número (cantidad)
             if current_frente:
                 try:
-                    num_pilas_val = row.iloc[1]
-                    if pd.notna(num_pilas_val) and isinstance(num_pilas_val, (int, float)) and num_pilas_val > 0:
+                    cantidad_val = row.iloc[1] if len(row) > 1 else None
+                    if pd.notna(cantidad_val) and isinstance(cantidad_val, (int, float)) and cantidad_val > 0:
                         # Es una actividad válida
                         descripcion = str(row.iloc[0]).strip() if pd.notna(row.iloc[0]) else ""
                         
+                        # Detectar tipo de actividad
+                        tipo_info = detectar_tipo_actividad(descripcion)
+                        tipo = tipo_info["tipo"]
+                        tiene_anclas = tipo_info["tiene_anclas"]
+                        
                         # Parsear fechas
-                        fecha_inicio_raw = row.iloc[2]
-                        fecha_fin_raw = row.iloc[3]
+                        fecha_inicio_raw = row.iloc[2] if len(row) > 2 else None
+                        fecha_fin_raw = row.iloc[3] if len(row) > 3 else None
                         fecha_descabece_raw = row.iloc[4] if len(row) > 4 else None
                         dias_raw = row.iloc[5] if len(row) > 5 else 0
                         
@@ -107,18 +128,50 @@ def parse_excel_cronograma(file_content: bytes) -> Dict[str, Any]:
                                 return val.strftime("%Y-%m-%d")
                             return excel_date_to_string(val)
                         
+                        cantidad = int(cantidad_val)
+                        dias = int(dias_raw) if pd.notna(dias_raw) and isinstance(dias_raw, (int, float)) else 0
+                        
                         actividad = {
                             "descripcion": descripcion,
-                            "num_pilas": int(num_pilas_val),
+                            "cantidad": cantidad,
+                            "tipo": tipo,
+                            "tiene_anclas": tiene_anclas,
                             "fecha_inicio": parse_fecha(fecha_inicio_raw),
                             "fecha_fin": parse_fecha(fecha_fin_raw),
                             "fecha_descabece": parse_fecha(fecha_descabece_raw),
-                            "dias": int(dias_raw) if pd.notna(dias_raw) and isinstance(dias_raw, (int, float)) else 0
+                            "dias": dias
                         }
                         
                         current_frente["actividades"].append(actividad)
-                        total_pilas += actividad["num_pilas"]
-                        total_dias += actividad["dias"]
+                        
+                        # Actualizar contadores según tipo
+                        if tipo == "pilas" or "pila" in descripcion.lower():
+                            total_pilas += cantidad
+                            tipos_actividades.add("pilas")
+                            semanas_por_tipo["pilas"] += max(1, dias // 7)
+                        elif tipo == "muros":
+                            total_muros += cantidad
+                            tipos_actividades.add("muros")
+                            semanas_por_tipo["muros"] += max(1, dias // 7)
+                        elif tipo == "excavacion":
+                            total_excavacion += cantidad
+                            tipos_actividades.add("excavacion")
+                            semanas_por_tipo["excavacion"] += max(1, dias // 7)
+                        elif tipo == "anclas":
+                            total_anclas += cantidad
+                            tipos_actividades.add("anclas")
+                            semanas_por_tipo["anclas"] += max(1, dias // 7)
+                        else:
+                            # Por defecto, si tiene número y parece ser pilas
+                            total_pilas += cantidad
+                            tipos_actividades.add("pilas")
+                        
+                        # Si tiene anclas, estimar cantidad
+                        if tiene_anclas:
+                            total_anclas += cantidad  # Una ancla por pila/muro
+                            tipos_actividades.add("anclas")
+                        
+                        total_dias += dias
                         
                         # Actualizar fechas del proyecto
                         if actividad["fecha_inicio"]:
