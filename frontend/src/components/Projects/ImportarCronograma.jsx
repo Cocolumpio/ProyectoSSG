@@ -150,15 +150,65 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
               <Check className="h-5 w-5 text-green-500" />
               Cronograma Analizado Correctamente
             </h3>
+            
+            {/* Tipos de Actividades Detectadas */}
+            {parsedData.resumen.tipos_actividades && parsedData.resumen.tipos_actividades.length > 0 && (
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">Tipos de actividades detectadas:</p>
+                <div className="flex flex-wrap gap-2">
+                  {parsedData.resumen.tipos_actividades.map((tipo, idx) => (
+                    <span 
+                      key={idx}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${
+                        tipo === 'pilas' ? 'bg-blue-100 text-blue-700' :
+                        tipo === 'excavacion' ? 'bg-amber-100 text-amber-700' :
+                        tipo === 'muros' ? 'bg-purple-100 text-purple-700' :
+                        tipo === 'anclas' ? 'bg-teal-100 text-teal-700' :
+                        'bg-gray-100 text-gray-700'
+                      }`}
+                    >
+                      {tipo === 'pilas' && <Columns3 className="h-4 w-4" />}
+                      {tipo === 'excavacion' && <Shovel className="h-4 w-4" />}
+                      {tipo === 'muros' && <Building2 className="h-4 w-4" />}
+                      {tipo === 'anclas' && <Anchor className="h-4 w-4" />}
+                      {tipo === 'cimentacion' && <Drill className="h-4 w-4" />}
+                      {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <p className="text-2xl font-bold text-[#994B49]">{parsedData.resumen.total_frentes}</p>
                 <p className="text-sm text-gray-500">Frentes</p>
               </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <p className="text-2xl font-bold text-blue-600">{parsedData.resumen.total_pilas}</p>
-                <p className="text-sm text-gray-500">Pilas Totales</p>
-              </div>
+              {/* Métricas dinámicas según tipos detectados */}
+              {parsedData.resumen.tipos_actividades?.includes('pilas') && (
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <p className="text-2xl font-bold text-blue-600">{parsedData.resumen.total_pilas}</p>
+                  <p className="text-sm text-gray-500">Pilas Totales</p>
+                </div>
+              )}
+              {parsedData.resumen.tipos_actividades?.includes('muros') && (
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <p className="text-2xl font-bold text-purple-600">{parsedData.resumen.total_muros}</p>
+                  <p className="text-sm text-gray-500">Muros Totales</p>
+                </div>
+              )}
+              {parsedData.resumen.tipos_actividades?.includes('anclas') && (
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <p className="text-2xl font-bold text-teal-600">{parsedData.resumen.total_anclas}</p>
+                  <p className="text-sm text-gray-500">Anclas Totales</p>
+                </div>
+              )}
+              {parsedData.resumen.tipos_actividades?.includes('excavacion') && (
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <p className="text-2xl font-bold text-amber-600">{parsedData.resumen.total_excavacion}</p>
+                  <p className="text-sm text-gray-500">Excavación (m³)</p>
+                </div>
+              )}
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <p className="text-2xl font-bold text-amber-600">{parsedData.resumen.total_dias}</p>
                 <p className="text-sm text-gray-500">Días de Trabajo</p>
