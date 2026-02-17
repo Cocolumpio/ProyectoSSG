@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { Upload, FileSpreadsheet, Check, AlertCircle, Loader2, Building2, Calendar, Layers } from 'lucide-react';
+import { Upload, FileSpreadsheet, Check, AlertCircle, Loader2, Building2, Calendar, Layers, Shovel, Anchor, Drill, Columns3 } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
