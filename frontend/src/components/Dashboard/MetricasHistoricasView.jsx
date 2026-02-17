@@ -226,19 +226,44 @@ export function MetricasHistoricasView({ proyectos }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Métricas Históricas</h1>
           <p className="text-gray-500">Evolución del avance de todos los proyectos</p>
         </div>
-        <button
-          onClick={loadHistoricalData}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Actualizar
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Botón Exportar Excel */}
+          <button
+            onClick={handleExportExcel}
+            disabled={exporting === 'excel'}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+            data-testid="export-excel-btn"
+          >
+            <FileSpreadsheet className={`h-4 w-4 ${exporting === 'excel' ? 'animate-pulse' : ''}`} />
+            <span className="hidden sm:inline">{exporting === 'excel' ? 'Exportando...' : 'Excel'}</span>
+          </button>
+          
+          {/* Botón Exportar PDF */}
+          <button
+            onClick={handleExportPDF}
+            disabled={exporting === 'pdf'}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+            data-testid="export-pdf-btn"
+          >
+            <FileText className={`h-4 w-4 ${exporting === 'pdf' ? 'animate-pulse' : ''}`} />
+            <span className="hidden sm:inline">{exporting === 'pdf' ? 'Exportando...' : 'PDF'}</span>
+          </button>
+          
+          {/* Botón Actualizar */}
+          <button
+            onClick={loadHistoricalData}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Actualizar</span>
+          </button>
+        </div>
       </div>
 
       {/* KPIs Totales */}
