@@ -485,57 +485,93 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                   </div>
                 </div>
 
-                {/* Gráfico de Volumen - Progresión Lineal con Proyección */}
+                {/* Gráfico de Progresión - Dinámico según tipo de actividad */}
                 {avances.length > 0 && (
                   <div className="p-2 sm:p-4 flex-shrink-0">
                     <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
                       {(() => {
+                        // Determinar tipo de métrica basado en actividades_tipo del proyecto
+                        const tipos = proyecto.actividades_tipo || [];
+                        let tipoMetrica = 'excavacion';
+                        let metaTotal = proyecto.volumen_total_planeado || 0;
+                        let campoReal = 'volumen_excavacion';
+                        let unidad = 'm³';
+                        let nombreMetrica = 'Excavación';
+                        let colorPrimario = '#994B49';
+                        let IconoMetrica = Shovel;
+                        
+                        // Prioridad: pilas > muros > anclas > excavacion
+                        if (tipos.includes('pilas') || proyecto.pilas_planeadas > 0) {
+                          tipoMetrica = 'pilas';
+                          metaTotal = proyecto.pilas_planeadas || 0;
+                          campoReal = 'pilas_completadas';
+                          unidad = 'pilas';
+                          nombreMetrica = 'Pilas';
+                          colorPrimario = '#2563EB';
+                          IconoMetrica = Columns3;
+                        } else if (tipos.includes('muros') || proyecto.muros_planeados > 0) {
+                          tipoMetrica = 'muros';
+                          metaTotal = proyecto.muros_planeados || 0;
+                          campoReal = 'muros_completados';
+                          unidad = 'muros';
+                          nombreMetrica = 'Muros';
+                          colorPrimario = '#7C3AED';
+                          IconoMetrica = Building2;
+                        } else if (tipos.includes('anclas') || proyecto.anclas_planeadas > 0) {
+                          tipoMetrica = 'anclas';
+                          metaTotal = proyecto.anclas_planeadas || 0;
+                          campoReal = 'anclas_instaladas';
+                          unidad = 'anclas';
+                          nombreMetrica = 'Anclas';
+                          colorPrimario = '#0D9488';
+                          IconoMetrica = Anchor;
+                        }
+                        
                         // Calcular datos del gráfico con proyección
                         const sortedAvances = [...avances].sort((a, b) => a.semana - b.semana);
                         let acumulado = 0;
                         const chartData = sortedAvances.map(a => {
-                          acumulado += (a.volumen_excavacion || 0);
+                          acumulado += (a[campoReal] || 0);
                           return {
                             semana: `Sem ${a.semana}`,
                             semanaNum: a.semana,
-                            volumen: a.volumen_excavacion || 0,
+                            valor: a[campoReal] || 0,
                             acumulado: acumulado,
                             proyeccion: null
                           };
                         });
 
                         // Calcular proyección si hay datos y meta
-                        const totalExcavado = acumulado;
-                        const semanasConDatos = sortedAvances.filter(a => a.volumen_excavacion > 0).length;
-                        const ritmoSemanal = semanasConDatos > 0 ? totalExcavado / semanasConDatos : 0;
-                        const metaVolumen = proyecto.volumen_total_planeado || 0;
+                        const totalEjecutado = acumulado;
+                        const semanasConDatos = sortedAvances.filter(a => (a[campoReal] || 0) > 0).length;
+                        const ritmoSemanal = semanasConDatos > 0 ? totalEjecutado / semanasConDatos : 0;
                         
                         let semanasRestantes = 0;
                         let semanaMeta = null;
                         
-                        if (ritmoSemanal > 0 && metaVolumen > 0 && totalExcavado < metaVolumen) {
-                          semanasRestantes = Math.ceil((metaVolumen - totalExcavado) / ritmoSemanal);
+                        if (ritmoSemanal > 0 && metaTotal > 0 && totalEjecutado < metaTotal) {
+                          semanasRestantes = Math.ceil((metaTotal - totalEjecutado) / ritmoSemanal);
                           const ultimaSemana = sortedAvances.length > 0 ? sortedAvances[sortedAvances.length - 1].semana : 0;
                           semanaMeta = ultimaSemana + semanasRestantes;
                           
                           // Agregar puntos de proyección
-                          let proyeccionAcumulado = totalExcavado;
+                          let proyeccionAcumulado = totalEjecutado;
                           for (let i = 1; i <= Math.min(semanasRestantes, 8); i++) {
                             proyeccionAcumulado += ritmoSemanal;
-                            if (proyeccionAcumulado > metaVolumen) proyeccionAcumulado = metaVolumen;
+                            if (proyeccionAcumulado > metaTotal) proyeccionAcumulado = metaTotal;
                             chartData.push({
                               semana: `Sem ${ultimaSemana + i}`,
                               semanaNum: ultimaSemana + i,
-                              volumen: null,
+                              valor: null,
                               acumulado: null,
                               proyeccion: proyeccionAcumulado
                             });
-                            if (proyeccionAcumulado >= metaVolumen) break;
+                            if (proyeccionAcumulado >= metaTotal) break;
                           }
                           
                           // Agregar punto de conexión para la proyección
                           if (chartData.length > sortedAvances.length && sortedAvances.length > 0) {
-                            chartData[sortedAvances.length - 1].proyeccion = totalExcavado;
+                            chartData[sortedAvances.length - 1].proyeccion = totalEjecutado;
                           }
                         }
 
@@ -543,23 +579,23 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                           <>
                             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                               <div className="flex items-center space-x-2">
-                                <Database className="h-4 sm:h-5 w-4 sm:w-5 text-[#994B49]" />
-                                <h5 className="font-semibold text-gray-900 text-sm sm:text-base">Progresión de Excavación</h5>
+                                <IconoMetrica className="h-4 sm:h-5 w-4 sm:w-5" style={{ color: colorPrimario }} />
+                                <h5 className="font-semibold text-gray-900 text-sm sm:text-base">Progresión de {nombreMetrica}</h5>
                               </div>
                               <div className="flex items-center gap-3 text-xs">
-                                {metaVolumen > 0 && (
+                                {metaTotal > 0 && (
                                   <div className="text-gray-500">
-                                    Meta: <span className="font-semibold text-green-600">{metaVolumen.toLocaleString()} m³</span>
+                                    Meta: <span className="font-semibold text-green-600">{metaTotal.toLocaleString()} {unidad}</span>
                                   </div>
                                 )}
                                 {ritmoSemanal > 0 && semanasRestantes > 0 && (
                                   <div className="text-gray-500 bg-orange-50 px-2 py-1 rounded">
-                                    📈 Ritmo: <span className="font-semibold text-orange-600">{ritmoSemanal.toLocaleString(undefined, {maximumFractionDigits: 0})} m³/sem</span>
+                                    📈 Ritmo: <span className="font-semibold text-orange-600">{ritmoSemanal.toLocaleString(undefined, {maximumFractionDigits: 0})} {unidad}/sem</span>
                                     <span className="mx-1">•</span>
                                     Meta en: <span className="font-semibold text-orange-600">~{semanasRestantes} sem</span>
                                   </div>
                                 )}
-                                {totalExcavado >= metaVolumen && metaVolumen > 0 && (
+                                {totalEjecutado >= metaTotal && metaTotal > 0 && (
                                   <div className="text-green-600 bg-green-50 px-2 py-1 rounded font-semibold">
                                     ✅ Meta alcanzada
                                   </div>
@@ -574,22 +610,22 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                                   <YAxis 
                                     stroke="#6B7280" 
                                     fontSize={11} 
-                                    domain={[0, metaVolumen > 0 ? metaVolumen * 1.05 : 'auto']}
+                                    domain={[0, metaTotal > 0 ? metaTotal * 1.05 : 'auto']}
                                     tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : v.toLocaleString()}
-                                    label={{ value: 'm³', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: 10, fill: '#6B7280' } }}
+                                    label={{ value: unidad, angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: 10, fill: '#6B7280' } }}
                                   />
                                   <Tooltip 
                                     formatter={(value, name) => {
                                       if (value === null) return [null, null];
                                       const label = name === 'acumulado' ? 'Total Acumulado' : 
                                                    name === 'proyeccion' ? 'Proyección' : 'Esta Semana';
-                                      return [`${value.toLocaleString(undefined, {maximumFractionDigits: 0})} m³`, label];
+                                      return [`${value.toLocaleString(undefined, {maximumFractionDigits: 0})} ${unidad}`, label];
                                     }}
                                     contentStyle={{ backgroundColor: '#FFF', border: '1px solid #E5E7EB', borderRadius: '8px' }}
                                   />
-                                  {metaVolumen > 0 && (
+                                  {metaTotal > 0 && (
                                     <ReferenceLine 
-                                      y={metaVolumen} 
+                                      y={metaTotal} 
                                       stroke="#22C55E" 
                                       strokeWidth={2}
                                       strokeDasharray="8 4"
@@ -599,10 +635,10 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                                   <Line 
                                     type="monotone" 
                                     dataKey="acumulado" 
-                                    stroke="#994B49" 
+                                    stroke={colorPrimario} 
                                     strokeWidth={3}
-                                    dot={{ fill: '#994B49', strokeWidth: 2, r: 5 }}
-                                    activeDot={{ r: 7, fill: '#7D3C3A' }}
+                                    dot={{ fill: colorPrimario, strokeWidth: 2, r: 5 }}
+                                    activeDot={{ r: 7, fill: colorPrimario }}
                                     name="acumulado"
                                     connectNulls={false}
                                   />
@@ -618,12 +654,12 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                                   />
                                   <Line 
                                     type="monotone" 
-                                    dataKey="volumen" 
+                                    dataKey="valor" 
                                     stroke="#60A5FA" 
                                     strokeWidth={2}
                                     strokeDasharray="5 5"
                                     dot={{ fill: '#60A5FA', strokeWidth: 2, r: 4 }}
-                                    name="volumen"
+                                    name="valor"
                                     connectNulls={false}
                                   />
                                 </LineChart>
@@ -631,7 +667,7 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                             </div>
                             <div className="flex items-center justify-center gap-3 sm:gap-5 mt-2 text-xs flex-wrap">
                               <div className="flex items-center gap-1.5">
-                                <div className="w-4 h-0.5 bg-[#994B49]"></div>
+                                <div className="w-4 h-0.5" style={{ backgroundColor: colorPrimario }}></div>
                                 <span className="text-gray-600">Acumulado</span>
                               </div>
                               <div className="flex items-center gap-1.5">
@@ -644,7 +680,7 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                                   <span className="text-gray-600">Proyección</span>
                                 </div>
                               )}
-                              {metaVolumen > 0 && (
+                              {metaTotal > 0 && (
                                 <div className="flex items-center gap-1.5">
                                   <div className="w-4 h-0.5 bg-green-500"></div>
                                   <span className="text-gray-600">Meta</span>
