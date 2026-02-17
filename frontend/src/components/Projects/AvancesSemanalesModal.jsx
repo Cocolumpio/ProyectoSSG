@@ -924,6 +924,49 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                     )}
                   </div>
                 </div>
+
+                {/* Sección de Análisis IA */}
+                {!readOnly && (
+                  <div className="p-2 sm:p-4">
+                    {!showAnalisisIA ? (
+                      <button
+                        onClick={() => setShowAnalisisIA(true)}
+                        className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all flex items-center justify-center gap-2 shadow-md"
+                        data-testid="show-analisis-ia-btn"
+                      >
+                        <Eye className="h-5 w-5" />
+                        Analizar Fotos con IA
+                      </button>
+                    ) : (
+                      <div className="bg-white rounded-xl shadow-lg p-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                            <Eye className="h-5 w-5 text-purple-600" />
+                            Análisis con IA
+                          </h4>
+                          <button
+                            onClick={() => setShowAnalisisIA(false)}
+                            className="text-gray-400 hover:text-gray-600"
+                          >
+                            <X className="h-5 w-5" />
+                          </button>
+                        </div>
+                        <AnalisisFotoIA
+                          avanceId={selectedAvance.id}
+                          proyectoId={proyecto.id}
+                          semana={selectedAvance.semana}
+                          onAnalisisCompleto={(resultado) => {
+                            if (onShowSuccess && resultado.success) {
+                              onShowSuccess(`Análisis completado: ${resultado.pilas_detectadas} pilas, ${resultado.anclas_detectadas} anclas detectadas`);
+                            }
+                            // Refrescar avances para mostrar datos actualizados
+                            fetchAvances();
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex-1 flex items-center justify-center text-gray-500">
