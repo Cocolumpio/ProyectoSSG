@@ -24,7 +24,9 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
     nombre: '', ubicacion: '', direccion: '', coordenadas: { lat: 0, lng: 0 },
     fecha_inicio: '', fecha_fin_planeada: '', descripcion: '', avance_actual: 0,
     volumen_total_planeado: 0, semanas_planeadas: 0,
-    capacidad_camion: 25, costo_m3: 150
+    pilas_planeadas: 0, anclas_planeadas: 0, muros_planeados: 0,
+    capacidad_camion: 25, costo_m3: 150,
+    fases: { excavacion: false, cimentacion: false, edificacion: false }
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -34,12 +36,22 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
       nombre: '', ubicacion: '', direccion: '', coordenadas: { lat: 0, lng: 0 },
       fecha_inicio: '', fecha_fin_planeada: '', descripcion: '', avance_actual: 0,
       volumen_total_planeado: 0, semanas_planeadas: 0,
-      capacidad_camion: 25, costo_m3: 150
+      pilas_planeadas: 0, anclas_planeadas: 0, muros_planeados: 0,
+      capacidad_camion: 25, costo_m3: 150,
+      fases: { excavacion: false, cimentacion: false, edificacion: false }
     });
   };
 
   const handleEditClick = (proyecto) => {
     setEditingProject(proyecto);
+    // Determinar fases basadas en los datos del proyecto
+    const tipos = proyecto.actividades_tipo || [];
+    const fases = {
+      excavacion: tipos.includes('excavacion') || proyecto.volumen_total_planeado > 0,
+      cimentacion: tipos.includes('pilas') || tipos.includes('anclas') || proyecto.pilas_planeadas > 0 || proyecto.anclas_planeadas > 0,
+      edificacion: tipos.includes('muros') || proyecto.muros_planeados > 0
+    };
+    
     setFormData({
       nombre: proyecto.nombre || '', 
       ubicacion: proyecto.ubicacion || '',
@@ -51,8 +63,12 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
       avance_actual: proyecto.avance_actual || 0,
       volumen_total_planeado: proyecto.volumen_total_planeado || 0,
       semanas_planeadas: proyecto.semanas_planeadas || 0,
+      pilas_planeadas: proyecto.pilas_planeadas || 0,
+      anclas_planeadas: proyecto.anclas_planeadas || 0,
+      muros_planeados: proyecto.muros_planeados || 0,
       capacidad_camion: proyecto.capacidad_camion || 25, 
-      costo_m3: proyecto.costo_m3 || 150
+      costo_m3: proyecto.costo_m3 || 150,
+      fases
     });
     setShowEditForm(true);
     setError(null);

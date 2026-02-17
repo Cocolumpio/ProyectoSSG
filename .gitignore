@@ -127,3 +127,4 @@ backend/uploads/modelos3d/hotel-marriott-001/40f7d195-bb3e-4668-9891-bca42a85842
 # Environment files
 *.env
 *.env.*
+frontend/node_modules/.cache/default-development/10.pack
