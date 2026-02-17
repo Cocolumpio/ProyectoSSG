@@ -447,13 +447,25 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
               <p className="text-white/80 text-xs sm:text-sm truncate max-w-[150px] sm:max-w-none">{proyecto.nombre}</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-white/80 hover:text-white p-1.5 sm:p-2 rounded-lg hover:bg-white/10"
-            data-testid="close-avances-modal"
-          >
-            <X className="h-5 sm:h-6 w-5 sm:w-6" />
-          </button>
+          <div className="flex items-center gap-2">
+            {!readOnly && (
+              <button
+                onClick={() => setShowComparacion(true)}
+                className="hidden sm:flex items-center gap-2 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors text-sm"
+                data-testid="comparar-avance-btn"
+              >
+                <ArrowUpDown className="h-4 w-4" />
+                <span>Comparar con Residente</span>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white p-1.5 sm:p-2 rounded-lg hover:bg-white/10"
+              data-testid="close-avances-modal"
+            >
+              <X className="h-5 sm:h-6 w-5 sm:w-6" />
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row flex-1 overflow-hidden">
