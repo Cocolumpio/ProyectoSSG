@@ -53,6 +53,14 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
     setError(null);
     
     try {
+      // Crear descripción dinámica basada en los tipos detectados
+      const tipos = parsedData.resumen.tipos_actividades || [];
+      let descripcionParts = [`Proyecto con ${parsedData.resumen.total_frentes} frentes`];
+      if (tipos.includes('pilas')) descripcionParts.push(`${parsedData.resumen.total_pilas} pilas`);
+      if (tipos.includes('muros')) descripcionParts.push(`${parsedData.resumen.total_muros} muros`);
+      if (tipos.includes('anclas')) descripcionParts.push(`${parsedData.resumen.total_anclas} anclas`);
+      if (tipos.includes('excavacion')) descripcionParts.push(`${parsedData.resumen.total_excavacion}m³ excavación`);
+      
       const response = await axios.post(`${API}/proyectos/crear-desde-cronograma`, {
         nombre: nombreProyecto,
         ubicacion: ubicacion,
@@ -60,7 +68,7 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
         coordenadas: { lat: 20.6597, lng: -103.3496 }, // Guadalajara default
         frentes: parsedData.frentes,
         resumen: parsedData.resumen,
-        descripcion: `Proyecto con ${parsedData.resumen.total_frentes} frentes y ${parsedData.resumen.total_pilas} pilas planeadas`
+        descripcion: descripcionParts.join(', ')
       });
       
       if (response.data.success) {
