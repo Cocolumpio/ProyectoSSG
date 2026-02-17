@@ -162,6 +162,9 @@ function AppContent() {
               <NavButton active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} testId="nav-dashboard-btn">
                 Dashboard
               </NavButton>
+              <NavButton active={activeView === 'metricas'} onClick={() => setActiveView('metricas')} testId="nav-metricas-btn">
+                Métricas
+              </NavButton>
               <NavButton active={activeView === 'proyectos'} onClick={() => setActiveView('proyectos')} testId="nav-proyectos-btn">
                 Proyectos
               </NavButton>
