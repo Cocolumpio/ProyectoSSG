@@ -668,6 +668,68 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                       </div>
                     )}
 
+                    {/* Muros completados - Solo si el proyecto tiene edificación */}
+                    {(proyecto.actividades_tipo?.includes('muros') || proyecto.muros_planeados > 0) && (
+                      <div className="p-3 bg-purple-50 rounded-lg border border-purple-100">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Building2 className="h-4 w-4 text-purple-600" />
+                            <span className="text-sm font-medium text-purple-800">Muros Completados:</span>
+                          </div>
+                          {editingMuros ? (
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={editMurosValue}
+                                onChange={(e) => setEditMurosValue(parseInt(e.target.value) || 0)}
+                                className="w-24 px-2 py-1 text-sm border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                data-testid="edit-muros-input"
+                              />
+                              <button
+                                onClick={handleSaveMuros}
+                                disabled={savingMuros}
+                                className="p-1.5 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 transition-colors"
+                                title="Guardar"
+                                data-testid="save-muros-btn"
+                              >
+                                {savingMuros ? (
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <Check className="h-4 w-4" />
+                                )}
+                              </button>
+                              <button
+                                onClick={handleCancelEditMuros}
+                                className="p-1.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                                title="Cancelar"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center space-x-2">
+                              <span className="text-lg font-bold text-purple-700" data-testid="muros-value">
+                                {(selectedAvance.muros_completados || 0).toLocaleString()}
+                              </span>
+                              <span className="text-sm text-purple-500">/ {(proyecto.muros_planeados || 0).toLocaleString()}</span>
+                              {!readOnly && (
+                                <button
+                                  onClick={handleEditMurosClick}
+                                  className="p-1.5 text-purple-500 hover:text-purple-700 hover:bg-purple-100 rounded transition-colors"
+                                  title="Editar muros"
+                                  data-testid="edit-muros-btn"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Volumen excavado - Solo si el proyecto tiene excavación */}
                     {(proyecto.actividades_tipo?.includes('excavacion') || proyecto.volumen_total_planeado > 0) && (
                       <div className="p-3 bg-gray-50 rounded-lg">
