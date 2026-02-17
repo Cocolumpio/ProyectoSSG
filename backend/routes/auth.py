@@ -56,7 +56,7 @@ async def register(user_data: UserCreate):
 
 
 @router.post("/login", response_model=Token)
-async def login(credentials: UserLogin):
+async def login(credentials: LoginRequest):
     """Inicia sesión y devuelve un token JWT"""
     db = get_db()
     
