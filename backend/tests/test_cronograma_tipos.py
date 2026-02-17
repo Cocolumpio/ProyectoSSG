@@ -242,8 +242,8 @@ class TestDashboardEstadisticas:
     """Tests for dashboard statistics endpoint"""
     
     def test_estadisticas_endpoint(self):
-        """Test /api/estadisticas returns correct data"""
-        response = requests.get(f"{BASE_URL}/api/estadisticas")
+        """Test /api/estadisticas/resumen returns correct data"""
+        response = requests.get(f"{BASE_URL}/api/estadisticas/resumen")
         
         assert response.status_code == 200
         data = response.json()
