@@ -27,6 +27,9 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
   const [editingAnclas, setEditingAnclas] = useState(false);
   const [editAnclasValue, setEditAnclasValue] = useState(0);
   const [savingAnclas, setSavingAnclas] = useState(false);
+  const [editingMuros, setEditingMuros] = useState(false);
+  const [editMurosValue, setEditMurosValue] = useState(0);
+  const [savingMuros, setSavingMuros] = useState(false);
   const [uploadingModel, setUploadingModel] = useState(false);
   const [viewerMode, setViewerMode] = useState('auto'); // 'auto', 'local', 'pix4d'
   const [showAnalisisIA, setShowAnalisisIA] = useState(false);
