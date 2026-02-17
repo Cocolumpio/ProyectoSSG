@@ -346,33 +346,35 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                 
                 {stats ? (
                   <div className="space-y-4">
-                    {/* Volumen */}
-                    <div className="bg-white rounded-lg p-4 border border-gray-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-600">Volumen Excavado vs Planeado</span>
-                        <span className="text-sm font-medium text-[#994B49]">{stats.porcentajeAvance.toFixed(1)}%</span>
-                      </div>
-                      <div className="flex items-end justify-between mb-2">
-                        <div>
-                          <span className="text-2xl font-bold text-gray-900">{stats.volumenExcavado.toLocaleString()}</span>
-                          <span className="text-sm text-gray-500 ml-1">m³</span>
+                    {/* Volumen - Solo mostrar si hay excavación planeada */}
+                    {stats.volumenPlaneado > 0 && (
+                      <div className="bg-white rounded-lg p-4 border border-gray-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-gray-600">Volumen Excavado vs Planeado</span>
+                          <span className="text-sm font-medium text-[#994B49]">{stats.porcentajeAvance.toFixed(1)}%</span>
                         </div>
-                        <div className="text-right">
-                          <span className="text-sm text-gray-500">de </span>
-                          <span className="text-lg font-semibold text-gray-700">{stats.volumenPlaneado.toLocaleString()}</span>
-                          <span className="text-sm text-gray-500 ml-1">m³</span>
+                        <div className="flex items-end justify-between mb-2">
+                          <div>
+                            <span className="text-2xl font-bold text-gray-900">{stats.volumenExcavado.toLocaleString()}</span>
+                            <span className="text-sm text-gray-500 ml-1">m³</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-sm text-gray-500">de </span>
+                            <span className="text-lg font-semibold text-gray-700">{stats.volumenPlaneado.toLocaleString()}</span>
+                            <span className="text-sm text-gray-500 ml-1">m³</span>
+                          </div>
                         </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div
+                            className="bg-gradient-to-r from-[#994B49] to-[#B85C5A] h-3 rounded-full transition-all"
+                            style={{ width: `${stats.porcentajeAvance}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Restante: <span className="font-medium">{stats.volumenRestante.toLocaleString()} m³</span>
+                        </p>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div
-                          className="bg-gradient-to-r from-[#994B49] to-[#B85C5A] h-3 rounded-full transition-all"
-                          style={{ width: `${stats.porcentajeAvance}%` }}
-                        />
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Restante: <span className="font-medium">{stats.volumenRestante.toLocaleString()} m³</span>
-                      </p>
-                    </div>
+                    )}
 
                     {/* Métricas por Tipo de Actividad - Condicionales */}
                     {stats.tiposActividades && stats.tiposActividades.length > 0 && (
