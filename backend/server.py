@@ -295,6 +295,9 @@ class AvanceSemanalUpdate(BaseModel):
     descripcion: Optional[str] = None
     porcentaje_avance: Optional[float] = None
     volumen_excavacion: Optional[float] = None
+    pilas_completadas: Optional[int] = None
+    anclas_instaladas: Optional[int] = None
+    muros_completados: Optional[int] = None
 
 class Proyecto(BaseModel):
     model_config = ConfigDict(extra="ignore")
