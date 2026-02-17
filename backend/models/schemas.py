@@ -16,7 +16,7 @@ class UserRole:
 class User(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    email: EmailStr
+    email: str
     nombre: str
     password_hash: str
     rol: str = "client"
@@ -25,7 +25,7 @@ class User(BaseModel):
 
 
 class UserCreate(BaseModel):
-    email: EmailStr
+    email: str
     nombre: str
     password: str
     rol: str = "client"
@@ -36,11 +36,16 @@ class UserResponse(BaseModel):
     email: str
     nombre: str
     rol: str
-    is_active: bool = True
+    activo: bool = True
+
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str
     password: str
 
 
@@ -57,12 +62,13 @@ class Coordinates(BaseModel):
 
 
 class Volumetria(BaseModel):
-    excavacion: float = 0.0  # m³
-    relleno: float = 0.0  # m³
-    materiales: float = 0.0  # m³
+    excavacion: float = 0.0
+    relleno: float = 0.0
+    materiales: float = 0.0
 
 
 class AvanceSemanal(BaseModel):
+    model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     proyecto_id: str
     semana: int
@@ -74,6 +80,9 @@ class AvanceSemanal(BaseModel):
     descripcion: Optional[str] = None
     porcentaje_avance: Optional[float] = None
     volumen_excavacion: Optional[float] = None
+    pilas_completadas: Optional[int] = None
+    anclas_instaladas: Optional[int] = None
+    muros_completados: Optional[int] = None
     imagenes: List[str] = []
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -85,6 +94,9 @@ class AvanceSemanalCreate(BaseModel):
     descripcion: Optional[str] = None
     porcentaje_avance: Optional[float] = None
     volumen_excavacion: Optional[float] = None
+    pilas_completadas: Optional[int] = None
+    anclas_instaladas: Optional[int] = None
+    muros_completados: Optional[int] = None
     imagenes: List[str] = []
 
 
@@ -97,6 +109,9 @@ class AvanceSemanalUpdate(BaseModel):
     descripcion: Optional[str] = None
     porcentaje_avance: Optional[float] = None
     volumen_excavacion: Optional[float] = None
+    pilas_completadas: Optional[int] = None
+    anclas_instaladas: Optional[int] = None
+    muros_completados: Optional[int] = None
 
 
 class Proyecto(BaseModel):
@@ -109,13 +124,29 @@ class Proyecto(BaseModel):
     fecha_inicio: str
     fecha_fin_planeada: str
     avance_actual: float = 0.0
-    volumen_total_planeado: Optional[float] = None
+    # Tipos de actividades del proyecto
+    actividades_tipo: List[str] = []
+    # Métricas planeadas
+    volumen_total_planeado: float = 0.0
+    pilas_planeadas: int = 0
+    muros_planeados: int = 0
+    anclas_planeadas: int = 0
+    # Métricas ejecutadas
+    volumen_ejecutado: float = 0.0
+    pilas_ejecutadas: int = 0
+    muros_ejecutados: int = 0
+    anclas_ejecutadas: int = 0
+    # Cronograma
     semanas_planeadas: int = 0
+    semanas_excavacion: int = 0
+    semanas_pilas: int = 0
+    semanas_muros: int = 0
     descripcion: Optional[str] = None
     pix4d_url: Optional[str] = None
     volumetria: Optional[Volumetria] = None
-    capacidad_camion: Optional[float] = 25.0
-    costo_m3: Optional[float] = 150.0
+    # Configuración de flotilla de camiones
+    capacidad_camion: float = 25.0
+    costo_m3: float = 150.0
     clientes_asignados: List[str] = []
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -127,14 +158,26 @@ class ProyectoCreate(BaseModel):
     coordenadas: Coordinates
     fecha_inicio: str
     fecha_fin_planeada: str
-    avance_actual: float = 0.0
-    volumen_total_planeado: Optional[float] = None
-    semanas_planeadas: int = 0
     descripcion: Optional[str] = None
     pix4d_url: Optional[str] = None
+    avance_actual: float = 0.0
+    # Tipos de actividades
+    actividades_tipo: List[str] = []
+    # Métricas planeadas
+    volumen_total_planeado: float = 0.0
+    pilas_planeadas: int = 0
+    muros_planeados: int = 0
+    anclas_planeadas: int = 0
+    # Cronograma
+    semanas_planeadas: int = 0
+    semanas_excavacion: int = 0
+    semanas_pilas: int = 0
+    semanas_muros: int = 0
     volumetria: Optional[Volumetria] = None
-    capacidad_camion: Optional[float] = 25.0
-    costo_m3: Optional[float] = 150.0
+    # Configuración de flotilla
+    capacidad_camion: float = 25.0
+    costo_m3: float = 150.0
+    clientes_asignados: List[str] = []
 
 
 class ProyectoUpdate(BaseModel):
@@ -145,16 +188,120 @@ class ProyectoUpdate(BaseModel):
     fecha_inicio: Optional[str] = None
     fecha_fin_planeada: Optional[str] = None
     avance_actual: Optional[float] = None
+    # Tipos de actividades
+    actividades_tipo: Optional[List[str]] = None
+    # Métricas planeadas
     volumen_total_planeado: Optional[float] = None
+    pilas_planeadas: Optional[int] = None
+    muros_planeados: Optional[int] = None
+    anclas_planeadas: Optional[int] = None
+    # Métricas ejecutadas
+    volumen_ejecutado: Optional[float] = None
+    pilas_ejecutadas: Optional[int] = None
+    muros_ejecutados: Optional[int] = None
+    anclas_ejecutadas: Optional[int] = None
+    # Cronograma
     semanas_planeadas: Optional[int] = None
+    semanas_excavacion: Optional[int] = None
+    semanas_pilas: Optional[int] = None
+    semanas_muros: Optional[int] = None
     descripcion: Optional[str] = None
     pix4d_url: Optional[str] = None
     volumetria: Optional[Volumetria] = None
     capacidad_camion: Optional[float] = None
     costo_m3: Optional[float] = None
+    clientes_asignados: Optional[List[str]] = None
 
 
-# --- Frentes y Cronograma Models ---
+# --- Flight Request Models ---
+class SolicitudVuelo(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    nombre_proyecto: str
+    fecha_inicio_proyecto: str
+    fecha_fin_proyecto: str
+    fecha_vuelo_deseada: str
+    hora_preferencia: Optional[str] = None
+    notas: Optional[str] = None
+    estado: str = "pendiente"
+    cliente_id: Optional[str] = None
+    cliente_email: Optional[str] = None
+    cliente_nombre: Optional[str] = None
+    comentario_admin: Optional[str] = None
+    fecha_respuesta: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class SolicitudVueloCreate(BaseModel):
+    nombre_proyecto: str
+    fecha_inicio_proyecto: str
+    fecha_fin_proyecto: str
+    fecha_vuelo_deseada: str
+    hora_preferencia: Optional[str] = None
+    notas: Optional[str] = None
+
+
+class SolicitudVueloUpdate(BaseModel):
+    estado: str
+    comentario_admin: Optional[str] = None
+
+
+# --- Vuelos Models ---
+class Vuelo(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    proyecto_id: str
+    fecha_vuelo: str
+    duracion_minutos: int
+    area_cubierta: float = 0.0
+    num_imagenes: int = 0
+    archivo_nube_puntos: Optional[str] = None
+    pix4d_url: Optional[str] = None
+    estado: str = "completado"
+    notas: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class VueloCreate(BaseModel):
+    proyecto_id: str
+    fecha_vuelo: str
+    duracion_minutos: int
+    area_cubierta: float = 0.0
+    num_imagenes: int = 0
+    pix4d_url: Optional[str] = None
+    notas: Optional[str] = None
+
+
+class VueloUpdate(BaseModel):
+    proyecto_id: Optional[str] = None
+    fecha_vuelo: Optional[str] = None
+    duracion_minutos: Optional[int] = None
+    area_cubierta: Optional[float] = None
+    num_imagenes: Optional[int] = None
+    pix4d_url: Optional[str] = None
+    notas: Optional[str] = None
+    estado: Optional[str] = None
+
+
+# --- Avances Hitos Models ---
+class AvanceHito(BaseModel):
+    nombre: str
+    porcentaje_planeado: float
+    porcentaje_real: float
+    fecha_planeada: str
+    fecha_real: Optional[str] = None
+    completado: bool = False
+
+
+class Avance(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    proyecto_id: str
+    hitos: List[AvanceHito]
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+# --- Frentes y Actividades Models ---
 class Actividad(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     descripcion: str
@@ -166,7 +313,7 @@ class Actividad(BaseModel):
     dias: int = 0
     pilas_completadas: int = 0
     anclas_instaladas: int = 0
-    estado: str = "pendiente"  # pendiente, en_progreso, completada
+    estado: str = "pendiente"
 
 
 class Frente(BaseModel):
@@ -186,6 +333,7 @@ class FrenteCreate(BaseModel):
     orden: int = 1
 
 
+# --- Análisis IA Models ---
 class AnalisisFotoIA(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     proyecto_id: str
@@ -196,123 +344,42 @@ class AnalisisFotoIA(BaseModel):
     anclas_detectadas: int = 0
     pilas_en_proceso: int = 0
     porcentaje_avance_estimado: float = 0.0
-    estado_proyecto: str = "EN_TIEMPO"  # EN_TIEMPO, ADELANTADO, RETRASADO
-    confianza_deteccion: str = "MEDIA"  # ALTA, MEDIA, BAJA
+    estado_proyecto: str = "EN_TIEMPO"
+    confianza_deteccion: str = "MEDIA"
     observaciones: Optional[str] = None
     recomendaciones: Optional[str] = None
     imagen_url: Optional[str] = None
 
 
-
-
-# --- Flight Models ---
-class Vuelo(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    proyecto_id: str
-    fecha_vuelo: str
-    duracion_minutos: int
-    area_cubierta: Optional[float] = None
-    num_imagenes: Optional[int] = None
-    estado: str = "completado"
-    notas: Optional[str] = None
-    semana_vinculada: Optional[int] = None
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-
-class VueloCreate(BaseModel):
-    proyecto_id: str
-    fecha_vuelo: str
-    duracion_minutos: int
-    area_cubierta: Optional[float] = None
-    num_imagenes: Optional[int] = None
-    estado: str = "completado"
-    notas: Optional[str] = None
-    semana_vinculada: Optional[int] = None
-
-
-class VueloUpdate(BaseModel):
-    proyecto_id: Optional[str] = None
-    fecha_vuelo: Optional[str] = None
-    duracion_minutos: Optional[int] = None
-    area_cubierta: Optional[float] = None
-    num_imagenes: Optional[int] = None
-    estado: Optional[str] = None
-    notas: Optional[str] = None
-    semana_vinculada: Optional[int] = None
-
-
-# --- Flight Request Models ---
-class SolicitudVuelo(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    cliente_id: str
-    cliente_email: str
-    cliente_nombre: str
-    proyecto_nombre: str
-    ubicacion: str
-    coordenadas: Optional[Coordinates] = None
-    fecha_preferida: str
-    hora_preferida: Optional[str] = None
-    notas: Optional[str] = None
-    estado: str = "pendiente"
-    admin_notas: Optional[str] = None
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-
-class SolicitudVueloCreate(BaseModel):
-    proyecto_nombre: str
-    ubicacion: str
-    coordenadas: Optional[Coordinates] = None
-    fecha_preferida: str
-    hora_preferida: Optional[str] = None
-    notas: Optional[str] = None
-
-
-class SolicitudVueloUpdate(BaseModel):
-    estado: Optional[str] = None
-    admin_notas: Optional[str] = None
-
-
 # --- Comparación de Avances con Residente ---
 class MetricaComparacion(BaseModel):
-    """Métrica individual para comparación"""
     nombre: str
     unidad: str
     valor_dron: float = 0.0
     valor_residente: float = 0.0
     diferencia: float = 0.0
     diferencia_porcentaje: float = 0.0
-    estado: str = "coincide"  # coincide, discrepancia_menor, discrepancia_mayor
+    estado: str = "coincide"
 
 
 class ComparacionAvance(BaseModel):
-    """Resultado de comparación entre avance del dron y reporte del residente"""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     proyecto_id: str
     semana: int
     fecha_comparacion: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     pdf_url: str
     pdf_nombre: str
-    
-    # Métricas extraídas del PDF
     metricas_residente: dict = {}
-    
-    # Métricas del sistema (dron)
     metricas_dron: dict = {}
-    
-    # Comparación detallada
     comparaciones: List[MetricaComparacion] = []
-    
-    # Análisis de IA
     resumen_ia: str = ""
     discrepancias_detectadas: List[str] = []
     recomendaciones: List[str] = []
-    
-    # Estado general
-    estado_comparacion: str = "pendiente"  # pendiente, analizado, revisado
+    estado_comparacion: str = "pendiente"
     avance_general_residente: float = 0.0
     avance_general_dron: float = 0.0
+    confianza: str = "MEDIA"
+    alerta_enviada: bool = False
 
 
 class ComparacionAvanceCreate(BaseModel):
