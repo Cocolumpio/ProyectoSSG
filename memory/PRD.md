@@ -106,10 +106,16 @@ Permite comparar automáticamente los avances registrados por el sistema de dron
 - ✅ Dashboard de Métricas Históricas con gráficas interactivas
 - ✅ Reportes actualizados con pilas, anclas y muros por proyecto
 - ✅ Exportación de métricas históricas a Excel y PDF
+- ✅ Preparación de estructura modular para refactorización (/app/backend/routes/, /app/backend/core/)
+- ✅ Requisito de archivos `.laz` DESCARTADO - Se continuará usando `.ply`
 
 ## Tareas Pendientes
-- (P2) Refactorización del archivo `server.py` monolítico (~3200 líneas)
-- (P3) Clarificar requisito de archivos `.laz`
+- Ninguna tarea pendiente crítica
+
+## Mejoras Futuras (Backlog)
+- Refactorización gradual del `server.py` usando la estructura modular preparada
+- Integración con Google Calendar para programar vuelos
+- Dashboard de comparación histórica entre dron y residente
 
 ## Funcionalidades del Sistema
 
