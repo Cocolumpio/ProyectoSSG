@@ -249,7 +249,18 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
                     {frente.actividades.slice(0, 3).map((act, i) => (
                       <div key={i} className="flex justify-between py-1 border-b border-gray-100 last:border-0">
                         <span className="truncate flex-1">{act.descripcion}</span>
-                        <span className="ml-4 text-[#994B49] font-medium">{act.num_pilas} pilas</span>
+                        <div className="ml-4 flex items-center gap-2">
+                          <span className={`text-xs px-1.5 py-0.5 rounded ${
+                            act.tipo === 'pilas' ? 'bg-blue-100 text-blue-700' :
+                            act.tipo === 'excavacion' ? 'bg-amber-100 text-amber-700' :
+                            act.tipo === 'muros' ? 'bg-purple-100 text-purple-700' :
+                            act.tipo === 'anclas' ? 'bg-teal-100 text-teal-700' :
+                            'bg-gray-100 text-gray-600'
+                          }`}>
+                            {act.tipo || 'otro'}
+                          </span>
+                          <span className="text-[#994B49] font-medium">{act.cantidad}</span>
+                        </div>
                       </div>
                     ))}
                     {frente.actividades.length > 3 && (
