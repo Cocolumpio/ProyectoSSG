@@ -3,7 +3,37 @@
 ## Estado Actual (Actualizado: 2025-12-17)
 - **Sistema Funcional**: Dashboard multi-fase completamente operativo
 - **Bug Fix**: Corregido bug de selección de proyectos (P0)
+- **Nueva Funcionalidad**: Comparación de Avances Dron vs Residente con IA
 - **Testing**: 100% de pruebas pasadas
+
+## Nueva Funcionalidad: Comparación de Avances con IA
+
+### Descripción
+Permite comparar automáticamente los avances registrados por el sistema de drones con los reportes PDF del residente de obra, usando Gemini (IA) para extraer y analizar métricas.
+
+### Flujo de Usuario
+1. Abrir modal "Avances Semanales" de un proyecto
+2. Click en botón "Comparar con Residente" en el header
+3. Subir PDF del reporte del residente
+4. El sistema analiza automáticamente con IA y muestra:
+   - Avance general: Dron vs Residente
+   - Tabla comparativa por métrica (excavación, anclas, muros)
+   - Discrepancias detectadas (>5%)
+   - Análisis y recomendaciones de IA
+5. Historial de comparaciones guardado
+
+### Métricas Comparadas
+| Métrica | Unidad | Fuente Dron | Fuente PDF |
+|---------|--------|-------------|------------|
+| Excavación | m³ | volumen_excavacion | Excavación M3 |
+| Pilas | pzas | pilas_completadas | Perforación PZA |
+| Anclas | pzas | anclas_instaladas | Tensado PZA |
+| Muros | m² | muros_completados | Lanzado M2 |
+
+### Endpoints API
+- `POST /api/proyectos/{id}/comparar-avance` - Subir y analizar PDF
+- `GET /api/proyectos/{id}/comparaciones` - Historial de comparaciones
+- `DELETE /api/proyectos/{id}/comparaciones/{id}` - Eliminar comparación
 
 ## Sistema de Fases de Construcción
 
@@ -55,18 +85,27 @@
 ## Stack Tecnológico
 - Frontend: React, TailwindCSS, Recharts, Three.js
 - Backend: FastAPI, Pydantic, Motor (MongoDB)
-- IA: Gemini Vision via emergentintegrations
+- IA: Gemini Vision via emergentintegrations (Emergent LLM Key)
 
-## Bugs Corregidos (2025-12-17)
-- **P0 - Selección de Proyectos**: El bug causaba que al hacer clic en cualquier proyecto, siempre mostrara el primero. Corregido eliminando `selectedProyecto` de las dependencias de `useCallback` en `App.js` y usando el patrón de función de actualización de estado.
+## Integraciones
+- **Gemini Vision**: Análisis de PDFs para comparación de avances
+- **Resend**: Notificaciones por email (pendiente implementación)
+- **OpenStreetMap**: Geocodificación de ubicaciones
+
+## Tareas Completadas (2025-12-17)
+- ✅ Bug de selección de proyectos en Dashboard
+- ✅ Funcionalidad de Comparación de Avances Dron vs Residente
+- ✅ Análisis automático de PDFs con Gemini
+- ✅ UI de comparación con métricas, discrepancias y análisis IA
 
 ## Tareas Pendientes
-- (P1) Prueba E2E completa del sistema de 3 fases
+- (P1) Prueba E2E completa del sistema de 3 fases con nuevo proyecto
 - (P1) Probar funcionalidad de análisis de fotos con AI
 - (P2) Refactorización del archivo `server.py` monolítico
 - (P2) Implementar notificaciones por email con Resend
 - (P3) Clarificar requisito de archivos `.laz`
 
 ## Notas Técnicas
-- El análisis de fotos con AI está integrado pero el flujo E2E no ha sido probado completamente
-- El cálculo de avance del backend es la fuente de verdad
+- La comparación de avances usa comparación ACUMULADA del proyecto
+- El nivel de confianza (ALTA/MEDIA/BAJA) indica qué tan seguro está el modelo de la extracción
+- Los PDFs se guardan en `/app/backend/uploads/reportes_residente/`
