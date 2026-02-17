@@ -221,7 +221,7 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
-                    <div className="mt-2 flex items-center gap-2">
+                    <div className="mt-2 flex items-center gap-2 flex-wrap">
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                         comp.confianza === 'ALTA' ? 'bg-green-100 text-green-700' :
                         comp.confianza === 'MEDIA' ? 'bg-yellow-100 text-yellow-700' :
@@ -232,6 +232,11 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
                       <span className="text-xs text-gray-500">
                         {comp.comparaciones?.length || 0} métricas
                       </span>
+                      {comp.alerta_enviada && (
+                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700">
+                          📧 Alerta
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))
