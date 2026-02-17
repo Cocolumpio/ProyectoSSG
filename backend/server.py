@@ -480,13 +480,12 @@ class Avance(BaseModel):
 
 async def recalcular_avance_proyecto(proyecto_id: str):
     """
-    Recalcula el porcentaje de avance de un proyecto basándose en:
-    - Para proyectos de excavación: volumen total planeado vs excavado
-    - Para proyectos de pilas: pilas planeadas vs completadas
-    - Para proyectos de anclas: anclas planeadas vs instaladas
-    - Para proyectos de muros: muros planeados vs completados
+    Recalcula el porcentaje de avance de un proyecto como PROMEDIO de todas las fases activas:
+    - Excavación: volumen total planeado vs excavado
+    - Cimentación: (pilas + anclas) / 2 si ambas tienen metas
+    - Edificación: muros planeados vs completados
     
-    Prioridad: pilas > muros > anclas > excavación
+    El avance TOTAL es el promedio de todas las fases que tengan metas configuradas.
     """
     # Obtener el proyecto
     proyecto = await db.proyectos.find_one({"id": proyecto_id}, {"_id": 0})
@@ -500,48 +499,60 @@ async def recalcular_avance_proyecto(proyecto_id: str):
         {"proyecto_id": proyecto_id}
     ).to_list(1000)
     
-    nuevo_avance = 0
+    # Calcular totales ejecutados
+    volumen_excavado = sum((a.get('volumen_excavacion', 0) or 0) for a in avances)
+    pilas_completadas = sum((a.get('pilas_completadas', 0) or 0) for a in avances)
+    anclas_instaladas = sum((a.get('anclas_instaladas', 0) or 0) for a in avances)
+    muros_completados = sum((a.get('muros_completados', 0) or 0) for a in avances)
     
-    # Determinar tipo de métrica y calcular avance
-    if 'pilas' in tipos or proyecto.get('pilas_planeadas', 0) > 0:
-        # Cálculo basado en pilas
-        pilas_planeadas = proyecto.get('pilas_planeadas', 0) or 0
+    # Obtener metas
+    volumen_planeado = proyecto.get('volumen_total_planeado', 0) or 0
+    pilas_planeadas = proyecto.get('pilas_planeadas', 0) or 0
+    anclas_planeadas = proyecto.get('anclas_planeadas', 0) or 0
+    muros_planeados = proyecto.get('muros_planeados', 0) or 0
+    
+    # Calcular porcentajes por fase
+    porcentajes = []
+    
+    # Excavación
+    if 'excavacion' in tipos or volumen_planeado > 0:
+        if volumen_planeado > 0:
+            pct_excavacion = min((volumen_excavado / volumen_planeado) * 100, 100)
+            porcentajes.append(pct_excavacion)
+    
+    # Cimentación (pilas + anclas)
+    if 'pilas' in tipos or 'anclas' in tipos or pilas_planeadas > 0 or anclas_planeadas > 0:
+        pct_cimentacion_parts = []
         if pilas_planeadas > 0:
-            pilas_completadas = sum(
-                (a.get('pilas_completadas', 0) or 0) for a in avances
-            )
-            nuevo_avance = min((pilas_completadas / pilas_planeadas) * 100, 100)
-    elif 'muros' in tipos or proyecto.get('muros_planeados', 0) > 0:
-        # Cálculo basado en muros
-        muros_planeados = proyecto.get('muros_planeados', 0) or 0
-        if muros_planeados > 0:
-            muros_completados = sum(
-                (a.get('muros_completados', 0) or 0) for a in avances
-            )
-            nuevo_avance = min((muros_completados / muros_planeados) * 100, 100)
-    elif 'anclas' in tipos or proyecto.get('anclas_planeadas', 0) > 0:
-        # Cálculo basado en anclas
-        anclas_planeadas = proyecto.get('anclas_planeadas', 0) or 0
+            pct_cimentacion_parts.append(min((pilas_completadas / pilas_planeadas) * 100, 100))
         if anclas_planeadas > 0:
-            anclas_instaladas = sum(
-                (a.get('anclas_instaladas', 0) or 0) for a in avances
-            )
-            nuevo_avance = min((anclas_instaladas / anclas_planeadas) * 100, 100)
-    else:
-        # Cálculo basado en volumen de excavación (default)
-        volumen_total_planeado = proyecto.get('volumen_total_planeado', 0) or 0
-        if volumen_total_planeado > 0:
-            volumen_excavado_total = sum(
-                (a.get('volumen_excavacion', 0) or 0) for a in avances
-            )
-            nuevo_avance = min((volumen_excavado_total / volumen_total_planeado) * 100, 100)
+            pct_cimentacion_parts.append(min((anclas_instaladas / anclas_planeadas) * 100, 100))
+        if pct_cimentacion_parts:
+            porcentajes.append(sum(pct_cimentacion_parts) / len(pct_cimentacion_parts))
+    
+    # Edificación (muros)
+    if 'muros' in tipos or muros_planeados > 0:
+        if muros_planeados > 0:
+            pct_edificacion = min((muros_completados / muros_planeados) * 100, 100)
+            porcentajes.append(pct_edificacion)
+    
+    # Avance total = promedio de todas las fases
+    nuevo_avance = 0
+    if porcentajes:
+        nuevo_avance = sum(porcentajes) / len(porcentajes)
     
     nuevo_avance = round(nuevo_avance, 2)
     
-    # Actualizar el proyecto
+    # Actualizar el proyecto con todos los totales ejecutados
     await db.proyectos.update_one(
         {"id": proyecto_id},
-        {"$set": {"avance_actual": nuevo_avance}}
+        {"$set": {
+            "avance_actual": nuevo_avance,
+            "volumen_ejecutado": volumen_excavado,
+            "pilas_ejecutadas": pilas_completadas,
+            "anclas_ejecutadas": anclas_instaladas,
+            "muros_ejecutados": muros_completados
+        }}
     )
     
     return nuevo_avance
