@@ -1664,6 +1664,23 @@ Responde SOLO con el JSON especificado, sin texto adicional."""
         # Eliminar _id de MongoDB para la respuesta
         comparacion.pop('_id', None)
         
+        # Verificar si hay discrepancias críticas (>15%) y enviar alerta
+        discrepancias_criticas = [c for c in comparaciones if c.get("estado") == "discrepancia_mayor"]
+        if discrepancias_criticas and ADMIN_EMAIL and resend.api_key:
+            try:
+                await enviar_alerta_discrepancia(
+                    proyecto_nombre=proyecto.get("nombre", "Proyecto"),
+                    proyecto_id=proyecto_id,
+                    discrepancias=discrepancias_criticas,
+                    resumen_ia=analisis_ia.get("analisis", ""),
+                    pdf_nombre=file.filename
+                )
+                comparacion["alerta_enviada"] = True
+                logging.info(f"Alerta de discrepancia enviada para proyecto {proyecto_id}")
+            except Exception as email_err:
+                logging.error(f"Error enviando alerta de discrepancia: {email_err}")
+                comparacion["alerta_enviada"] = False
+        
         return comparacion
         
     except json.JSONDecodeError as e:
