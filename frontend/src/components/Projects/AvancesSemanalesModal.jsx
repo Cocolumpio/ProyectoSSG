@@ -179,6 +179,78 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
     setEditVolumenValue(0);
   };
 
+  // Funciones para editar pilas completadas
+  const handleEditPilasClick = () => {
+    setEditPilasValue(selectedAvance?.pilas_completadas || 0);
+    setEditingPilas(true);
+  };
+
+  const handleSavePilas = async () => {
+    if (!selectedAvance) return;
+    
+    setSavingPilas(true);
+    try {
+      await axios.put(`${API}/proyectos/${proyecto.id}/avances-semanales/${selectedAvance.id}`, {
+        pilas_completadas: editPilasValue
+      });
+      
+      const updatedAvance = { ...selectedAvance, pilas_completadas: editPilasValue };
+      setSelectedAvance(updatedAvance);
+      setAvances(avances.map(a => a.id === selectedAvance.id ? updatedAvance : a));
+      
+      setEditingPilas(false);
+      if (onShowSuccess) {
+        onShowSuccess(`Pilas completadas actualizadas para Semana ${selectedAvance.semana}`);
+      }
+    } catch (err) {
+      console.error('Error actualizando pilas:', err);
+      alert('Error al actualizar pilas completadas');
+    } finally {
+      setSavingPilas(false);
+    }
+  };
+
+  const handleCancelEditPilas = () => {
+    setEditingPilas(false);
+    setEditPilasValue(0);
+  };
+
+  // Funciones para editar anclas instaladas
+  const handleEditAnclasClick = () => {
+    setEditAnclasValue(selectedAvance?.anclas_instaladas || 0);
+    setEditingAnclas(true);
+  };
+
+  const handleSaveAnclas = async () => {
+    if (!selectedAvance) return;
+    
+    setSavingAnclas(true);
+    try {
+      await axios.put(`${API}/proyectos/${proyecto.id}/avances-semanales/${selectedAvance.id}`, {
+        anclas_instaladas: editAnclasValue
+      });
+      
+      const updatedAvance = { ...selectedAvance, anclas_instaladas: editAnclasValue };
+      setSelectedAvance(updatedAvance);
+      setAvances(avances.map(a => a.id === selectedAvance.id ? updatedAvance : a));
+      
+      setEditingAnclas(false);
+      if (onShowSuccess) {
+        onShowSuccess(`Anclas instaladas actualizadas para Semana ${selectedAvance.semana}`);
+      }
+    } catch (err) {
+      console.error('Error actualizando anclas:', err);
+      alert('Error al actualizar anclas instaladas');
+    } finally {
+      setSavingAnclas(false);
+    }
+  };
+
+  const handleCancelEditAnclas = () => {
+    setEditingAnclas(false);
+    setEditAnclasValue(0);
+  };
+
   const handleModel3DUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file || !selectedAvance) return;
