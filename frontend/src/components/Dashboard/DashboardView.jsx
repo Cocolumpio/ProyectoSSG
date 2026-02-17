@@ -163,6 +163,25 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
   const stats = calcularEstadisticasProyecto();
   const ultimoAvance = avancesSemanales.length > 0 ? avancesSemanales[0] : null;
 
+  // Función para enviar reporte semanal
+  const handleEnviarReporte = async () => {
+    setSendingReport(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/enviar-reporte-semanal`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (onShowSuccess) {
+        onShowSuccess('📊 Reporte semanal enviado exitosamente');
+      }
+    } catch (err) {
+      console.error('Error enviando reporte:', err);
+      alert('Error al enviar el reporte semanal');
+    } finally {
+      setSendingReport(false);
+    }
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* KPI Cards */}
