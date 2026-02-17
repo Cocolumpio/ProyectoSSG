@@ -286,6 +286,9 @@ class AvanceSemanalCreate(BaseModel):
     descripcion: Optional[str] = None
     porcentaje_avance: Optional[float] = None
     volumen_excavacion: Optional[float] = None  # Volumen quitado en m³
+    pilas_completadas: Optional[int] = None  # Pilas completadas
+    anclas_instaladas: Optional[int] = None  # Anclas instaladas
+    muros_completados: Optional[int] = None  # Muros completados
     imagenes: List[str] = []  # URLs de las imágenes del vuelo
 
 class AvanceSemanalUpdate(BaseModel):
