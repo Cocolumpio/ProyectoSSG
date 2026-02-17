@@ -257,6 +257,10 @@ function AppContent() {
           />
         )}
         
+        {activeView === 'metricas' && (
+          <MetricasHistoricasView proyectos={proyectos} />
+        )}
+        
         {activeView === 'proyectos' && (
           isAdmin ? (
             <ProyectosView
