@@ -56,7 +56,11 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
       setSelectedComparacion(response.data);
       
       if (onShowSuccess) {
-        onShowSuccess('Análisis de comparación completado');
+        if (response.data.alerta_enviada) {
+          onShowSuccess('Análisis completado. ⚠️ Alerta enviada al administrador por discrepancias críticas');
+        } else {
+          onShowSuccess('Análisis de comparación completado');
+        }
       }
     } catch (err) {
       console.error('Error subiendo PDF:', err);
