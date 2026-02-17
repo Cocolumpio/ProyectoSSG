@@ -8,252 +8,140 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 - Visualización de datos de volumetría (excavación, relleno, materiales) en m³
 - Seguimiento del avance de proyectos comparado con el cronograma
 - Mapa interactivo para ubicaciones de obras
-- Visor 3D para nubes de puntos usando Pix4D iframe
+- Visor 3D para nubes de puntos usando Pix4D iframe y archivos PLY locales
 - CRUD completo para proyectos con campos para URL de Pix4D y volumetría
 - CRUD completo para vuelos
 - Avances semanales con galería de fotos y modelos 3D
 - Gráfico de volumen excavado por semana
 - Descarga de fotos en formato ZIP
 - Generación de reportes ejecutivos PDF con costos de flotilla
-- **Programación de vuelos por el cliente con notificación por email + Google Calendar**
-- **Sistema de autenticación con roles (Admin/Cliente)**
-- **Vista Admin: acceso completo + gestión de solicitudes**
-- **Vista Cliente: solo lectura + crear/ver solicitudes propias**
-- Tema de UI con logo de "DrON Topografía" y colores gris claro (#F8F9FA) / rojo ladrillo (#994B49)
+- Programación de vuelos por el cliente con notificación por email
+- Sistema de autenticación con roles (Admin/Cliente)
+- **Importación de cronograma desde Excel con detección automática de tipos de actividades**
+- **Análisis de fotos con IA (Gemini Vision) para detectar pilas y anclas**
+- **Gráfico Gantt visual de progreso del proyecto**
 
 ## Usuarios del Sistema
-- **Admin (ianalejandrogn@gmail.com):** Acceso completo a todas las funciones
+- **Admin:** Acceso completo a todas las funciones
   - Credenciales: admin@dron.mx / admin123
 - **Clientes:** Vista de solo lectura + solicitar vuelos
   - Ejemplo: cliente@test.com / cliente123
 
 ## Stack Tecnológico
-- **Frontend:** React, TailwindCSS, Leaflet, Recharts, Axios
+- **Frontend:** React, TailwindCSS, Leaflet, Recharts, Axios, Three.js
 - **Backend:** FastAPI, Pydantic, Motor (MongoDB async driver), Resend (email), python-jose (JWT)
 - **Base de datos:** MongoDB
 - **Autenticación:** JWT con bcrypt para hashing de contraseñas
-- **Visor 3D:** Pix4D iframe embebido
+- **Visor 3D:** Pix4D iframe + Three.js para PLY locales
 - **Email:** Resend API
+- **IA:** Gemini Vision via emergentintegrations
 
 ## Arquitectura
 ```
 /app/
 ├── backend/
-│   ├── server.py        # API FastAPI con auth + endpoints
-│   └── uploads/         # Archivos e imágenes
+│   ├── server.py              # API FastAPI con auth + endpoints
+│   ├── models/
+│   │   └── schemas.py         # Modelos Pydantic
+│   ├── services/
+│   │   ├── auth.py            # Autenticación JWT
+│   │   ├── database.py        # Conexión MongoDB
+│   │   ├── thumbnails.py      # Generación thumbnails PLY
+│   │   └── cronograma_ai.py   # Parser Excel + IA Gemini
+│   └── uploads/               # Archivos y modelos 3D
 ├── frontend/
 │   └── src/
-│       ├── App.js       # Estado global, routing, header, vistas read-only
+│       ├── App.js
 │       ├── context/
-│       │   └── AuthContext.jsx    # ✅ NUEVO (Feb 2025)
+│       │   └── AuthContext.jsx
 │       └── components/
-│           ├── Auth/
-│           │   └── LoginPage.jsx         # ✅ NUEVO (Feb 2025)
-│           ├── Admin/
-│           │   └── SolicitudesAdminView.jsx  # ✅ NUEVO (Feb 2025)
-│           ├── Client/
-│           │   └── MisSolicitudesView.jsx    # ✅ NUEVO (Feb 2025)
+│           ├── Auth/LoginPage.jsx
+│           ├── Admin/SolicitudesAdminView.jsx
+│           ├── Client/MisSolicitudesView.jsx
 │           ├── Dashboard/
-│           │   └── DashboardView.jsx
+│           │   ├── DashboardView.jsx
+│           │   └── GanttChart.jsx          # NUEVO (Feb 2025)
 │           ├── Projects/
 │           │   ├── ProyectosView.jsx
 │           │   ├── ProjectFormContent.jsx
-│           │   └── AvancesSemanalesModal.jsx
-│           ├── Flights/
-│           │   ├── VuelosView.jsx
-│           │   └── SolicitarVueloForm.jsx
-│           └── common/
-│               ├── KPICard.jsx
-│               └── MapRecenter.jsx
+│           │   ├── AvancesSemanalesModal.jsx
+│           │   ├── PointCloudViewer.jsx
+│           │   ├── ImportarCronograma.jsx  # NUEVO (Feb 2025)
+│           │   └── AnalisisFotoIA.jsx      # NUEVO (Feb 2025)
+│           └── Flights/
+│               ├── VuelosView.jsx
+│               └── SolicitarVueloForm.jsx
 └── memory/
     └── PRD.md
 ```
-│           │   ├── VuelosView.jsx         # ✅ NUEVO (Feb 2025)
-│           │   └── SolicitarVueloForm.jsx
-│           └── common/
-│               ├── KPICard.jsx
-│               └── MapRecenter.jsx
-└── memory/
-    └── PRD.md           # Este archivo
-```
 
-## Implementado (Enero 2025)
+## Implementado (Febrero 2025)
 
-### Nuevas Funcionalidades (29 Enero 2025)
-- [x] **CRUD completo para Vuelos** - Formulario con crear, editar, eliminar
-  - Campos: proyecto, fecha, duración, área, imágenes, volumetría, URL Pix4D, estado, notas
-  - Endpoint PUT /api/vuelos/{id} agregado
-- [x] **Gráfico de Volumen Excavado por Semana** - BarChart que muestra toneladas extraídas por semana
-- [x] **Descarga de Fotos en ZIP** - Botón "Descargar ZIP" en galería de fotos
-  - Endpoint GET /api/proyectos/{id}/avances-semanales/{avance_id}/imagenes/zip
-- [x] **Reporte Ejecutivo PDF** - Generación de reportes para gestión de presupuesto de flotillas
-  - Endpoint GET /api/proyectos/{id}/reporte-ejecutivo
-  - Contenido:
-    - Información del proyecto (nombre, ubicación, coordenadas, fechas)
-    - Avance de obra en porcentaje
-    - Volumetría por semana (toneladas excavadas)
-    - Viajes de camión estimados por semana
-    - Desglose de costos por semana y total
-    - Resumen para logística de transporte
-- [x] **Programación de Vuelos con Notificación Email** (Resend)
-  - Formulario para que el cliente solicite vuelos
-  - Envío automático de email al administrador
-  - Link de Google Calendar incluido en el email
-  - Campos: nombre proyecto, fechas, hora preferida, notas
-- [x] **Configuración de Flotilla por Proyecto** - Campos configurables para cálculo de costos
-  - `capacidad_camion`: Toneladas que carga cada camión (default 25 ton)
-  - `costo_viaje_camion`: Precio por viaje en MXN (default $2,500)
-  - Cálculo automático de viajes necesarios y costo total en el reporte PDF
+### Sesión Actual - 17 Feb 2025
 
-### Correcciones de Despliegue (29 Enero 2025)
-- [x] **CRÍTICO:** Eliminados paquetes obsoletos `@react-three/drei`, `@react-three/fiber`, `three` que causaban error de build
-  - El paquete `camera-controls@3.1.2` requería Node.js >=22.0.0, incompatible con el servidor de producción (20.18.1)
-- [x] Eliminado proyecto de prueba "Acuarela" de la base de datos
-- [x] Build de producción verificado exitosamente
+#### P0 - Tipos de Actividades (COMPLETADO)
+- [x] Parser de Excel detecta tipos de actividades: pilas, muros, anclas, excavación
+- [x] Endpoint `/api/proyectos/crear-desde-cronograma` guarda `actividades_tipo` y métricas
+- [x] ImportarCronograma.jsx muestra tipos detectados con badges de colores
+- [x] DashboardView.jsx muestra métricas condicionales (Pilas X/Y, Muros X/Y, Anclas X/Y)
+- [x] Tests: 13/13 backend tests pasados
 
-### Backend
-- [x] Modelos Pydantic: Proyecto, Vuelo, Volumetria, Avance, AvanceSemanal
-- [x] Endpoints CRUD para proyectos: GET, POST, PUT, DELETE
-- [x] Endpoints para vuelos
-- [x] Endpoint de estadísticas/resumen
-- [x] Endpoint PUT /api/proyectos/{id} para editar proyectos completos
-- [x] Endpoints CRUD para avances semanales: GET, POST, PUT, DELETE /api/proyectos/{id}/avances-semanales
-- [x] **Endpoints para galería de imágenes**: POST, GET, DELETE para fotos de vuelo por avance semanal
+#### P1 - Análisis de Fotos con IA (COMPLETADO)
+- [x] Componente AnalisisFotoIA.jsx para upload de fotos y análisis
+- [x] Botón "Analizar Fotos con IA" en AvancesSemanalesModal.jsx
+- [x] Endpoint `/api/avances/{id}/analizar-foto` con Gemini Vision
+- [x] Muestra: pilas detectadas, anclas, estado proyecto, observaciones
+- [x] Integración con emergentintegrations y EMERGENT_LLM_KEY
 
-### Frontend  
-- [x] Dashboard con KPIs (Total Proyectos, Vuelos, Avance Promedio, Volumetría)
-- [x] Mapa interactivo con Leaflet
-- [x] Lista de proyectos con selección
-- [x] Gráficos de volumetría con Recharts
-- [x] Visor Pix4D embebido en iframe (sincronizado con datos del proyecto)
-- [x] Vista de Proyectos con tarjetas
-- [x] Modal de Nuevo Proyecto con campos para Pix4D y volumetría
-- [x] Modal de Editar Proyecto con datos pre-llenados
-- [x] Mensaje de confirmación global al guardar cambios
-- [x] **Modal de Avances Semanales (80% de pantalla)** con:
-  - Visor 3D por semana
-  - **Galería de fotos del vuelo** con subida múltiple
-  - Vista previa ampliada de fotos
-  - **Descarga individual de fotos** (nombradas automáticamente)
-- [x] Vista de Vuelos con tabla y filtros
-- [x] **CRUD completo para Vuelos** - Modal con formulario de crear/editar
-- [x] **Gráfico de Evolución del Progreso** - LineChart en modal de avances semanales
-- [x] **Botón Descargar ZIP** - Descarga todas las fotos de una semana en ZIP
-- [x] Branding personalizado (logo, colores)
+#### P1 - Gráfico Gantt Visual (COMPLETADO)
+- [x] Componente GanttChart.jsx con métricas de estado
+- [x] Muestra Progreso Semanal (X/Y), Avance Total (%), Estado (Adelantado/En Tiempo/Retrasado)
+- [x] Gráfico de barras "Planeado vs Ejecutado" por semana
+- [x] Colores: verde = adelantado, rojo = retrasado
+- [x] Timeline visual del proyecto con barras de progreso
+- [x] Integrado en DashboardView.jsx
 
-### Testing
-- [x] Tests de API con pytest (14/14 pasados)
-- [x] Tests e2e de UI con Playwright (100% éxito)
+### Funcionalidades Anteriores
 
-## Backlog (P1)
-- [x] **COMPLETADO:** Refactorizar App.js en componentes más pequeños
-  - Reducido de ~640 líneas a ~209 líneas (67% reducción)
-  - Componentes extraídos: DashboardView, ProjectFormContent, AvancesSemanalesModal, KPICard, MapRecenter
-  - **Feb 2025:** Extraídos `ProyectosView` y `VuelosView` - Refactorización 100% completa
-- [x] **COMPLETADO (Feb 2025):** Sistema de autenticación con roles Admin/Cliente
-  - JWT con bcrypt para hashing de contraseñas
-  - Vista Admin: acceso completo + panel de gestión de solicitudes
-  - Vista Cliente: solo lectura + historial de solicitudes propias
-  - Notificación por email al cliente cuando admin confirma/rechaza
-- [x] **COMPLETADO (Feb 2025):** Gestión de usuarios desde panel admin
-  - Crear nuevos usuarios (admin/cliente)
-  - Activar/desactivar usuarios
-  - Búsqueda de usuarios
-  - Estadísticas de usuarios
-- [x] **COMPLETADO (Feb 2025):** Edición inline del volumen excavado en avances semanales
-  - Botón de editar junto al valor del volumen (solo visible para admins)
-  - Campo de entrada con botones de guardar y cancelar
-  - Recálculo automático del porcentaje de avance del proyecto
-  - Actualización instantánea del gráfico de progresión
-- [x] **COMPLETADO (Feb 2025):** Proyección automática de excavación
-  - Cálculo del ritmo semanal promedio basado en datos históricos
-  - Línea de proyección naranja que muestra la tendencia hacia la meta
-  - Indicador de "Meta en: ~X semanas" con estimación de tiempo
-  - Se muestra "✅ Meta alcanzada" cuando se completa el volumen planeado
-- [x] **COMPLETADO (Feb 2025):** Visor de nubes de puntos 3D local
-  - Subida de archivos PLY, XYZ, PTS, PCD desde el navegador
-  - Visor 3D con Three.js (rotación, zoom, pan)
-  - Tabs para cambiar entre visor local y Pix4D
-  - Pix4D como respaldo si el visor local falla
-  - Indicador de número de puntos y controles de navegación
-- [x] **COMPLETADO (Feb 2025):** Asignación de proyectos a clientes
-  - Modal para asignar múltiples clientes a un proyecto
-  - Filtrado automático de proyectos por cliente asignado
-  - Indicador visual de clientes asignados en tarjetas de proyecto
-  - Vista de cliente solo muestra proyectos donde está asignado
-- [x] **COMPLETADO (Feb 2025):** Corrección del cálculo de porcentaje de avance
-  - Recálculo automático cuando se actualiza el volumen planeado del proyecto
-  - El porcentaje ahora se limita a 100% cuando se excede la meta
-  - Sincronización correcta entre avances semanales y porcentaje del proyecto
-- [x] **COMPLETADO (Feb 2025):** Vinculación de vuelos con avances semanales
-  - Selector de semana en el formulario de vuelos
-  - Sincronización automática del volumen excavado entre vuelo y avance semanal
-  - Columna "Semana" en la tabla de vuelos
-  - Al crear/editar un vuelo vinculado, se actualiza el avance semanal correspondiente
-- [x] **COMPLETADO (Feb 2025):** Vista detallada de proyecto en Dashboard
-  - Al seleccionar un proyecto, se muestra una sección expandida con:
-    - **Thumbnail del modelo 3D** generado automáticamente al subir archivo PLY
-    - Visor 3D completo en modal al hacer clic en "Ver Modelo 3D"
-    - Volumen excavado vs. planeado con barra de progreso
-    - Semanas trabajadas / total semanas
-    - Viajes de camión estimados
-    - Costo total de flotilla ($150/m³ por defecto)
-    - Bitácora de vuelos del proyecto
-  - **Prioridad:** Archivos PLY locales tienen prioridad sobre Pix4D
-  - **Fix:** Corregido bug de re-renders infinitos usando `selectedProyecto?.id` como dependencia
-- [x] **COMPLETADO (Feb 2025):** Generación automática de thumbnails para modelos PLY
-  - Backend: Genera miniatura PNG con **3 vistas** (perspectiva, superior, frontal) usando matplotlib y plyfile
-  - Endpoint para regenerar thumbnails: POST `/api/proyectos/{id}/avances-semanales/{avance_id}/regenerar-thumbnail`
-  - Frontend: Muestra thumbnail con overlay de hover para ver modelo completo
-  - Modal de visor 3D con PointCloudViewer para modelo completo
-- [x] **COMPLETADO (Feb 2025):** Refactorización del Backend
-  - Creados módulos en `/backend/models/schemas.py` con todos los modelos Pydantic
-  - Creados servicios en `/backend/services/`:
-    - `database.py` - Conexión MongoDB y colecciones
-    - `auth.py` - Autenticación JWT y funciones de usuario
-    - `thumbnails.py` - Generación de thumbnails para modelos PLY
-  - Limpiada colección obsoleta `users` de MongoDB (ahora solo usa `usuarios`)
+#### Backend
+- [x] Modelos Pydantic para proyectos, vuelos, avances, frentes
+- [x] Autenticación JWT con roles admin/client
+- [x] CRUD completo para proyectos, vuelos, avances semanales
+- [x] Generación de thumbnails para modelos PLY
+- [x] Endpoints de estadísticas y reportes PDF
+- [x] Gestión de usuarios desde panel admin
+- [x] Importación de cronograma desde Excel
 
-## Backlog (P2)
-- [x] **COMPLETADO:** Vista Admin para Solicitudes de Vuelo
-- [x] **COMPLETADO:** Notificación al cliente cuando se confirma un vuelo
-- [x] **COMPLETADO:** Funcionalidad DELETE para Vuelos (ya existía en backend y frontend)
-- [x] **COMPLETADO:** Gestión de usuarios desde panel admin
-- [x] **COMPLETADO:** Estructura de carpetas y módulos para el backend
-  - `/backend/models/` - Modelos Pydantic (`schemas.py`)
-  - `/backend/services/` - Database, Auth, Thumbnails services
-  - `/backend/routes/` - Rutas de API (estructura lista)
-- [x] **COMPLETADO (Feb 2025):** Importación de Cronograma desde Excel
-  - Parsea automáticamente archivos Excel con cronogramas de obra
-  - Detecta Frentes, Actividades, Pilas, Fechas
-  - Crea proyecto completo con avances semanales automáticos
-  - Nuevo campo "Semanas Planeadas" en proyectos
-- [x] **COMPLETADO (Feb 2025):** Análisis de Fotos con IA (Gemini Vision)
-  - Detecta número de pilas visibles en fotos aéreas
-  - Detecta anclas instaladas
-  - Compara con semana anterior
-  - Evalúa si el proyecto va en tiempo, adelantado o retrasado
-  - Genera recomendaciones automáticas
-- [ ] Migrar endpoints de `server.py` a módulos de rutas (opcional, baja prioridad)
-- [ ] Funcionalidad de carga de archivos LAZ/LAS para archivo
+#### Frontend
+- [x] Dashboard con KPIs y mapa interactivo
+- [x] Visor 3D con Three.js para archivos PLY
+- [x] Sistema de avances semanales con galería de fotos
+- [x] Descarga de fotos en ZIP
+- [x] Formulario de solicitud de vuelos
+- [x] Sistema de notificaciones por email
+- [x] Asignación de proyectos a clientes
 
-## API Endpoints
+## Backlog
+
+### P2 - Pendiente
+- [ ] Refactorizar server.py en módulos de rutas separados
+- [ ] Soporte para archivos LAZ/LAS
+
+### P3 - Futuro
+- [ ] Dashboard de métricas avanzadas
+- [ ] Exportación de reportes a Excel
+- [ ] Integración con más proveedores de nube de puntos
+
+## API Endpoints Principales
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
+| POST | /api/auth/login | Login de usuario |
 | GET | /api/proyectos | Listar proyectos |
-| POST | /api/proyectos | Crear proyecto |
-| GET | /api/proyectos/{id} | Obtener proyecto |
-| PUT | /api/proyectos/{id} | Actualizar proyecto completo |
-| PUT | /api/proyectos/{id}/avance | Actualizar solo avance |
-| DELETE | /api/proyectos/{id} | Eliminar proyecto |
-| GET | /api/vuelos | Listar vuelos |
-| POST | /api/vuelos | Crear vuelo |
-| **PUT** | **/api/vuelos/{id}** | **Actualizar vuelo** |
-| DELETE | /api/vuelos/{id} | Eliminar vuelo |
-| GET | /api/proyectos/{id}/avances-semanales | Listar avances semanales |
-| POST | /api/proyectos/{id}/avances-semanales | Crear avance semanal |
-| **GET** | **/api/proyectos/{id}/avances-semanales/{avance_id}/imagenes/zip** | **Descargar fotos en ZIP** |
-| GET | /api/estadisticas/resumen | Obtener estadísticas |
+| POST | /api/proyectos/crear-desde-cronograma | Crear proyecto desde Excel |
+| POST | /api/proyectos/importar-cronograma | Parsear archivo Excel |
+| GET | /api/proyectos/{id}/avances-semanales | Obtener avances |
+| POST | /api/avances/{id}/analizar-foto | Analizar foto con IA |
+| GET | /api/plantilla-cronograma | Descargar plantilla Excel |
 
 ## Esquema de Datos
 ```javascript
@@ -266,21 +154,30 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
   fecha_inicio: string,
   fecha_fin_planeada: string,
   avance_actual: float,
-  descripcion: string,
-  pix4d_url: string,
-  volumetria: { excavacion: float, relleno: float, materiales: float }
+  actividades_tipo: ["pilas", "muros", "anclas", "excavacion"],
+  pilas_planeadas: int,
+  muros_planeados: int,
+  anclas_planeadas: int,
+  volumen_total_planeado: float,
+  semanas_planeadas: int
 }
 
-// Vuelo
+// Avance Semanal
 {
   id: string,
   proyecto_id: string,
-  fecha_vuelo: string,
-  duracion_minutos: int,
-  area_cubierta: float,
-  num_imagenes: int,
-  volumetria: { excavacion: float, relleno: float, materiales: float },
-  pix4d_url: string,
-  estado: string
+  semana: int,
+  fecha: string,
+  volumen_excavacion: float,
+  pilas_completadas: int,
+  anclas_instaladas: int,
+  modelo_3d_url: string,
+  thumbnail_url: string,
+  imagenes: [string]
 }
 ```
+
+## Testing
+- Backend: 13 tests con pytest (100% éxito)
+- Frontend: 10 features verificadas (100% éxito)
+- Playwright: Flujos e2e automatizados
