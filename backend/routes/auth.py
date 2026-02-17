@@ -11,7 +11,7 @@ from core.config import (
     create_access_token, get_current_user, get_current_admin,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
-from models.schemas import UserCreate, UserLogin, Token, UserResponse
+from models.schemas import UserCreate, LoginRequest, Token, UserResponse
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
 
