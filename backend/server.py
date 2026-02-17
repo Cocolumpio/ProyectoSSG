@@ -1862,6 +1862,24 @@ async def eliminar_comparacion(proyecto_id: str, comparacion_id: str):
     return {"message": "Comparación eliminada"}
 
 
+# --- Endpoint para enviar reporte semanal manualmente ---
+@api_router.post("/admin/enviar-reporte-semanal")
+async def enviar_reporte_semanal_manual(current_user: dict = Depends(get_current_admin)):
+    """
+    Envía el reporte semanal manualmente (solo admin).
+    Útil para testing o para enviar reportes fuera del horario programado.
+    """
+    try:
+        await generar_reporte_semanal()
+        return {
+            "success": True,
+            "message": f"Reporte semanal enviado a {ADMIN_EMAIL}",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error enviando reporte: {str(e)}")
+
+
 # --- Reporte Ejecutivo PDF ---
 @api_router.get("/proyectos/{proyecto_id}/reporte-ejecutivo")
 async def generar_reporte_ejecutivo(proyecto_id: str):
