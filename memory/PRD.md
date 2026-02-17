@@ -1,72 +1,56 @@
 # DrON Topografía - Product Requirements Document
 
 ## Declaración del Problema
-Dashboard interactivo para visualizar informes de vuelos de drones en proyectos de construcción. Permite gestionar proyectos, visualizar avances, métricas de volumetría/pilas y modelos 3D de Pix4D.
+Dashboard interactivo para visualizar informes de vuelos de drones en proyectos de construcción. Permite gestionar proyectos con **múltiples fases** (Excavación, Cimentación, Edificación), visualizar avances por fase y un avance TOTAL del proyecto.
 
-## Requisitos del Usuario
-- Dashboard con KPIs de proyectos y vuelos
-- **Métricas dinámicas según tipo de actividad**: pilas, muros, anclas, excavación
-- **Edición inline de pilas/anclas/volumen** en Avances Semanales
-- Visualización de datos de volumetría (excavación, relleno, materiales) en m³
-- Seguimiento del avance de proyectos comparado con el cronograma
-- Mapa interactivo para ubicaciones de obras
-- Visor 3D para nubes de puntos usando Pix4D iframe y archivos PLY locales
-- CRUD completo para proyectos y vuelos
-- Avances semanales con galería de fotos y modelos 3D
-- Gráfico de progresión dinámico según tipo de actividad
-- Sistema de autenticación con roles (Admin/Cliente)
-- Importación de cronograma desde Excel con detección automática de tipos
-- Análisis de fotos con IA (Gemini Vision)
-- Gráfico Gantt visual de progreso del proyecto
+## Requisitos Implementados
+
+### Fases de Construcción (NUEVO)
+- **Excavación**: Volumen total en m³
+- **Cimentación**: Pilas planeadas + Anclas planeadas  
+- **Edificación**: Muros planeados
+- Se pueden seleccionar una o más fases por proyecto
+- El avance TOTAL se calcula como promedio de las fases activas
+
+### Formulario de Proyecto (NUEVO)
+- Checkboxes para seleccionar fases (Excavación, Cimentación, Edificación)
+- Campos condicionales que se muestran al seleccionar cada fase
+- Mensaje informativo sobre proyección automática sin cronograma
+
+### Dashboard con Avance por Fase (NUEVO)
+- **Avance Total del Proyecto**: Barra de progreso con porcentaje
+- **Avance por Fase**: Barras de progreso para cada fase activa
+  - Excavación (naranja)
+  - Cimentación (azul)
+  - Edificación (púrpura)
+- **Proyección de semanas restantes**: Si no hay cronograma, calcula basado en ritmo
+- **Detalles numéricos**: Tarjetas con ejecutado/planeado por cada métrica
+
+### Avances Semanales - Campos Editables
+- **Pilas Completadas** (azul)
+- **Anclas Instaladas** (teal)
+- **Muros Completados** (púrpura) - NUEVO
+- **Volumen Excavado** (rojo/naranja)
+- Los campos solo aparecen si el proyecto tiene esa fase configurada
+
+### Cálculo de Avance Automático
+- Se recalcula al guardar cualquier métrica
+- Prioridad para tipo principal: pilas > muros > anclas > excavación
+- Avance TOTAL: promedio de todas las fases activas
 
 ## Stack Tecnológico
-- **Frontend:** React, TailwindCSS, Leaflet, Recharts, Axios, Three.js
+- **Frontend:** React, TailwindCSS, Leaflet, Recharts, Three.js
 - **Backend:** FastAPI, Pydantic, Motor (MongoDB), python-jose (JWT)
 - **Base de datos:** MongoDB
 - **IA:** Gemini Vision via emergentintegrations
 
-## Implementado (Febrero 2025)
-
-### Sesión Actual - 17 Feb 2025
-
-#### Edición de Pilas/Anclas en Avances Semanales (COMPLETADO)
-- [x] Campos editables para pilas_completadas y anclas_instaladas
-- [x] Campos solo se muestran cuando el proyecto tiene esos tipos de actividades
-- [x] Diseño con colores por tipo: Pilas (azul), Anclas (teal), Excavación (rojo)
-- [x] Backend actualizado con campos en AvanceSemanalUpdate
-- [x] Función recalcular_avance_proyecto actualizada para calcular por tipo
-- [x] Verificado: 30 pilas completadas = 5.21% avance (30/576)
-
-#### Métricas Dinámicas por Tipo de Actividad (COMPLETADO)
-- [x] GanttChart muestra progresión según actividades_tipo del proyecto
-- [x] Prioridad: pilas > muros > anclas > excavación
-- [x] Dashboard oculta "Volumen Excavado" cuando no hay excavación planeada
-- [x] AvancesSemanalesModal con gráfico dinámico
-
-### Funcionalidades Base
-
-#### Backend
-- [x] Autenticación JWT con roles admin/client
-- [x] CRUD completo para proyectos, vuelos, avances semanales
-- [x] Generación de thumbnails para modelos PLY
-- [x] Importación de cronograma desde Excel
-- [x] Análisis de fotos con Gemini Vision
-
-#### Frontend
-- [x] Dashboard con KPIs y mapa interactivo
-- [x] Visor 3D con Three.js para archivos PLY
-- [x] Sistema de avances semanales con galería de fotos
-- [x] Descarga de fotos en ZIP
-- [x] Formulario de solicitud de vuelos
-- [x] Sistema de notificaciones por email
-
 ## Proyectos de Prueba
-| Proyecto | Tipo | Meta | Avance |
-|----------|------|------|--------|
-| Proyecto Pilas Demo | Pilas + Anclas | 576 pilas, 464 anclas | 5.21% (30 pilas) |
+| Proyecto | Fases | Métricas | Avance |
+|----------|-------|----------|--------|
+| Proyecto Pilas Demo | Cimentación | 576 pilas, 464 anclas | 5.21% |
+| Programa Tabla | Cimentación | 576 pilas, 464 anclas | 0% |
 | Acuarela | Excavación | 50,000 m³ | 0% |
 | Hotel Marriott Centro | Excavación | 70,000 m³ | 0% |
-| Torre Mezquitan | Sin tipo | - | 0% |
 
 ## Credenciales de Prueba
 - **Admin:** admin@dron.mx / admin123
@@ -75,10 +59,39 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 ## API Endpoints Principales
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| PUT | /api/proyectos/{id}/avances-semanales/{avance_id} | Actualizar pilas/anclas/volumen |
-| POST | /api/proyectos/crear-desde-cronograma | Crear proyecto desde Excel |
-| POST | /api/avances/{id}/analizar-foto | Analizar foto con IA |
+| POST | /api/proyectos | Crear proyecto con fases |
+| PUT | /api/proyectos/{id}/avances-semanales/{avance_id} | Actualizar pilas/anclas/muros/volumen |
+| POST | /api/proyectos/crear-desde-cronograma | Crear desde Excel |
+| POST | /api/avances/{id}/analizar-foto | Analizar con IA |
+
+## Esquema de Datos
+```javascript
+// Proyecto
+{
+  id: string,
+  nombre: string,
+  actividades_tipo: ["excavacion", "pilas", "anclas", "muros"],
+  volumen_total_planeado: float,  // Excavación
+  pilas_planeadas: int,           // Cimentación
+  anclas_planeadas: int,          // Cimentación
+  muros_planeados: int,           // Edificación
+  semanas_planeadas: int,
+  avance_actual: float            // Calculado automáticamente
+}
+
+// Avance Semanal
+{
+  id: string,
+  proyecto_id: string,
+  semana: int,
+  volumen_excavacion: float,
+  pilas_completadas: int,
+  anclas_instaladas: int,
+  muros_completados: int
+}
+```
 
 ## Backlog
 - [ ] P2: Refactorizar server.py en módulos de rutas
 - [ ] P3: Soporte para archivos LAZ/LAS
+- [ ] P3: Gráficos Gantt con múltiples fases en paralelo
