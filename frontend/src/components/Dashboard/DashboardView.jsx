@@ -184,6 +184,25 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Header con botón de reporte */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Dashboard</h1>
+        <button
+          onClick={handleEnviarReporte}
+          disabled={sendingReport}
+          className="flex items-center gap-2 px-4 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors disabled:opacity-50 text-sm"
+          data-testid="enviar-reporte-btn"
+        >
+          {sendingReport ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Mail className="h-4 w-4" />
+          )}
+          <span className="hidden sm:inline">{sendingReport ? 'Enviando...' : 'Enviar Reporte Semanal'}</span>
+          <span className="sm:hidden">{sendingReport ? '...' : 'Reporte'}</span>
+        </button>
+      </div>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <KPICard
