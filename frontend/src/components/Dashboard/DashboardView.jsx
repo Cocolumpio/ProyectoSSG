@@ -505,6 +505,16 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                 )}
               </div>
             </div>
+
+            {/* Gráfico Gantt / Timeline del Proyecto */}
+            {avancesSemanales.length > 0 && (
+              <div className="mt-6">
+                <GanttChart 
+                  proyecto={selectedProyecto} 
+                  avances={avancesSemanales} 
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
