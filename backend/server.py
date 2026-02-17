@@ -1661,6 +1661,9 @@ Responde SOLO con el JSON especificado, sin texto adicional."""
         # Guardar en la base de datos
         await db.comparaciones_avance.insert_one(comparacion)
         
+        # Eliminar _id de MongoDB para la respuesta
+        comparacion.pop('_id', None)
+        
         return comparacion
         
     except json.JSONDecodeError as e:
