@@ -415,49 +415,138 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                 
                 {stats ? (
                   <div className="space-y-4">
-                    {/* Volumen - Solo mostrar si hay excavación planeada */}
-                    {stats.volumenPlaneado > 0 && (
+                    {/* Avance Total del Proyecto - Siempre visible */}
+                    <div className="bg-gradient-to-r from-[#994B49]/10 to-[#994B49]/5 rounded-xl p-4 border border-[#994B49]/30">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-semibold text-gray-800">Avance Total del Proyecto</span>
+                        <span className="text-2xl font-bold text-[#994B49]">{stats.avanceTotal.toFixed(1)}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-4 mb-3">
+                        <div
+                          className="bg-gradient-to-r from-[#994B49] to-[#B85C5A] h-4 rounded-full transition-all duration-500"
+                          style={{ width: `${stats.avanceTotal}%` }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-gray-600">
+                        <span>Semanas trabajadas: <span className="font-medium text-gray-800">{stats.semanasTrabajas}</span></span>
+                        {stats.semanasPlaneadas > 0 ? (
+                          <span>Planeadas: <span className="font-medium text-gray-800">{stats.semanasPlaneadas}</span></span>
+                        ) : stats.semanasProyectadas ? (
+                          <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded">
+                            📈 ~{stats.semanasProyectadas} sem restantes
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    {/* Avance por Fase */}
+                    {(stats.fasesActivas.length > 0 || stats.volumenPlaneado > 0 || stats.pilasPlaneadas > 0 || stats.murosPlaneados > 0) && (
                       <div className="bg-white rounded-lg p-4 border border-gray-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-gray-600">Volumen Excavado vs Planeado</span>
-                          <span className="text-sm font-medium text-[#994B49]">{stats.porcentajeAvance.toFixed(1)}%</span>
+                        <h4 className="text-sm font-semibold text-gray-700 mb-3">Avance por Fase</h4>
+                        <div className="space-y-3">
+                          {/* Excavación */}
+                          {stats.volumenPlaneado > 0 && (
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-2 w-24">
+                                <Shovel className="h-4 w-4 text-amber-600" />
+                                <span className="text-xs font-medium text-amber-800">Excavación</span>
+                              </div>
+                              <div className="flex-1 bg-amber-100 rounded-full h-3">
+                                <div
+                                  className="bg-amber-500 h-3 rounded-full transition-all"
+                                  style={{ width: `${stats.porcentajeExcavacion}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-bold text-amber-700 w-12 text-right">{stats.porcentajeExcavacion.toFixed(0)}%</span>
+                            </div>
+                          )}
+                          
+                          {/* Cimentación (Pilas) */}
+                          {stats.pilasPlaneadas > 0 && (
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-2 w-24">
+                                <Columns3 className="h-4 w-4 text-blue-600" />
+                                <span className="text-xs font-medium text-blue-800">Cimentación</span>
+                              </div>
+                              <div className="flex-1 bg-blue-100 rounded-full h-3">
+                                <div
+                                  className="bg-blue-500 h-3 rounded-full transition-all"
+                                  style={{ width: `${stats.porcentajePilas}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-bold text-blue-700 w-12 text-right">{stats.porcentajePilas.toFixed(0)}%</span>
+                            </div>
+                          )}
+                          
+                          {/* Edificación (Muros) */}
+                          {stats.murosPlaneados > 0 && (
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-2 w-24">
+                                <Building2 className="h-4 w-4 text-purple-600" />
+                                <span className="text-xs font-medium text-purple-800">Edificación</span>
+                              </div>
+                              <div className="flex-1 bg-purple-100 rounded-full h-3">
+                                <div
+                                  className="bg-purple-500 h-3 rounded-full transition-all"
+                                  style={{ width: `${stats.porcentajeMuros}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-bold text-purple-700 w-12 text-right">{stats.porcentajeMuros.toFixed(0)}%</span>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-end justify-between mb-2">
-                          <div>
-                            <span className="text-2xl font-bold text-gray-900">{stats.volumenExcavado.toLocaleString()}</span>
-                            <span className="text-sm text-gray-500 ml-1">m³</span>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-sm text-gray-500">de </span>
-                            <span className="text-lg font-semibold text-gray-700">{stats.volumenPlaneado.toLocaleString()}</span>
-                            <span className="text-sm text-gray-500 ml-1">m³</span>
-                          </div>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div
-                            className="bg-gradient-to-r from-[#994B49] to-[#B85C5A] h-3 rounded-full transition-all"
-                            style={{ width: `${stats.porcentajeAvance}%` }}
-                          />
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">
-                          Restante: <span className="font-medium">{stats.volumenRestante.toLocaleString()} m³</span>
-                        </p>
                       </div>
                     )}
 
-                    {/* Métricas por Tipo de Actividad - Condicionales */}
-                    {stats.tiposActividades && stats.tiposActividades.length > 0 && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {/* Pilas */}
-                        {stats.tiposActividades.includes('pilas') && stats.pilasPlaneadas > 0 && (
-                          <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <Columns3 className="h-4 w-4 text-blue-600" />
-                              <span className="text-xs font-medium text-blue-800">Pilas</span>
-                              <span className="text-xs text-blue-600 ml-auto">{stats.porcentajePilas.toFixed(0)}%</span>
-                            </div>
-                            <div className="flex items-end justify-between mb-1">
-                              <span className="text-xl font-bold text-blue-700">{stats.pilasEjecutadas}</span>
+                    {/* Detalles numéricos por fase */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {/* Excavación */}
+                      {stats.volumenPlaneado > 0 && (
+                        <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Shovel className="h-4 w-4 text-amber-600" />
+                            <span className="text-xs font-medium text-amber-800">Excavación</span>
+                          </div>
+                          <div className="text-lg font-bold text-amber-700">{stats.volumenExcavado.toLocaleString()}</div>
+                          <div className="text-xs text-amber-600">/ {stats.volumenPlaneado.toLocaleString()} m³</div>
+                        </div>
+                      )}
+                      
+                      {/* Pilas */}
+                      {stats.pilasPlaneadas > 0 && (
+                        <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Columns3 className="h-4 w-4 text-blue-600" />
+                            <span className="text-xs font-medium text-blue-800">Pilas</span>
+                          </div>
+                          <div className="text-lg font-bold text-blue-700">{stats.pilasEjecutadas.toLocaleString()}</div>
+                          <div className="text-xs text-blue-600">/ {stats.pilasPlaneadas.toLocaleString()}</div>
+                        </div>
+                      )}
+                      
+                      {/* Anclas */}
+                      {stats.anclasPlaneadas > 0 && (
+                        <div className="bg-teal-50 rounded-lg p-3 border border-teal-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Anchor className="h-4 w-4 text-teal-600" />
+                            <span className="text-xs font-medium text-teal-800">Anclas</span>
+                          </div>
+                          <div className="text-lg font-bold text-teal-700">{stats.anclasEjecutadas.toLocaleString()}</div>
+                          <div className="text-xs text-teal-600">/ {stats.anclasPlaneadas.toLocaleString()}</div>
+                        </div>
+                      )}
+                      
+                      {/* Muros */}
+                      {stats.murosPlaneados > 0 && (
+                        <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Building2 className="h-4 w-4 text-purple-600" />
+                            <span className="text-xs font-medium text-purple-800">Muros</span>
+                          </div>
+                          <div className="text-lg font-bold text-purple-700">{stats.murosEjecutados.toLocaleString()}</div>
+                          <div className="text-xs text-purple-600">/ {stats.murosPlaneados.toLocaleString()}</div>
+                        </div>
+                      )}
                               <span className="text-sm text-blue-500">/ {stats.pilasPlaneadas}</span>
                             </div>
                             <div className="w-full bg-blue-200 rounded-full h-2">
