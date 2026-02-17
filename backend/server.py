@@ -307,8 +307,23 @@ class Proyecto(BaseModel):
     fecha_inicio: str
     fecha_fin_planeada: str
     avance_actual: float = 0.0  # Porcentaje 0-100 (calculado automáticamente)
+    # Tipos de actividades del proyecto
+    actividades_tipo: List[str] = []  # ["excavacion", "pilas", "muros", "anclas", "cimentacion"]
+    # Métricas planeadas
     volumen_total_planeado: float = 0.0  # Volumen total estimado a excavar en m³
+    pilas_planeadas: int = 0  # Número total de pilas planeadas
+    muros_planeados: int = 0  # Número total de muros planeados
+    anclas_planeadas: int = 0  # Número total de anclas planeadas
+    # Métricas ejecutadas
+    volumen_ejecutado: float = 0.0  # Volumen excavado en m³
+    pilas_ejecutadas: int = 0  # Pilas completadas
+    muros_ejecutados: int = 0  # Muros completados
+    anclas_ejecutadas: int = 0  # Anclas instaladas
+    # Cronograma
     semanas_planeadas: int = 0  # Número de semanas planeadas de trabajo según cronograma
+    semanas_excavacion: int = 0  # Semanas dedicadas a excavación
+    semanas_pilas: int = 0  # Semanas dedicadas a pilas
+    semanas_muros: int = 0  # Semanas dedicadas a muros
     descripcion: Optional[str] = None
     pix4d_url: Optional[str] = None  # URL del modelo 3D
     volumetria: Optional[Volumetria] = None  # Volumetrías del proyecto
@@ -328,13 +343,23 @@ class ProyectoCreate(BaseModel):
     descripcion: Optional[str] = None
     pix4d_url: Optional[str] = None
     avance_actual: float = 0.0
-    volumen_total_planeado: float = 0.0  # Volumen total estimado a excavar en m³
-    semanas_planeadas: int = 0  # Número de semanas planeadas de trabajo
+    # Tipos de actividades
+    actividades_tipo: List[str] = []  # ["excavacion", "pilas", "muros", "anclas", "cimentacion"]
+    # Métricas planeadas
+    volumen_total_planeado: float = 0.0
+    pilas_planeadas: int = 0
+    muros_planeados: int = 0
+    anclas_planeadas: int = 0
+    # Cronograma
+    semanas_planeadas: int = 0
+    semanas_excavacion: int = 0
+    semanas_pilas: int = 0
+    semanas_muros: int = 0
     volumetria: Optional[Volumetria] = None
     # Configuración de flotilla
     capacidad_camion: float = 25.0
-    costo_m3: float = 150.0  # Costo por metro cúbico en MXN
-    clientes_asignados: List[str] = []  # Lista de IDs de clientes asignados
+    costo_m3: float = 150.0
+    clientes_asignados: List[str] = []
 
 class ProyectoUpdate(BaseModel):
     nombre: Optional[str] = None
@@ -344,15 +369,29 @@ class ProyectoUpdate(BaseModel):
     fecha_inicio: Optional[str] = None
     fecha_fin_planeada: Optional[str] = None
     avance_actual: Optional[float] = None
+    # Tipos de actividades
+    actividades_tipo: Optional[List[str]] = None
+    # Métricas planeadas
     volumen_total_planeado: Optional[float] = None
-    semanas_planeadas: Optional[int] = None  # Número de semanas planeadas
+    pilas_planeadas: Optional[int] = None
+    muros_planeados: Optional[int] = None
+    anclas_planeadas: Optional[int] = None
+    # Métricas ejecutadas
+    volumen_ejecutado: Optional[float] = None
+    pilas_ejecutadas: Optional[int] = None
+    muros_ejecutados: Optional[int] = None
+    anclas_ejecutadas: Optional[int] = None
+    # Cronograma
+    semanas_planeadas: Optional[int] = None
+    semanas_excavacion: Optional[int] = None
+    semanas_pilas: Optional[int] = None
+    semanas_muros: Optional[int] = None
     descripcion: Optional[str] = None
     pix4d_url: Optional[str] = None
     volumetria: Optional[Volumetria] = None
-    # Configuración de flotilla
     capacidad_camion: Optional[float] = None
     costo_m3: Optional[float] = None
-    clientes_asignados: Optional[List[str]] = None  # Lista de IDs de clientes asignados
+    clientes_asignados: Optional[List[str]] = None
 
 # Modelo para solicitud de vuelo programado
 class SolicitudVuelo(BaseModel):
