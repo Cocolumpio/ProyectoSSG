@@ -503,64 +503,193 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                     <p className="mt-2 text-xs sm:text-sm text-gray-600">{selectedAvance.descripcion}</p>
                   )}
                   
-                  {/* Volumen excavado con edición inline */}
-                  <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Database className="h-4 w-4 text-[#994B49]" />
-                        <span className="text-sm font-medium text-gray-700">Volumen Excavado:</span>
-                      </div>
-                      {editingVolumen ? (
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.1"
-                            value={editVolumenValue}
-                            onChange={(e) => setEditVolumenValue(parseFloat(e.target.value) || 0)}
-                            className="w-32 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-                            data-testid="edit-volumen-input"
-                          />
-                          <span className="text-sm text-gray-500">m³</span>
-                          <button
-                            onClick={handleSaveVolumen}
-                            disabled={savingVolumen}
-                            className="p-1.5 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 transition-colors"
-                            title="Guardar"
-                            data-testid="save-volumen-btn"
-                          >
-                            {savingVolumen ? (
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                              <Check className="h-4 w-4" />
-                            )}
-                          </button>
-                          <button
-                            onClick={handleCancelEditVolumen}
-                            className="p-1.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
-                            title="Cancelar"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center space-x-2">
-                          <span className="text-lg font-bold text-[#994B49]" data-testid="volumen-value">
-                            {(selectedAvance.volumen_excavacion || 0).toLocaleString()} m³
-                          </span>
-                          {!readOnly && (
-                            <button
-                              onClick={handleEditVolumenClick}
-                              className="p-1.5 text-gray-500 hover:text-[#994B49] hover:bg-gray-200 rounded transition-colors"
-                              title="Editar volumen"
-                              data-testid="edit-volumen-btn"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </button>
+                  {/* Métricas editables - Dinámicas según tipo de actividad */}
+                  <div className="mt-3 space-y-2">
+                    {/* Pilas completadas - Solo si el proyecto tiene pilas */}
+                    {(proyecto.actividades_tipo?.includes('pilas') || proyecto.pilas_planeadas > 0) && (
+                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Columns3 className="h-4 w-4 text-blue-600" />
+                            <span className="text-sm font-medium text-blue-800">Pilas Completadas:</span>
+                          </div>
+                          {editingPilas ? (
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={editPilasValue}
+                                onChange={(e) => setEditPilasValue(parseInt(e.target.value) || 0)}
+                                className="w-24 px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                data-testid="edit-pilas-input"
+                              />
+                              <button
+                                onClick={handleSavePilas}
+                                disabled={savingPilas}
+                                className="p-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                                title="Guardar"
+                                data-testid="save-pilas-btn"
+                              >
+                                {savingPilas ? (
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <Check className="h-4 w-4" />
+                                )}
+                              </button>
+                              <button
+                                onClick={handleCancelEditPilas}
+                                className="p-1.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                                title="Cancelar"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center space-x-2">
+                              <span className="text-lg font-bold text-blue-700" data-testid="pilas-value">
+                                {(selectedAvance.pilas_completadas || 0).toLocaleString()}
+                              </span>
+                              <span className="text-sm text-blue-500">/ {(proyecto.pilas_planeadas || 0).toLocaleString()}</span>
+                              {!readOnly && (
+                                <button
+                                  onClick={handleEditPilasClick}
+                                  className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-100 rounded transition-colors"
+                                  title="Editar pilas"
+                                  data-testid="edit-pilas-btn"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </button>
+                              )}
+                            </div>
                           )}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
+
+                    {/* Anclas instaladas - Solo si el proyecto tiene anclas */}
+                    {(proyecto.actividades_tipo?.includes('anclas') || proyecto.anclas_planeadas > 0) && (
+                      <div className="p-3 bg-teal-50 rounded-lg border border-teal-100">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Anchor className="h-4 w-4 text-teal-600" />
+                            <span className="text-sm font-medium text-teal-800">Anclas Instaladas:</span>
+                          </div>
+                          {editingAnclas ? (
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={editAnclasValue}
+                                onChange={(e) => setEditAnclasValue(parseInt(e.target.value) || 0)}
+                                className="w-24 px-2 py-1 text-sm border border-teal-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                data-testid="edit-anclas-input"
+                              />
+                              <button
+                                onClick={handleSaveAnclas}
+                                disabled={savingAnclas}
+                                className="p-1.5 bg-teal-600 text-white rounded hover:bg-teal-700 disabled:opacity-50 transition-colors"
+                                title="Guardar"
+                                data-testid="save-anclas-btn"
+                              >
+                                {savingAnclas ? (
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <Check className="h-4 w-4" />
+                                )}
+                              </button>
+                              <button
+                                onClick={handleCancelEditAnclas}
+                                className="p-1.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                                title="Cancelar"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center space-x-2">
+                              <span className="text-lg font-bold text-teal-700" data-testid="anclas-value">
+                                {(selectedAvance.anclas_instaladas || 0).toLocaleString()}
+                              </span>
+                              <span className="text-sm text-teal-500">/ {(proyecto.anclas_planeadas || 0).toLocaleString()}</span>
+                              {!readOnly && (
+                                <button
+                                  onClick={handleEditAnclasClick}
+                                  className="p-1.5 text-teal-500 hover:text-teal-700 hover:bg-teal-100 rounded transition-colors"
+                                  title="Editar anclas"
+                                  data-testid="edit-anclas-btn"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Volumen excavado - Solo si el proyecto tiene excavación */}
+                    {(proyecto.actividades_tipo?.includes('excavacion') || proyecto.volumen_total_planeado > 0) && (
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Shovel className="h-4 w-4 text-[#994B49]" />
+                            <span className="text-sm font-medium text-gray-700">Volumen Excavado:</span>
+                          </div>
+                          {editingVolumen ? (
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.1"
+                                value={editVolumenValue}
+                                onChange={(e) => setEditVolumenValue(parseFloat(e.target.value) || 0)}
+                                className="w-32 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+                                data-testid="edit-volumen-input"
+                              />
+                              <span className="text-sm text-gray-500">m³</span>
+                              <button
+                                onClick={handleSaveVolumen}
+                                disabled={savingVolumen}
+                                className="p-1.5 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 transition-colors"
+                                title="Guardar"
+                                data-testid="save-volumen-btn"
+                              >
+                                {savingVolumen ? (
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <Check className="h-4 w-4" />
+                                )}
+                              </button>
+                              <button
+                                onClick={handleCancelEditVolumen}
+                                className="p-1.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                                title="Cancelar"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center space-x-2">
+                              <span className="text-lg font-bold text-[#994B49]" data-testid="volumen-value">
+                                {(selectedAvance.volumen_excavacion || 0).toLocaleString()} m³
+                              </span>
+                              {!readOnly && (
+                                <button
+                                  onClick={handleEditVolumenClick}
+                                  className="p-1.5 text-gray-500 hover:text-[#994B49] hover:bg-gray-200 rounded transition-colors"
+                                  title="Editar volumen"
+                                  data-testid="edit-volumen-btn"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
