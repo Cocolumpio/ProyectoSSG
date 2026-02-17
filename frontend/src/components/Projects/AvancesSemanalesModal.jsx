@@ -1467,6 +1467,15 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
           </div>
         )}
       </div>
+
+      {/* Modal de Comparación de Avances */}
+      {showComparacion && (
+        <ComparacionAvanceModal
+          proyecto={proyecto}
+          onClose={() => setShowComparacion(false)}
+          onShowSuccess={onShowSuccess}
+        />
+      )}
     </div>
   );
 }
