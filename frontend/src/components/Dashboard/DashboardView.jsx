@@ -69,6 +69,17 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
     const porcentajeAvance = volumenPlaneado > 0 ? Math.min((volumenExcavado / volumenPlaneado) * 100, 100) : 0;
     const volumenRestante = Math.max(volumenPlaneado - volumenExcavado, 0);
     
+    // Métricas de tipos de actividades
+    const tiposActividades = selectedProyecto.actividades_tipo || [];
+    const pilasPlaneadas = selectedProyecto.pilas_planeadas || 0;
+    const murosPlaneados = selectedProyecto.muros_planeados || 0;
+    const anclasPlaneadas = selectedProyecto.anclas_planeadas || 0;
+    
+    // Calcular ejecutados de los avances semanales
+    const pilasEjecutadas = avancesSemanales.reduce((sum, a) => sum + (a.pilas_completadas || 0), 0);
+    const murosEjecutados = avancesSemanales.reduce((sum, a) => sum + (a.muros_completados || 0), 0);
+    const anclasEjecutadas = avancesSemanales.reduce((sum, a) => sum + (a.anclas_instaladas || 0), 0);
+    
     return {
       volumenPlaneado,
       volumenExcavado,
@@ -80,7 +91,18 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
       viajesCamion,
       porcentajeAvance,
       costoM3,
-      capacidadCamion
+      capacidadCamion,
+      // Tipos de actividades
+      tiposActividades,
+      pilasPlaneadas,
+      murosPlaneados,
+      anclasPlaneadas,
+      pilasEjecutadas,
+      murosEjecutados,
+      anclasEjecutadas,
+      porcentajePilas: pilasPlaneadas > 0 ? Math.min((pilasEjecutadas / pilasPlaneadas) * 100, 100) : 0,
+      porcentajeMuros: murosPlaneados > 0 ? Math.min((murosEjecutados / murosPlaneados) * 100, 100) : 0,
+      porcentajeAnclas: anclasPlaneadas > 0 ? Math.min((anclasEjecutadas / anclasPlaneadas) * 100, 100) : 0,
     };
   };
 
