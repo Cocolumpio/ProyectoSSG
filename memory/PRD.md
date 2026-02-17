@@ -97,12 +97,12 @@ Permite comparar automáticamente los avances registrados por el sistema de dron
 - ✅ Funcionalidad de Comparación de Avances Dron vs Residente
 - ✅ Análisis automático de PDFs con Gemini
 - ✅ UI de comparación con métricas, discrepancias y análisis IA
+- ✅ Alertas automáticas por email (Resend) cuando discrepancias >15%
+- ✅ Prueba E2E del sistema de 3 fases (Proyecto E2E 3 Fases Test creado)
 
 ## Tareas Pendientes
-- (P1) Prueba E2E completa del sistema de 3 fases con nuevo proyecto
-- (P1) Probar funcionalidad de análisis de fotos con AI
+- (P1) Probar funcionalidad de análisis de fotos con AI (UI integrada, flujo completo pendiente)
 - (P2) Refactorización del archivo `server.py` monolítico
-- (P2) Implementar notificaciones por email con Resend
 - (P3) Clarificar requisito de archivos `.laz`
 
 ## Notas Técnicas
