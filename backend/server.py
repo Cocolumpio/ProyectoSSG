@@ -2912,11 +2912,24 @@ async def generar_reporte_semanal():
         proyectos_rows = ""
         for p in proyectos_data:
             avance_color = "#22c55e" if p['avance'] >= 75 else ("#eab308" if p['avance'] >= 50 else "#ef4444")
+            
+            # Construir métricas adicionales según el tipo de proyecto
+            metricas_extra = []
+            if p['pilas_planeadas'] > 0:
+                metricas_extra.append(f"🔵 Pilas: {p['pilas']}/{p['pilas_planeadas']} (+{p['pilas_semana']} sem)")
+            if p['anclas_planeadas'] > 0:
+                metricas_extra.append(f"⚓ Anclas: {p['anclas']}/{p['anclas_planeadas']} (+{p['anclas_semana']} sem)")
+            if p['muros_planeados'] > 0:
+                metricas_extra.append(f"🧱 Muros: {p['muros']}/{p['muros_planeados']} (+{p['muros_semana']} sem)")
+            
+            metricas_html = "<br>".join(metricas_extra) if metricas_extra else ""
+            
             proyectos_rows += f"""
             <tr>
                 <td style="padding: 12px; border-bottom: 1px solid #e5e5e5;">
                     <strong>{p['nombre']}</strong>
                     <br><span style="font-size: 12px; color: #6b7280;">{p['ubicacion']}</span>
+                    {f'<br><span style="font-size: 11px; color: #4b5563; margin-top: 4px; display: block;">{metricas_html}</span>' if metricas_html else ''}
                 </td>
                 <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; text-align: center;">
                     <span style="background: {avance_color}; color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold;">
