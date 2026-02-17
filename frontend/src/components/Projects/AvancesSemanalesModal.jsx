@@ -20,6 +20,13 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
   const [editingVolumen, setEditingVolumen] = useState(false);
   const [editVolumenValue, setEditVolumenValue] = useState(0);
   const [savingVolumen, setSavingVolumen] = useState(false);
+  // Nuevos estados para editar pilas y anclas
+  const [editingPilas, setEditingPilas] = useState(false);
+  const [editPilasValue, setEditPilasValue] = useState(0);
+  const [savingPilas, setSavingPilas] = useState(false);
+  const [editingAnclas, setEditingAnclas] = useState(false);
+  const [editAnclasValue, setEditAnclasValue] = useState(0);
+  const [savingAnclas, setSavingAnclas] = useState(false);
   const [uploadingModel, setUploadingModel] = useState(false);
   const [viewerMode, setViewerMode] = useState('auto'); // 'auto', 'local', 'pix4d'
   const [showAnalisisIA, setShowAnalisisIA] = useState(false);
