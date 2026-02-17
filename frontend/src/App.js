@@ -10,6 +10,7 @@ import { LoginPage } from './components/Auth/LoginPage';
 
 // Componentes refactorizados
 import { DashboardView } from './components/Dashboard/DashboardView';
+import { MetricasHistoricasView } from './components/Dashboard/MetricasHistoricasView';
 import { ProyectosView } from './components/Projects/ProyectosView';
 import { VuelosView } from './components/Flights/VuelosView';
 import { SolicitarVueloForm } from './components/Flights/SolicitarVueloForm';
