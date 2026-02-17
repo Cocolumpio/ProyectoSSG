@@ -254,6 +254,42 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
     setEditAnclasValue(0);
   };
 
+  // Funciones para editar muros completados
+  const handleEditMurosClick = () => {
+    setEditMurosValue(selectedAvance?.muros_completados || 0);
+    setEditingMuros(true);
+  };
+
+  const handleSaveMuros = async () => {
+    if (!selectedAvance) return;
+    
+    setSavingMuros(true);
+    try {
+      await axios.put(`${API}/proyectos/${proyecto.id}/avances-semanales/${selectedAvance.id}`, {
+        muros_completados: editMurosValue
+      });
+      
+      const updatedAvance = { ...selectedAvance, muros_completados: editMurosValue };
+      setSelectedAvance(updatedAvance);
+      setAvances(avances.map(a => a.id === selectedAvance.id ? updatedAvance : a));
+      
+      setEditingMuros(false);
+      if (onShowSuccess) {
+        onShowSuccess(`Muros completados actualizados para Semana ${selectedAvance.semana}`);
+      }
+    } catch (err) {
+      console.error('Error actualizando muros:', err);
+      alert('Error al actualizar muros completados');
+    } finally {
+      setSavingMuros(false);
+    }
+  };
+
+  const handleCancelEditMuros = () => {
+    setEditingMuros(false);
+    setEditMurosValue(0);
+  };
+
   const handleModel3DUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file || !selectedAvance) return;
