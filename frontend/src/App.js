@@ -61,22 +61,24 @@ function AppContent() {
       setVuelos(vuelosRes.data);
       setEstadisticas(estadisticasRes.data);
 
-      if (proyectosRes.data.length > 0 && !selectedProyecto) {
-        const firstProject = proyectosRes.data[0];
-        setSelectedProyecto(firstProject);
-        if (firstProject.coordenadas) {
-          setMapCenter(firstProject.coordenadas);
+      // Usar setSelectedProyecto con función para acceder al estado actual sin depender de él en useCallback
+      setSelectedProyecto(currentSelected => {
+        if (proyectosRes.data.length > 0 && !currentSelected) {
+          const firstProject = proyectosRes.data[0];
+          if (firstProject.coordenadas) {
+            setMapCenter(firstProject.coordenadas);
+          }
+          return firstProject;
+        } else if (currentSelected) {
+          const updatedProject = proyectosRes.data.find(p => p.id === currentSelected.id);
+          return updatedProject || currentSelected;
         }
-      } else if (selectedProyecto) {
-        const updatedProject = proyectosRes.data.find(p => p.id === selectedProyecto.id);
-        if (updatedProject) {
-          setSelectedProyecto(updatedProject);
-        }
-      }
+        return currentSelected;
+      });
     } catch (err) {
       console.error('Error fetching data:', err);
     }
-  }, [selectedProyecto, user]);
+  }, [user]);
 
   useEffect(() => {
     if (isAuthenticated) {
