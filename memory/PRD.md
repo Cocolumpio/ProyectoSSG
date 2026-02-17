@@ -150,6 +150,18 @@ Permite comparar automáticamente los avances registrados por el sistema de dron
 - **Por Proyecto**: Muestra pilas, anclas, muros ejecutados vs planeados + incremento semanal
 - **Envío manual**: Botón "Enviar Reporte Semanal" en dashboard
 
+### Análisis de Fotos con IA
+- Ubicación: Modal de Avances Semanales → Detalle de semana → "Analizar Fotos con IA"
+- Detecta: Pilas, anclas, estado del proyecto
+- Modelo: Gemini 2.5 Flash via Emergent LLM Key
+
+### Modelos 3D y Nubes de Puntos
+- **Formato soportado**: `.ply` (Stanford PLY) - tamaño medio recomendado
+- **Otros formatos**: `.xyz`, `.pts`, `.pcd`
+- **Visualización**: Three.js con PLYLoader y OrbitControls
+- **Generación**: Los archivos se generan por computadora después de cada vuelo
+- **Nota**: Archivos `.laz` descartados, se usa `.ply` como estándar
+
 ## Notas Técnicas
 - La comparación de avances usa comparación ACUMULADA del proyecto
 - El nivel de confianza (ALTA/MEDIA/BAJA) indica qué tan seguro está el modelo de la extracción
