@@ -1,14 +1,12 @@
 from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Depends
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 import asyncio
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict, EmailStr
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 import uuid
 from datetime import datetime, timezone, timedelta
@@ -19,7 +17,6 @@ import numpy as np
 import zipfile
 import io
 import resend
-from passlib.context import CryptContext
 from jose import JWTError, jwt
 from concurrent.futures import ThreadPoolExecutor
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -35,37 +32,33 @@ from reportlab.graphics.shapes import Drawing, Rect
 from reportlab.graphics.charts.barcharts import VerticalBarChart
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 
+# Import shared configuration
+from core.config import (
+    get_db, get_client, get_database, UPLOAD_DIR, ROOT_DIR,
+    SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES,
+    RESEND_API_KEY, ADMIN_EMAIL, EMERGENT_LLM_KEY,
+    verify_password, get_password_hash, create_access_token,
+    get_current_user, get_current_admin, get_optional_user,
+    pwd_context, security, logger
+)
+
+# Import shared services
+from services.helpers import recalcular_avance_proyecto, generar_google_calendar_link, obtener_metricas_proyecto
+from services.email import enviar_alerta_discrepancia, enviar_notificacion_solicitud_vuelo, enviar_actualizacion_solicitud
+
 # Thread pool for CPU-intensive tasks
 thumbnail_executor = ThreadPoolExecutor(max_workers=2)
 
 # Scheduler for weekly reports
 scheduler = AsyncIOScheduler()
 
-
-ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
-
 # Resend configuration
-resend.api_key = os.environ.get('RESEND_API_KEY')
-ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL')
+if RESEND_API_KEY:
+    resend.api_key = RESEND_API_KEY
 
-# JWT Configuration
-SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 días
-
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-security = HTTPBearer()
-
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
-
-# Create uploads directory
-UPLOAD_DIR = ROOT_DIR / "uploads"
-UPLOAD_DIR.mkdir(exist_ok=True)
+# Database reference (for backwards compatibility)
+db = get_db()
+client = get_client()
 
 # Thumbnail generation function
 def generate_ply_thumbnail(ply_path: str, output_path: str, width: int = 400, height: int = 300) -> bool:
