@@ -332,7 +332,12 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                 </div>
                 {ultimoAvance && (
                   <p className="text-xs text-gray-500 mt-2">
-                    Última actualización: {ultimoAvance.fecha} • Volumen: {(ultimoAvance.volumen_excavacion || 0).toLocaleString()} m³
+                    Última actualización: {ultimoAvance.fecha}
+                    {selectedProyecto?.actividades_tipo?.includes('pilas') || selectedProyecto?.pilas_planeadas > 0 
+                      ? ` • Pilas: ${(ultimoAvance.pilas_completadas || 0).toLocaleString()}`
+                      : selectedProyecto?.volumen_total_planeado > 0 
+                        ? ` • Volumen: ${(ultimoAvance.volumen_excavacion || 0).toLocaleString()} m³`
+                        : ''}
                   </p>
                 )}
               </div>
