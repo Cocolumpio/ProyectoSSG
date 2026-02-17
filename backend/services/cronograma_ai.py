@@ -209,12 +209,23 @@ def parse_excel_cronograma(file_content: bytes) -> Dict[str, Any]:
             "frentes": frentes,
             "resumen": {
                 "total_frentes": len(frentes),
-                "total_pilas": total_pilas,
                 "total_actividades": sum(len(f["actividades"]) for f in frentes),
                 "total_dias": total_dias,
                 "semanas_estimadas": semanas_estimadas,
                 "fecha_inicio": fecha_inicio_proyecto,
-                "fecha_fin": fecha_fin_proyecto
+                "fecha_fin": fecha_fin_proyecto,
+                # Métricas por tipo
+                "total_pilas": total_pilas,
+                "total_muros": total_muros,
+                "total_anclas": total_anclas,
+                "total_excavacion": total_excavacion,
+                # Tipos de actividades detectadas
+                "tipos_actividades": list(tipos_actividades),
+                # Semanas por tipo
+                "semanas_excavacion": semanas_por_tipo["excavacion"],
+                "semanas_pilas": semanas_por_tipo["pilas"],
+                "semanas_muros": semanas_por_tipo["muros"],
+                "semanas_anclas": semanas_por_tipo["anclas"]
             }
         }
         
