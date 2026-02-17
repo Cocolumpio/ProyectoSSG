@@ -1,10 +1,11 @@
 # DrON Topografía - Product Requirements Document
 
 ## Declaración del Problema
-Dashboard interactivo para visualizar informes de vuelos de drones en proyectos de construcción. Permite gestionar proyectos, visualizar avances, métricas de volumetría y modelos 3D de Pix4D.
+Dashboard interactivo para visualizar informes de vuelos de drones en proyectos de construcción. Permite gestionar proyectos, visualizar avances, métricas de volumetría/pilas y modelos 3D de Pix4D.
 
 ## Requisitos del Usuario
 - Dashboard con KPIs de proyectos y vuelos
+- **Métricas dinámicas según tipo de actividad**: pilas, muros, anclas, excavación
 - Visualización de datos de volumetría (excavación, relleno, materiales) en m³
 - Seguimiento del avance de proyectos comparado con el cronograma
 - Mapa interactivo para ubicaciones de obras
@@ -12,14 +13,14 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 - CRUD completo para proyectos con campos para URL de Pix4D y volumetría
 - CRUD completo para vuelos
 - Avances semanales con galería de fotos y modelos 3D
-- Gráfico de volumen excavado por semana
+- Gráfico de progresión dinámico según tipo de actividad
 - Descarga de fotos en formato ZIP
 - Generación de reportes ejecutivos PDF con costos de flotilla
 - Programación de vuelos por el cliente con notificación por email
 - Sistema de autenticación con roles (Admin/Cliente)
-- **Importación de cronograma desde Excel con detección automática de tipos de actividades**
-- **Análisis de fotos con IA (Gemini Vision) para detectar pilas y anclas**
-- **Gráfico Gantt visual de progreso del proyecto**
+- Importación de cronograma desde Excel con detección automática de tipos de actividades
+- Análisis de fotos con IA (Gemini Vision) para detectar pilas y anclas
+- Gráfico Gantt visual de progreso del proyecto
 
 ## Usuarios del Sistema
 - **Admin:** Acceso completo a todas las funciones
@@ -40,37 +41,27 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 ```
 /app/
 ├── backend/
-│   ├── server.py              # API FastAPI con auth + endpoints
+│   ├── server.py
 │   ├── models/
-│   │   └── schemas.py         # Modelos Pydantic
+│   │   └── schemas.py
 │   ├── services/
-│   │   ├── auth.py            # Autenticación JWT
-│   │   ├── database.py        # Conexión MongoDB
-│   │   ├── thumbnails.py      # Generación thumbnails PLY
-│   │   └── cronograma_ai.py   # Parser Excel + IA Gemini
-│   └── uploads/               # Archivos y modelos 3D
+│   │   ├── auth.py
+│   │   ├── database.py
+│   │   ├── thumbnails.py
+│   │   └── cronograma_ai.py
+│   └── uploads/
 ├── frontend/
 │   └── src/
-│       ├── App.js
-│       ├── context/
-│       │   └── AuthContext.jsx
 │       └── components/
-│           ├── Auth/LoginPage.jsx
-│           ├── Admin/SolicitudesAdminView.jsx
-│           ├── Client/MisSolicitudesView.jsx
 │           ├── Dashboard/
 │           │   ├── DashboardView.jsx
-│           │   └── GanttChart.jsx          # NUEVO (Feb 2025)
+│           │   └── GanttChart.jsx
 │           ├── Projects/
 │           │   ├── ProyectosView.jsx
-│           │   ├── ProjectFormContent.jsx
 │           │   ├── AvancesSemanalesModal.jsx
-│           │   ├── PointCloudViewer.jsx
-│           │   ├── ImportarCronograma.jsx  # NUEVO (Feb 2025)
-│           │   └── AnalisisFotoIA.jsx      # NUEVO (Feb 2025)
-│           └── Flights/
-│               ├── VuelosView.jsx
-│               └── SolicitarVueloForm.jsx
+│           │   ├── ImportarCronograma.jsx
+│           │   └── AnalisisFotoIA.jsx
+│           └── ...
 └── memory/
     └── PRD.md
 ```
@@ -79,69 +70,51 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
 
 ### Sesión Actual - 17 Feb 2025
 
-#### P0 - Tipos de Actividades (COMPLETADO)
-- [x] Parser de Excel detecta tipos de actividades: pilas, muros, anclas, excavación
-- [x] Endpoint `/api/proyectos/crear-desde-cronograma` guarda `actividades_tipo` y métricas
-- [x] ImportarCronograma.jsx muestra tipos detectados con badges de colores
-- [x] DashboardView.jsx muestra métricas condicionales (Pilas X/Y, Muros X/Y, Anclas X/Y)
-- [x] Tests: 13/13 backend tests pasados
+#### Métricas Dinámicas por Tipo de Actividad (COMPLETADO)
+- [x] GanttChart.jsx muestra progresión según `actividades_tipo` del proyecto
+- [x] Prioridad de visualización: pilas > muros > anclas > excavación
+- [x] Dashboard oculta "Volumen Excavado vs Planeado" cuando no hay excavación planeada
+- [x] AvancesSemanalesModal.jsx muestra gráfico dinámico con título y unidades correctas
+- [x] Badges de color según tipo: Pilas (azul), Muros (púrpura), Anclas (teal), Excavación (naranja)
+- [x] "Última actualización" muestra dato relevante (Pilas: X o Volumen: X m³)
 
-#### P1 - Análisis de Fotos con IA (COMPLETADO)
-- [x] Componente AnalisisFotoIA.jsx para upload de fotos y análisis
-- [x] Botón "Analizar Fotos con IA" en AvancesSemanalesModal.jsx
-- [x] Endpoint `/api/avances/{id}/analizar-foto` con Gemini Vision
-- [x] Muestra: pilas detectadas, anclas, estado proyecto, observaciones
-- [x] Integración con emergentintegrations y EMERGENT_LLM_KEY
-
-#### P1 - Gráfico Gantt Visual (COMPLETADO)
-- [x] Componente GanttChart.jsx con métricas de estado
-- [x] Muestra Progreso Semanal (X/Y), Avance Total (%), Estado (Adelantado/En Tiempo/Retrasado)
-- [x] Gráfico de barras "Planeado vs Ejecutado" por semana
-- [x] Colores: verde = adelantado, rojo = retrasado
-- [x] Timeline visual del proyecto con barras de progreso
-- [x] Integrado en DashboardView.jsx
+#### Bug Fixes
+- [x] Eliminación de proyectos funcionando correctamente (verificado)
 
 ### Funcionalidades Anteriores
 
-#### Backend
-- [x] Modelos Pydantic para proyectos, vuelos, avances, frentes
-- [x] Autenticación JWT con roles admin/client
-- [x] CRUD completo para proyectos, vuelos, avances semanales
-- [x] Generación de thumbnails para modelos PLY
-- [x] Endpoints de estadísticas y reportes PDF
-- [x] Gestión de usuarios desde panel admin
-- [x] Importación de cronograma desde Excel
+#### Tipos de Actividades (COMPLETADO)
+- [x] Parser de Excel detecta tipos: pilas, muros, anclas, excavación
+- [x] ImportarCronograma.jsx muestra tipos detectados con badges
+- [x] Dashboard muestra métricas condicionales
 
-#### Frontend
-- [x] Dashboard con KPIs y mapa interactivo
-- [x] Visor 3D con Three.js para archivos PLY
-- [x] Sistema de avances semanales con galería de fotos
-- [x] Descarga de fotos en ZIP
-- [x] Formulario de solicitud de vuelos
-- [x] Sistema de notificaciones por email
-- [x] Asignación de proyectos a clientes
+#### Análisis de Fotos con IA (COMPLETADO)
+- [x] AnalisisFotoIA.jsx para upload y análisis
+- [x] Botón "Analizar Fotos con IA" en Avances Semanales
+- [x] Integración con Gemini Vision
 
-## Backlog
+#### Gráfico Gantt Visual (COMPLETADO)
+- [x] Métricas: Semanas, Pilas/Muros/Anclas/Volumen, Avance Total, Estado
+- [x] Gráfico de área "Planeado vs Ejecutado"
+- [x] Timeline visual del proyecto
 
-### P2 - Pendiente
-- [ ] Refactorizar server.py en módulos de rutas separados
-- [ ] Soporte para archivos LAZ/LAS
-
-### P3 - Futuro
-- [ ] Dashboard de métricas avanzadas
-- [ ] Exportación de reportes a Excel
-- [ ] Integración con más proveedores de nube de puntos
+## Proyectos de Prueba
+| Proyecto | Tipo | Métricas |
+|----------|------|----------|
+| Acuarela | Excavación | 50,000 m³ |
+| Proyecto Pilas Demo | Pilas + Anclas | 576 pilas, 464 anclas |
+| Torre Mezquitan | Sin tipo | - |
+| Hotel Marriott Centro | Excavación | 70,000 m³ |
 
 ## API Endpoints Principales
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | POST | /api/auth/login | Login de usuario |
 | GET | /api/proyectos | Listar proyectos |
+| DELETE | /api/proyectos/{id} | Eliminar proyecto |
 | POST | /api/proyectos/crear-desde-cronograma | Crear proyecto desde Excel |
-| POST | /api/proyectos/importar-cronograma | Parsear archivo Excel |
 | GET | /api/proyectos/{id}/avances-semanales | Obtener avances |
 | POST | /api/avances/{id}/analizar-foto | Analizar foto con IA |
-| GET | /api/plantilla-cronograma | Descargar plantilla Excel |
 
 ## Esquema de Datos
 ```javascript
@@ -150,10 +123,6 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
   id: string,
   nombre: string,
   ubicacion: string,
-  coordenadas: { lat: float, lng: float },
-  fecha_inicio: string,
-  fecha_fin_planeada: string,
-  avance_actual: float,
   actividades_tipo: ["pilas", "muros", "anclas", "excavacion"],
   pilas_planeadas: int,
   muros_planeados: int,
@@ -170,14 +139,11 @@ Dashboard interactivo para visualizar informes de vuelos de drones en proyectos 
   fecha: string,
   volumen_excavacion: float,
   pilas_completadas: int,
-  anclas_instaladas: int,
-  modelo_3d_url: string,
-  thumbnail_url: string,
-  imagenes: [string]
+  muros_completados: int,
+  anclas_instaladas: int
 }
 ```
 
-## Testing
-- Backend: 13 tests con pytest (100% éxito)
-- Frontend: 10 features verificadas (100% éxito)
-- Playwright: Flujos e2e automatizados
+## Backlog
+- [ ] P2: Refactorizar server.py en módulos de rutas
+- [ ] P3: Soporte para archivos LAZ/LAS
