@@ -272,3 +272,49 @@ class SolicitudVueloCreate(BaseModel):
 class SolicitudVueloUpdate(BaseModel):
     estado: Optional[str] = None
     admin_notas: Optional[str] = None
+
+
+# --- Comparación de Avances con Residente ---
+class MetricaComparacion(BaseModel):
+    """Métrica individual para comparación"""
+    nombre: str
+    unidad: str
+    valor_dron: float = 0.0
+    valor_residente: float = 0.0
+    diferencia: float = 0.0
+    diferencia_porcentaje: float = 0.0
+    estado: str = "coincide"  # coincide, discrepancia_menor, discrepancia_mayor
+
+
+class ComparacionAvance(BaseModel):
+    """Resultado de comparación entre avance del dron y reporte del residente"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    proyecto_id: str
+    semana: int
+    fecha_comparacion: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    pdf_url: str
+    pdf_nombre: str
+    
+    # Métricas extraídas del PDF
+    metricas_residente: dict = {}
+    
+    # Métricas del sistema (dron)
+    metricas_dron: dict = {}
+    
+    # Comparación detallada
+    comparaciones: List[MetricaComparacion] = []
+    
+    # Análisis de IA
+    resumen_ia: str = ""
+    discrepancias_detectadas: List[str] = []
+    recomendaciones: List[str] = []
+    
+    # Estado general
+    estado_comparacion: str = "pendiente"  # pendiente, analizado, revisado
+    avance_general_residente: float = 0.0
+    avance_general_dron: float = 0.0
+
+
+class ComparacionAvanceCreate(BaseModel):
+    semana: int
+    pdf_nombre: str
