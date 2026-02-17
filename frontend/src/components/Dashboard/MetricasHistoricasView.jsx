@@ -8,7 +8,7 @@ import {
 import { 
   TrendingUp, Calendar, Building2, Layers, 
   ArrowUp, ArrowDown, Minus, RefreshCw, 
-  Shovel, Anchor, Columns3, Box
+  Shovel, Anchor, Columns3, Box, Download, FileSpreadsheet, FileText
 } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -19,6 +19,7 @@ export function MetricasHistoricasView({ proyectos }) {
   const [selectedProyectos, setSelectedProyectos] = useState([]);
   const [historicalData, setHistoricalData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(null); // 'excel' | 'pdf' | null
   const [viewMode, setViewMode] = useState('avance'); // avance, excavacion, cimentacion, edificacion
 
   useEffect(() => {
