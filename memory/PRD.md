@@ -105,23 +105,31 @@ Permite comparar automáticamente los avances registrados por el sistema de dron
 - ✅ Verificación de la interfaz de Análisis de Fotos con IA
 - ✅ Dashboard de Métricas Históricas con gráficas interactivas
 - ✅ Reportes actualizados con pilas, anclas y muros por proyecto
+- ✅ Exportación de métricas históricas a Excel y PDF
 
 ## Tareas Pendientes
-- (P2) Refactorización del archivo `server.py` monolítico (~3000 líneas)
+- (P2) Refactorización del archivo `server.py` monolítico (~3200 líneas)
 - (P3) Clarificar requisito de archivos `.laz`
 
 ## Funcionalidades del Sistema
 
-### Dashboard de Métricas Históricas (NUEVO)
+### Exportación de Métricas (NUEVO)
+- **Ubicación**: Pestaña "Métricas" → Botones Excel/PDF en header
+- **Excel** (verde): Genera archivo .xlsx con 3 hojas
+  - Resumen General: KPIs y métricas por proyecto
+  - Avances Semanales: Detalle por semana de cada proyecto
+  - Comparaciones Residente: Historial de comparaciones IA
+- **PDF** (rojo): Genera reporte ejecutivo con
+  - KPIs Resumen: Proyectos, Volumen, Pilas, Anclas, Muros, Costo
+  - Tabla detalle por proyecto
+  - Desglose de costos de flotilla
+
+### Dashboard de Métricas Históricas
 - **Ubicación**: Pestaña "Métricas" en la navegación principal
-- **KPIs Totales**:
-  - Excavación Total (m³)
-  - Pilas Totales
-  - Anclas Totales
-  - Muros Totales
-- **Gráfica de Evolución**: AreaChart mostrando avance por semana de todos los proyectos
+- **KPIs Totales**: Excavación, Pilas, Anclas, Muros
+- **Gráfica de Evolución**: AreaChart por semana
 - **Selector de Vista**: Avance Total, Excavación, Cimentación, Edificación
-- **Comparativa**: BarChart horizontal comparando avance entre proyectos
+- **Comparativa**: BarChart horizontal
 - **Tabla de Detalle**: Métricas completas por proyecto
 
 ### Reporte Semanal Automático (ACTUALIZADO)
