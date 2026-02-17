@@ -273,6 +273,9 @@ class AvanceSemanal(BaseModel):
     descripcion: Optional[str] = None
     porcentaje_avance: Optional[float] = None  # Porcentaje de avance en esa semana
     volumen_excavacion: Optional[float] = None  # Volumen quitado en m³
+    pilas_completadas: Optional[int] = None  # Pilas completadas en esta semana
+    anclas_instaladas: Optional[int] = None  # Anclas instaladas en esta semana
+    muros_completados: Optional[int] = None  # Muros completados en esta semana
     imagenes: List[str] = []  # URLs de las imágenes del vuelo
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
