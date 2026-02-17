@@ -287,9 +287,21 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                 <p className="text-white/80 text-sm">{selectedProyecto.direccion || selectedProyecto.ubicacion}</p>
               </div>
               <div className="text-right">
-                <div className="text-3xl sm:text-4xl font-bold">{stats?.porcentajeAvance?.toFixed(1) || 0}%</div>
+                <div className="text-3xl sm:text-4xl font-bold">{stats?.avanceTotal?.toFixed(1) || 0}%</div>
                 <div className="text-white/80 text-sm">Avance Total</div>
+                {stats?.semanasProyectadas && stats.semanasPlaneadas === 0 && (
+                  <div className="text-white/60 text-xs mt-1">
+                    📈 Proyección: ~{stats.semanasProyectadas} sem restantes
+                  </div>
+                )}
               </div>
+            </div>
+            {/* Barra de progreso total */}
+            <div className="mt-3 w-full bg-white/20 rounded-full h-2">
+              <div 
+                className="bg-white h-2 rounded-full transition-all duration-500" 
+                style={{ width: `${stats?.avanceTotal || 0}%` }}
+              />
             </div>
           </div>
 
