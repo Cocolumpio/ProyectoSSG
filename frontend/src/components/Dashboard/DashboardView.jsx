@@ -60,14 +60,16 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
     const volumenPlaneado = selectedProyecto.volumen_total_planeado || 0;
     const volumenExcavado = avancesSemanales.reduce((sum, a) => sum + (a.volumen_excavacion || 0), 0);
     // Semanas con avance registrado (avances semanales reales)
-    const semanasTrabajas = avancesSemanales.filter(a => a.volumen_excavacion > 0).length;
+    const semanasTrabajas = avancesSemanales.filter(a => 
+      (a.volumen_excavacion > 0) || (a.pilas_completadas > 0) || (a.muros_completados > 0) || (a.anclas_instaladas > 0)
+    ).length;
     // Semanas planeadas del cronograma del proyecto
-    const semanasPlaneadas = selectedProyecto.semanas_planeadas || avancesSemanales.length;
+    const semanasPlaneadas = selectedProyecto.semanas_planeadas || 0;
     const costoM3 = selectedProyecto.costo_m3 || 150;
     const capacidadCamion = selectedProyecto.capacidad_camion || 25;
     const costoFlotilla = volumenExcavado * costoM3;
     const viajesCamion = Math.ceil(volumenExcavado / capacidadCamion);
-    const porcentajeAvance = volumenPlaneado > 0 ? Math.min((volumenExcavado / volumenPlaneado) * 100, 100) : 0;
+    const porcentajeExcavacion = volumenPlaneado > 0 ? Math.min((volumenExcavado / volumenPlaneado) * 100, 100) : 0;
     const volumenRestante = Math.max(volumenPlaneado - volumenExcavado, 0);
     
     // Métricas de tipos de actividades
@@ -81,6 +83,51 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
     const murosEjecutados = avancesSemanales.reduce((sum, a) => sum + (a.muros_completados || 0), 0);
     const anclasEjecutadas = avancesSemanales.reduce((sum, a) => sum + (a.anclas_instaladas || 0), 0);
     
+    // Calcular porcentajes por fase
+    const porcentajePilas = pilasPlaneadas > 0 ? Math.min((pilasEjecutadas / pilasPlaneadas) * 100, 100) : 0;
+    const porcentajeMuros = murosPlaneados > 0 ? Math.min((murosEjecutados / murosPlaneados) * 100, 100) : 0;
+    const porcentajeAnclas = anclasPlaneadas > 0 ? Math.min((anclasEjecutadas / anclasPlaneadas) * 100, 100) : 0;
+    
+    // Calcular avance TOTAL como promedio de las fases activas
+    const fasesActivas = [];
+    const porcentajesFases = [];
+    
+    // Excavación
+    if (tiposActividades.includes('excavacion') || volumenPlaneado > 0) {
+      fasesActivas.push('excavacion');
+      porcentajesFases.push(porcentajeExcavacion);
+    }
+    // Cimentación (pilas + anclas)
+    if (tiposActividades.includes('pilas') || pilasPlaneadas > 0) {
+      fasesActivas.push('cimentacion');
+      // Promedio de pilas y anclas si ambas tienen metas
+      if (pilasPlaneadas > 0 && anclasPlaneadas > 0) {
+        porcentajesFases.push((porcentajePilas + porcentajeAnclas) / 2);
+      } else if (pilasPlaneadas > 0) {
+        porcentajesFases.push(porcentajePilas);
+      } else if (anclasPlaneadas > 0) {
+        porcentajesFases.push(porcentajeAnclas);
+      }
+    }
+    // Edificación (muros)
+    if (tiposActividades.includes('muros') || murosPlaneados > 0) {
+      fasesActivas.push('edificacion');
+      porcentajesFases.push(porcentajeMuros);
+    }
+    
+    // Avance total: promedio de todas las fases activas
+    const avanceTotal = porcentajesFases.length > 0 
+      ? porcentajesFases.reduce((a, b) => a + b, 0) / porcentajesFases.length 
+      : 0;
+    
+    // Proyección de semanas restantes (sin cronograma)
+    let semanasProyectadas = null;
+    if (semanasTrabajas > 0 && avanceTotal > 0 && avanceTotal < 100) {
+      const ritmoSemanal = avanceTotal / semanasTrabajas; // % por semana
+      const restante = 100 - avanceTotal;
+      semanasProyectadas = Math.ceil(restante / ritmoSemanal);
+    }
+    
     return {
       volumenPlaneado,
       volumenExcavado,
@@ -90,20 +137,25 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
       totalSemanas: avancesSemanales.length,
       costoFlotilla,
       viajesCamion,
-      porcentajeAvance,
+      porcentajeAvance: porcentajeExcavacion, // Mantener para compatibilidad
+      porcentajeExcavacion,
       costoM3,
       capacidadCamion,
       // Tipos de actividades
       tiposActividades,
+      fasesActivas,
       pilasPlaneadas,
       murosPlaneados,
       anclasPlaneadas,
       pilasEjecutadas,
       murosEjecutados,
       anclasEjecutadas,
-      porcentajePilas: pilasPlaneadas > 0 ? Math.min((pilasEjecutadas / pilasPlaneadas) * 100, 100) : 0,
-      porcentajeMuros: murosPlaneados > 0 ? Math.min((murosEjecutados / murosPlaneados) * 100, 100) : 0,
-      porcentajeAnclas: anclasPlaneadas > 0 ? Math.min((anclasEjecutadas / anclasPlaneadas) * 100, 100) : 0,
+      porcentajePilas,
+      porcentajeMuros,
+      porcentajeAnclas,
+      // Avance total del proyecto
+      avanceTotal,
+      semanasProyectadas,
     };
   };
 
