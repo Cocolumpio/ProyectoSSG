@@ -1065,8 +1065,8 @@ async def actualizar_avance_semanal(proyecto_id: str, avance_id: str, avance: Av
     if isinstance(avance_actualizado.get('created_at'), str):
         avance_actualizado['created_at'] = datetime.fromisoformat(avance_actualizado['created_at'])
     
-    # Si se actualizó el volumen de excavación, recalcular el avance del proyecto
-    if 'volumen_excavacion' in update_data:
+    # Si se actualizó el volumen de excavación o pilas/anclas, recalcular el avance del proyecto
+    if any(key in update_data for key in ['volumen_excavacion', 'pilas_completadas', 'anclas_instaladas', 'muros_completados']):
         await recalcular_avance_proyecto(proyecto_id)
     
     return avance_actualizado
