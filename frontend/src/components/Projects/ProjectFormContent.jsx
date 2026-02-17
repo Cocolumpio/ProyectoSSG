@@ -212,26 +212,165 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Volumen Total Planeado (m³) *
-          </label>
-          <div className="relative">
-            <input
-              type="number"
-              name="volumen_total_planeado"
-              value={formData.volumen_total_planeado || ''}
-              onChange={handleInputChange}
-              min="0"
-              step="100"
-              placeholder="Ej: 50000"
-              className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-              data-testid="project-volumen-planeado-input"
-            />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">m³</span>
+      {/* Fases de Construcción */}
+      <div className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200">
+        <div className="flex items-center gap-2 mb-3">
+          <Building2 className="h-5 w-5 text-slate-700" />
+          <h4 className="font-semibold text-slate-800">Fases de Construcción</h4>
+          <span className="text-xs text-slate-500 bg-white px-2 py-0.5 rounded">(Selecciona una o más)</span>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Excavación */}
+          <div className={`rounded-lg p-4 border-2 transition-all cursor-pointer ${
+            formData.fases?.excavacion 
+              ? 'bg-amber-50 border-amber-400 shadow-md' 
+              : 'bg-white border-gray-200 hover:border-amber-300'
+          }`}
+            onClick={() => setFormData(prev => ({
+              ...prev,
+              fases: { ...prev.fases, excavacion: !prev.fases?.excavacion }
+            }))}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <input
+                type="checkbox"
+                checked={formData.fases?.excavacion || false}
+                onChange={() => {}}
+                className="h-4 w-4 text-amber-600 rounded focus:ring-amber-500"
+              />
+              <Shovel className="h-5 w-5 text-amber-600" />
+              <span className="font-medium text-gray-800">Excavación</span>
+            </div>
+            {formData.fases?.excavacion && (
+              <div className="mt-3 space-y-2" onClick={e => e.stopPropagation()}>
+                <div>
+                  <label className="text-xs text-amber-700 font-medium">Volumen Total (m³)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="100"
+                    value={formData.volumen_total_planeado || ''}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      volumen_total_planeado: parseFloat(e.target.value) || 0 
+                    }))}
+                    className="w-full mt-1 px-3 py-1.5 text-sm border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                    placeholder="50000"
+                    data-testid="project-volumen-planeado-input"
+                  />
+                </div>
+              </div>
+            )}
           </div>
-          <p className="text-xs text-gray-500 mt-1">Total de volumen estimado a excavar según el programa del cliente</p>
+
+          {/* Cimentación */}
+          <div className={`rounded-lg p-4 border-2 transition-all cursor-pointer ${
+            formData.fases?.cimentacion 
+              ? 'bg-blue-50 border-blue-400 shadow-md' 
+              : 'bg-white border-gray-200 hover:border-blue-300'
+          }`}
+            onClick={() => setFormData(prev => ({
+              ...prev,
+              fases: { ...prev.fases, cimentacion: !prev.fases?.cimentacion }
+            }))}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <input
+                type="checkbox"
+                checked={formData.fases?.cimentacion || false}
+                onChange={() => {}}
+                className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+              />
+              <Columns3 className="h-5 w-5 text-blue-600" />
+              <span className="font-medium text-gray-800">Cimentación</span>
+            </div>
+            {formData.fases?.cimentacion && (
+              <div className="mt-3 space-y-2" onClick={e => e.stopPropagation()}>
+                <div>
+                  <label className="text-xs text-blue-700 font-medium">Pilas Planeadas</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={formData.pilas_planeadas || ''}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      pilas_planeadas: parseInt(e.target.value) || 0 
+                    }))}
+                    className="w-full mt-1 px-3 py-1.5 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="576"
+                    data-testid="project-pilas-planeadas-input"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-teal-700 font-medium">Anclas Planeadas</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={formData.anclas_planeadas || ''}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      anclas_planeadas: parseInt(e.target.value) || 0 
+                    }))}
+                    className="w-full mt-1 px-3 py-1.5 text-sm border border-teal-300 rounded-lg focus:ring-2 focus:ring-teal-500"
+                    placeholder="464"
+                    data-testid="project-anclas-planeadas-input"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Edificación */}
+          <div className={`rounded-lg p-4 border-2 transition-all cursor-pointer ${
+            formData.fases?.edificacion 
+              ? 'bg-purple-50 border-purple-400 shadow-md' 
+              : 'bg-white border-gray-200 hover:border-purple-300'
+          }`}
+            onClick={() => setFormData(prev => ({
+              ...prev,
+              fases: { ...prev.fases, edificacion: !prev.fases?.edificacion }
+            }))}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <input
+                type="checkbox"
+                checked={formData.fases?.edificacion || false}
+                onChange={() => {}}
+                className="h-4 w-4 text-purple-600 rounded focus:ring-purple-500"
+              />
+              <Building2 className="h-5 w-5 text-purple-600" />
+              <span className="font-medium text-gray-800">Edificación</span>
+            </div>
+            {formData.fases?.edificacion && (
+              <div className="mt-3 space-y-2" onClick={e => e.stopPropagation()}>
+                <div>
+                  <label className="text-xs text-purple-700 font-medium">Muros Planeados</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={formData.muros_planeados || ''}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      muros_planeados: parseInt(e.target.value) || 0 
+                    }))}
+                    className="w-full mt-1 px-3 py-1.5 text-sm border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    placeholder="50"
+                    data-testid="project-muros-planeados-input"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Info si no hay cronograma */}
+        <div className="mt-4 flex items-start gap-2 text-xs text-slate-600 bg-white/50 rounded-lg p-2">
+          <Info className="h-4 w-4 flex-shrink-0 mt-0.5" />
+          <span>Si no cuentas con las cantidades exactas del cronograma, el sistema proyectará automáticamente las semanas restantes basándose en el ritmo de avance semanal.</span>
         </div>
       </div>
 
