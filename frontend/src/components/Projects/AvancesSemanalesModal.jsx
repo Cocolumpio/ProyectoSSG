@@ -22,6 +22,7 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
   const [savingVolumen, setSavingVolumen] = useState(false);
   const [uploadingModel, setUploadingModel] = useState(false);
   const [viewerMode, setViewerMode] = useState('auto'); // 'auto', 'local', 'pix4d'
+  const [showAnalisisIA, setShowAnalisisIA] = useState(false);
   const [formData, setFormData] = useState({
     semana: 1,
     fecha: '',
