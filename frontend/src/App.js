@@ -249,7 +249,7 @@ function AppContent() {
             onProyectoClick={handleProyectoClick}
             mapCenter={mapCenter}
             readOnly={!isAdmin}
-            onShowSuccess={setGlobalSuccess}
+            onShowSuccess={showGlobalSuccess}
           />
         )}
         
