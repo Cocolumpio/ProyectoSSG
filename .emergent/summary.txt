@@ -10,65 +10,61 @@ PRODUCT REQUIREMENTS:
 - A flight scheduling form that sends email notifications.
 - A feature to import project schedules from an Excel file to auto-configure projects.
 - AI (Gemini Vision) integration to analyze progress photos to count construction elements.
-- **New (from this session):** The application must be expanded to manage three distinct construction phases: **Excavación** (Excavation), **Cimentación** (Foundation - includes piles and anchors), and **Edificación** (Structure - includes walls).
-- **New (from this session):** The project creation form must allow users to select which of the three phases are active for a given project and to set the quantitative goals for each (e.g., total excavation volume, total number of piles/anchors/walls).
-- **New (from this session):** The dashboard must be updated to show the progress percentage for each active phase individually, as well as a **total project progress percentage** calculated as the average of all active phases.
-- **New (from this session):** For projects created without a schedule, the system should forecast the remaining weeks to completion based on the current work pace.
-- **New (from this session):** The weekly progress modal must allow admins to edit the number of completed units for all activity types (volume, piles, anchors, and walls).
-- **New (from this session):** A user-reported bug where project deletion was not working needs to be addressed.
+- The application must manage three distinct construction phases: **Excavación** (Excavation), **Cimentación** (Foundation), and **Edificación** (Structure).
+- The project creation form must allow users to select active phases for a given project and set quantitative goals for each.
+- The dashboard must show progress for each active phase individually, as well as a **total project progress percentage**.
+- The weekly progress modal must allow admins to edit the number of completed units for all activity types.
+- **New Feature:** Implement an AI-powered comparison between drone data and a resident engineer's PDF report. This should be cumulative, run automatically upon upload, and use the Emergent LLM Key.
+- **New Feature:** Implement automatic email alerts (via Resend) to an admin when the AI comparison detects significant discrepancies.
+- **New Feature:** Implement a weekly executive email report sent every Friday, summarizing project progress (including excavation, piles, anchors, and walls) and total costs from truck fleets, broken down by project.
+- **New Feature:** Create a Métricas Históricas (Historical Metrics) dashboard with interactive charts to visualize project evolution over time.
+- **New Feature:** Add functionality to export the historical metrics dashboard data to both Excel and PDF formats.
+- **Clarification:** The requirement for  files was discussed and discarded; the application will continue to use  files.
 
 **User's preferred language**: Spanish. The next agent MUST respond in Spanish.
 
 **what currently exists?**
-A full-stack React/FastAPI application with JWT authentication and a multi-phase project management system. The application allows creating projects manually or by importing an Excel file. The UI dynamically adapts to the active construction phases of a project, displaying relevant metrics for Excavation, Foundation (piles/anchors), and Structure (walls). The dashboard shows progress for each phase and a total project progress percentage. Admins can edit the weekly completed units for each metric directly in the UI, which automatically recalculates all related progress percentages. The backend models and API endpoints have been updated to support this new multi-phase structure.
+A full-stack React/FastAPI application with a multi-phase project management system. A critical bug preventing project selection on the main dashboard has been fixed. The app now includes a sophisticated feature to compare drone data against uploaded resident engineer PDF reports using Gemini AI, complete with a dedicated UI modal and automatic email alerts for major discrepancies. A new Historical Metrics dashboard has been added, featuring interactive charts and export-to-Excel/PDF functionality. A scheduled weekly email report summarizing progress and costs is also implemented. The backend  remains largely monolithic, though an attempt at refactoring was started.
 
 **Last working item**:
-- **Last item agent was working:** The agent was debugging a critical UI bug on the main dashboard (). After implementing the multi-phase progress display, the functionality to select a project from the Proyectos Activos list broke. Clicking on a project consistently defaults to showing the details of the first project in the list, preventing users from viewing the detailed dashboard for any other project.
-- **Status:** IN PROGRESS
-- **Agent Testing Done:** N
-- **Which testing method agent to use?** Frontend testing agent. The primary goal is to fix and verify the project selection functionality in . The test should ensure that clicking on any project in the list correctly updates the detailed view to show that specific project's data.
-- **User Testing Done:** N
+-   **Last item agent was working:** The agent started refactoring the monolithic  file by creating modular route files (, , etc.) in . However, after running into import errors and assessing the risk of introducing regressions, the agent postponed the full refactor to address other user requests.
+-   **Status:** IN PROGRESS
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** backend testing agent. A full regression test of all API endpoints is mandatory after the refactor is completed to ensure no functionality was broken.
+-   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: Dashboard project selection is broken (P0)**
-  - **Description:** On the , clicking a project in the Proyectos Activos list does not select the correct one; it always defaults to the first project. This makes it impossible to view the detailed dashboard for other projects.
-  - **Attempted fixes:** The previous agent tried multiple clicks and scrolling without success.
-  - **Next debug checklist:**
-    1.  Examine .
-    2.  Focus on the  handler attached to each project list item and the  function it calls.
-    3.  Investigate the  state management. Check for issues with state updates, component re-rendering, or incorrect event propagation.
-    4.  Verify that the  prop for each item in the project list is unique and stable.
-  - **Why fix this issue and what will be achieved with the fix?** This is a critical usability bug. Fixing it will restore the core functionality of the dashboard, allowing users to view detailed progress, Gantt charts, and metrics for any of their projects.
-  - **Status:** NOT STARTED
-  - **Is recurring issue?** N
-  - **Should Test frontend/backend/both after fix?** Frontend
+*   None.
 
 **In progress Task List**:
-*   None.
+- **Task 1: Complete Backend Refactoring (P2)**
+    - **Where to resume:** The foundational files exist in  and . The next step is to systematically move the endpoint logic, helper functions, and related dependencies from  into their respective modular files (e.g., project-related endpoints into ).
+    - **What will be achieved with this?** This will break down the 3500+ line  file, significantly improving code maintainability, organization, and scalability, making future development easier.
+    - **Status:** IN PROGRESS
+    - **Should Test frontend/backend/both after fix?** Backend
+    - **Blocked on something:** No.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **(P1) Investigate Progress Calculation Discrepancy:** The previous agent noted that the backend calculated a total project advance of 52.26% for the demo project, while the frontend displayed 28.0%. After fixing the selection bug, investigate why these values differ and ensure the frontend uses the backend's calculation as the source of truth.
-    *   **(P1) Full E2E Test of the 3-Phase System:** Once the selection bug is fixed, perform a complete end-to-end test. Create a new project with all three phases, add weekly progress for each, and verify that the dashboard and modals reflect all data correctly.
-    *   **(P1) Test AI Photo Analysis Feature:** The UI is integrated, but the full flow has not been tested. Upload a photo in the , trigger the analysis, and ensure the backend API is called and results are handled (even if just displaying a success/error message for now).
+    *   **(P1) Full E2E Test of AI Photo Analysis Feature:** The UI for this is integrated in the . The task is to perform a full end-to-end test by uploading a real construction site photo, triggering the analysis via the backend API (), and ensuring the results from Gemini Vision are correctly processed and displayed in the UI.
 
 *   **Future Tasks:**
-    *   **(P2) Complete Backend Refactoring:** The monolithic  still contains all API routes. It should be broken down into modular files within .
-    *   **(P2) Implement Email Notifications:** Implement the user's suggestion to send email notifications with project status summaries (e.g., when a project becomes delayed), using the existing Resend integration.
-    - **(P3) Clarify  File Requirement:** The original request for  files was never formally closed. Confirm with the user if this is still needed.
+    *   **(P2) Implement Flight Scheduling Form:** Build the form for scheduling drone flights as per the original product requirements. This should include fields for date, time, and project assignment. Upon submission, an email notification should be sent to relevant parties.
+    *   **(P3) Implement Client Role View Filtering:** The original requirements specified that users with the Client role should only see their assigned projects. This access control logic needs to be implemented in the backend API endpoints that fetch project data and tested by logging in as the client user ().
+    *   **(P3) Verify Project Completion Forecasting:** The logic to forecast project completion time for projects without a schedule was previously implemented. This feature should be formally tested and verified to ensure its accuracy.
 
 **Completed work in this session**
-- **Feature:** Fully implemented a multi-phase construction management system (Excavación, Cimentación, Edificación).
-- **Feature:** The project form now allows selecting active phases and setting quantitative goals for each.
-- **Feature:** The dashboard dynamically displays progress for each active phase and a total project progress percentage.
-- **Feature:** Implemented forecasting of project completion time for projects without a formal schedule.
-- **Feature:** Added inline editing for completed walls () in the weekly progress modal, completing the editable metrics feature.
-- **Feature:** Integrated the AI Photo Analysis UI into the weekly progress modal, making it accessible to users.
-- **Bugfix:** Confirmed that the project deletion functionality works correctly, resolving a user-reported issue.
-- **Bugfix:** Corrected the backend logic () and Pydantic models to accurately calculate and store progress for all activity types across multiple phases.
+- **Bugfix:** Resolved the critical project selection bug on the main dashboard.
+- **Feature:** Implemented AI-powered comparison of drone data vs. resident engineer's PDF reports, including a new UI modal () and a backend endpoint using Gemini.
+- **Feature:** Added automatic email alerts for critical discrepancies detected by the AI comparison.
+- **Feature:** Implemented a scheduled (and manually triggerable) weekly executive email report summarizing project progress and costs.
+- **Feature:** Created a comprehensive Métricas Históricas dashboard () with interactive charts and filters.
+- **Feature:** Added export-to-Excel and export-to-PDF functionality for the historical metrics data.
+- **Task:** Confirmed with the user that  file support is no longer needed; the existing  implementation is sufficient.
+- **Testing:** Successfully used the testing agent after each major feature implementation, ensuring high test coverage and no regressions.
 
 **Earlier issues found/mentioned but not fixed**
-- The monolithic  file remains a significant piece of technical debt. This is tracked as a future task.
+- The monolithic  file remains the primary piece of technical debt and is being tracked as the main In progress Task.
 
 **Known issue recurrence from previous fork**
 *   None.
@@ -78,82 +74,80 @@ A full-stack React/FastAPI application with JWT authentication and a multi-phase
 
 **Key Technical Concepts**
 - **Frontend:** React, TailwindCSS, Recharts, Axios, Three.js
-- **Backend:** FastAPI, Pydantic, Motor (MongoDB driver)
+- **Backend:** FastAPI, Pydantic, Motor, APScheduler (for scheduled tasks)
 - **Database:** MongoDB
-- **Core Logic:** Dynamic UI rendering based on project properties (). Calculation of composite progress metrics (total progress as an average of phase progresses).
+- **Integrations:** Gemini Vision (for AI analysis), Resend (for emails), ReportLab (PDF generation), Openpyxl (Excel generation)
 
 **key DB schema**
-- ** collection:**
-    - :  (e.g., )
-    - , , , 
-    - :  (total project progress percentage, calculated by backend)
-- ** collection:**
-    - , , , 
+- ****: Main project collection.
+- ****: Stores weekly progress data for each project.
+- ****: **New collection.** Stores the results of the AI-powered comparison between drone and resident reports, including the extracted data, the AI's analysis, and a flag () if a notification was triggered.
 
 **changes in tech stack**
-*   None.
+- **APScheduler:** Added to the backend to handle the scheduled weekly email report.
 
 **All files of reference**
-- : Major updates for multi-phase display. **Contains the critical selection bug.**
-- : Major updates for dynamic charts and editing of all metrics.
-- : Major updates for the new multi-phase project form.
-- : Updated to handle the new project form fields.
-- : Updated endpoints (, ) and models to handle all phases.
-- : Updated , ,  to include all progress metrics.
+- : Heavily modified to add all new features: AI comparison, alerts, scheduled reports, and data exports. Target for refactoring.
+- : Fixed selection bug and added routing for the new Métricas view.
+- : **New file.** Contains the UI for the historical metrics dashboard, including charts and export buttons.
+- : **New file.** The UI for uploading a resident's PDF report and viewing the side-by-side AI comparison.
+- : Modified to include the trigger button for the new AI comparison modal.
+- : Updated with Pydantic models for the new  data structure.
+- : Updated to reflect all completed features and pending tasks.
 
 **Areas that need refactoring**:
-- **/app/backend/server.py**: High priority. Routes should be split into smaller, domain-specific files in .
+- **/app/backend/server.py**: High priority. This monolithic file contains over 3500 lines of code. The refactoring process has been started but needs to be completed to improve maintainability.
 
 **key api endpoints**
-- : Updates weekly progress for any metric and triggers a recalculation of the total project progress.
-- : Creates a new project with the specified active phases and goals.
-- : Confirmed to be working.
+- : Uploads a resident engineer's report for AI analysis and comparison.
+- : Manually triggers the sending of the weekly executive summary email.
+- : Exports historical metrics data as an  file.
+- : Exports historical metrics data as a  file.
+- : Endpoint for the AI photo analysis feature (untested end-to-end).
 
 **Critical Info for New Agent**
-- **Fix the Project Selection Bug First:** Your immediate and highest priority is to fix the bug in  that prevents selecting projects. This is a blocker for all other verification and testing.
-- **Data Source of Truth:** The backend's calculation for  (total project progress) is the intended source of truth. After fixing the selection bug, ensure the frontend dashboard displays this value rather than calculating its own potentially inconsistent version.
-- **Phases vs. Activity Types:** The system uses  to drive the UI. The form groups these into Fases:
-    -  -> Excavación phase
-    -  -> Cimentación phase (covers  and )
-    -  -> Edificación phase (covers )
+- Your first in-progress task is the backend refactoring of . This is a significant task that requires careful execution to avoid breaking existing functionality. A full regression test using the backend testing agent is essential upon completion.
+- The user is very active and regularly adds new, complex features. Be prepared to plan and prioritize these requests alongside the existing technical debt and future tasks.
+- After completing the refactor, the next priority should be the end-to-end testing of the AI Photo Analysis feature, which is functionally complete but unverified.
 
 **documents and test reports created in this job**
 -  (updated)
 -  to 
-- 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (LATEST):** Confirmed the agent should create a demo project with all 3 phases active to test the new system.
-2.  **User:** Requested the full multi-phase system (Excavación, Cimentación, Edificación), including a form to select active phases, progress tracking for each, and a total project progress percentage.
-3.  **User:** Agreed to add editable fields for  (walls).
-4.  **User:** Asked for the ability to edit the number of completed piles and anchors in the weekly progress modal.
-5.  **User:** Agreed with the agent's plan to add the editable fields.
-6.  **User:** Reported that the project delete button was not working and requested that the progress calculation be dynamic to handle projects with only piles (no excavation). The agent subsequently fixed both issues.
-7.  **Agent:** Proposed creating a demo project with all 3 phases.
-8.  **User:** Agreed.
-9.  **Agent:** Completed the implementation and asked for confirmation.
-10. **User:** Provided a new set of complex requirements, which the agent successfully implemented in the last session.
+1.  **User (LATEST):** Instructed the agent to work on the pending tasks.
+2.  **User:** Approved the implementation of export to PDF/Excel for the metrics dashboard.
+3.  **User:** Approved the historical metrics dashboard and requested that the weekly report also include progress on piles, walls, and anchors.
+4.  **User:** Requested the creation of a historical metrics dashboard with interactive graphs.
+5.  **User:** Approved the addition of automatic email alerts for discrepancies and instructed the agent to continue with future tasks.
+6.  **User:** Approved the idea of a weekly summary report, requesting it be sent on Fridays and include fleet costs.
+7.  **User:** Proposed the new feature to compare drone progress vs. a resident's PDF report using AI.
+8.  **User:** Confirmed the requirements for the AI comparison feature (automatic, cumulative, use Emergent LLM Key).
+9.  **User:** Agreed with the agent's initial plan to fix the dashboard selection bug.
+10. **Agent:** (ask_human) Proposed a plan to fix the bug and tackle upcoming tasks.
 
 **Project Health Check:**
-- **Broken:** Yes. The main dashboard is unusable for viewing details of any project except the first one due to the selection bug.
-- **Mocked:** The AI photo analysis results display is still mocked; the full end-to-end user flow has not been tested.
+- **Broken:** No. The application is stable and the critical bug from the previous session was fixed.
+- **Mocked:** The AI photo analysis feature () is fully integrated into the UI, but its end-to-end functionality has not been verified with a real image upload and analysis.
 
 **3rd Party Integrations**
-- **Gemini Vision:** Integrated via  for AI photo analysis. Uses Emergent LLM Key.
-- **Resend:** For email notifications. Requires User API Key.
-- **OpenStreetMap (Nominatim):** For geocoding. No key required.
-- **Three.js:** Renders  models.
+- **Gemini Vision:** Used for AI analysis of PDFs and photos. Uses Emergent LLM Key.
+- **Resend:** Used for sending email alerts and reports. Requires User API Key.
+- **OpenStreetMap (Nominatim):** Used for geocoding project locations. No key required.
+- **Three.js:** Used for rendering 3D  models.
+- **APScheduler:** Used for scheduling backend jobs (weekly reports).
+- **ReportLab & Openpyxl:** Used for server-side generation of PDF and Excel files.
 
 **Testing status**
-- **Testing agent used after significant changes:** YES
+- **Testing agent used after significant changes:** YES. The testing agent was used successfully after every major feature implementation, as documented in test reports  through .
 - **Troubleshoot agent used after agent stuck in loop:** NO
-- **Test files created:** []
-- **Known regressions:** The project selection functionality on the main dashboard () is broken.
+- **Test files created:** None, but multiple test reports were generated in .
+- **Known regressions:** None.
 
 **Credentials to test flow:**
 - **Admin:**  / 
 - **Client:**  / 
 
 **What agent forgot to execute**
-- The agent identified the critical project selection bug on the dashboard but finished the session before fixing it.
-- The agent noticed a discrepancy between the frontend's and backend's calculation of Total Project Progress but did not investigate or resolve it.</analysis>
+- The agent started the backend refactoring of  but postponed it, leaving it incomplete.
+- The agent built and integrated the UI for the AI Photo Analysis feature but did not perform a full end-to-end test to verify that an uploaded image is correctly analyzed and the results are displayed.</analysis>
