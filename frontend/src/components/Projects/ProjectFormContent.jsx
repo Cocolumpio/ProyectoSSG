@@ -374,29 +374,54 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
         </div>
       </div>
 
-      {/* Avance calculado automáticamente */}
+      {/* Avance calculado automáticamente - Por fase */}
       <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-3">
           <div>
-            <h4 className="font-medium text-blue-900 mb-1">📊 Avance del Proyecto</h4>
+            <h4 className="font-medium text-blue-900">📊 Avance del Proyecto</h4>
             <p className="text-xs text-blue-700">
-              El porcentaje se calcula automáticamente: (Volumen excavado / Volumen planeado) × 100
+              El porcentaje se calcula automáticamente basado en cada fase activa
             </p>
           </div>
           <div className="text-right">
             <span className="text-3xl font-bold text-blue-600">{formData.avance_actual || 0}%</span>
+            <p className="text-xs text-blue-500">Total</p>
           </div>
         </div>
-        {formData.volumen_total_planeado > 0 && (
-          <div className="mt-3">
-            <div className="w-full bg-blue-200 rounded-full h-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full transition-all" 
-                style={{ width: `${Math.min(formData.avance_actual || 0, 100)}%` }} 
-              />
+        
+        {/* Barras de progreso por fase */}
+        <div className="space-y-2">
+          {formData.fases?.excavacion && formData.volumen_total_planeado > 0 && (
+            <div className="flex items-center gap-3">
+              <Shovel className="h-4 w-4 text-amber-600" />
+              <span className="text-xs text-gray-600 w-20">Excavación</span>
+              <div className="flex-1 bg-amber-200 rounded-full h-2">
+                <div className="bg-amber-600 h-2 rounded-full transition-all" style={{ width: '0%' }} />
+              </div>
+              <span className="text-xs text-amber-700 font-medium w-10">0%</span>
             </div>
-          </div>
-        )}
+          )}
+          {formData.fases?.cimentacion && formData.pilas_planeadas > 0 && (
+            <div className="flex items-center gap-3">
+              <Columns3 className="h-4 w-4 text-blue-600" />
+              <span className="text-xs text-gray-600 w-20">Cimentación</span>
+              <div className="flex-1 bg-blue-200 rounded-full h-2">
+                <div className="bg-blue-600 h-2 rounded-full transition-all" style={{ width: '0%' }} />
+              </div>
+              <span className="text-xs text-blue-700 font-medium w-10">0%</span>
+            </div>
+          )}
+          {formData.fases?.edificacion && formData.muros_planeados > 0 && (
+            <div className="flex items-center gap-3">
+              <Building2 className="h-4 w-4 text-purple-600" />
+              <span className="text-xs text-gray-600 w-20">Edificación</span>
+              <div className="flex-1 bg-purple-200 rounded-full h-2">
+                <div className="bg-purple-600 h-2 rounded-full transition-all" style={{ width: '0%' }} />
+              </div>
+              <span className="text-xs text-purple-700 font-medium w-10">0%</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Fleet Configuration Section */}
