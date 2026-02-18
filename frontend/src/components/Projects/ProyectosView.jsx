@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Building2, Plus, Eye, Trash2, Pencil, Layers, X, FileText, Users, UserPlus, FileSpreadsheet } from 'lucide-react';
+import { Building2, Plus, Eye, Trash2, Pencil, Layers, X, FileText, Users, UserPlus, FileSpreadsheet, CalendarClock } from 'lucide-react';
 import { ProjectFormContent } from './ProjectFormContent';
 import { AvancesSemanalesModal } from './AvancesSemanalesModal';
 import { ImportarCronograma } from './ImportarCronograma';
+import { CronogramaProyectoModal } from './CronogramaProyectoModal';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
