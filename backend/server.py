@@ -294,6 +294,14 @@ class Proyecto(BaseModel):
     # Configuración de flotilla de camiones
     capacidad_camion: float = 25.0  # m³ por camión (default 25 m³)
     costo_m3: float = 150.0  # Costo por metro cúbico en MXN (default $150)
+    # Parámetros del terreno
+    area_terreno: float = 0.0  # m²
+    espacio_maniobra: float = 0.0  # m²
+    distancia_pilas: float = 3.0  # metros
+    # Catálogo de maquinaria
+    catalogo_maquinaria: List[dict] = []
+    analisis_maquinaria_ia: Optional[dict] = None
+    parametros_proyecto: Optional[dict] = None
     clientes_asignados: List[str] = []  # Lista de IDs de clientes asignados
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
