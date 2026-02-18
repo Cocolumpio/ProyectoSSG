@@ -32,6 +32,9 @@ from reportlab.graphics.shapes import Drawing, Rect
 from reportlab.graphics.charts.barcharts import VerticalBarChart
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 
+# Excel processing
+from openpyxl import load_workbook, Workbook
+
 # Import shared configuration
 from core.config import (
     get_db, get_client, get_database, UPLOAD_DIR, ROOT_DIR,
