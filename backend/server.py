@@ -3047,6 +3047,7 @@ Responde en formato JSON con esta estructura:
         )
         
         # Parsear respuesta JSON
+        import json as json_lib
         response_text = response.strip()
         if response_text.startswith("```json"):
             response_text = response_text[7:]
@@ -3055,8 +3056,7 @@ Responde en formato JSON con esta estructura:
         if response_text.endswith("```"):
             response_text = response_text[:-3]
         
-        import json
-        resultado_ia = json.loads(response_text.strip())
+        resultado_ia = json_lib.loads(response_text.strip())
         
         return {
             "success": True,
@@ -3072,7 +3072,7 @@ Responde en formato JSON con esta estructura:
             "maquinas_raw": maquinas_disponibles,
             "analisis_ia": resultado_ia
         }
-    except json.JSONDecodeError:
+    except json_lib.JSONDecodeError:
         # Si no puede parsear JSON, devolver texto plano
         return {
             "success": True,
