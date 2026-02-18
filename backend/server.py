@@ -2847,6 +2847,7 @@ async def analizar_catalogo_maquinaria(
     2. Buscar especificaciones técnicas
     3. Proponer distribución óptima para el proyecto
     """
+    import json as json_module
     from emergentintegrations.llm.chat import LlmChat, UserMessage
     
     if not file.filename.endswith(('.xlsx', '.xls')):
