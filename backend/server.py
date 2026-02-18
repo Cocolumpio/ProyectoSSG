@@ -3065,11 +3065,20 @@ Responde en formato JSON con esta estructura:
 """
     
     try:
-        llm = LlmChat(api_key=EMERGENT_LLM_KEY)
-        response = await llm.send_async(
-            prompt=prompt,
-            model="gemini-2.0-flash"
-        )
+        from emergentintegrations.llm.chat import UserMessage
+        
+        # Crear chat con Gemini
+        llm = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"catalogo-maquinaria-{uuid.uuid4()}",
+            system_message="Eres un experto en maquinaria de construcción y planificación de obras. Siempre respondes en formato JSON válido."
+        ).with_model("gemini", "gemini-2.0-flash")
+        
+        # Enviar mensaje
+        user_message = UserMessage(text=prompt)
+        response = await llm.send_message(user_message)
+        
+        logging.info(f"Respuesta IA recibida: {len(response)} caracteres")
         
         # Parsear respuesta JSON
         response_text = response.strip()
@@ -3080,7 +3089,13 @@ Responde en formato JSON con esta estructura:
         if response_text.endswith("```"):
             response_text = response_text[:-3]
         
-        resultado_ia = json_module.loads(response_text.strip())
+        # Intentar extraer JSON de la respuesta
+        import re
+        json_match = re.search(r'\{[\s\S]*\}', response_text)
+        if json_match:
+            resultado_ia = json_module.loads(json_match.group())
+        else:
+            resultado_ia = json_module.loads(response_text.strip())
         
         return {
             "success": True,
@@ -3096,7 +3111,8 @@ Responde en formato JSON con esta estructura:
             "maquinas_raw": maquinas_disponibles,
             "analisis_ia": resultado_ia
         }
-    except json_module.JSONDecodeError:
+    except json_module.JSONDecodeError as e:
+        logging.warning(f"Error parseando JSON de IA: {e}")
         # Si no puede parsear JSON, devolver texto plano
         return {
             "success": True,
@@ -3110,11 +3126,13 @@ Responde en formato JSON con esta estructura:
                 "manipuladores": len(manipuladores)
             },
             "maquinas_raw": maquinas_disponibles,
-            "analisis_ia_texto": response if 'response' in dir() else "Error procesando respuesta de IA",
-            "mensaje": "Catálogo procesado. El análisis de IA no pudo ser parseado como JSON pero el texto está disponible."
+            "analisis_ia_texto": response if 'response' in locals() else "Error procesando respuesta de IA",
+            "mensaje": "Catálogo procesado. El análisis de IA está disponible como texto."
         }
     except Exception as e:
         logging.error(f"Error analizando catálogo con IA: {e}")
+        import traceback
+        traceback.print_exc()
         # Devolver éxito parcial - tenemos las máquinas pero no el análisis IA
         return {
             "success": True,
