@@ -2,43 +2,41 @@
 
 ## Estado Actual (Actualizado: 2025-12-18)
 - **Sistema Funcional**: Dashboard multi-fase completamente operativo
-- **Refactorización**: Backend modularizado exitosamente
-- **Testing**: 100% de pruebas pasadas (39 tests totales)
+- **Nuevas Funcionalidades**: Catálogo de Maquinaria con IA + Formulario de avance simplificado
+- **Testing**: 100% de pruebas pasadas (14 tests nuevos)
 
-## Refactorización Completada (2025-12-18)
+## Funcionalidades Implementadas Hoy (2025-12-18)
 
-### Cambios Realizados
-El archivo monolítico `server.py` (3534 líneas) fue refactorizado:
+### 1. Catálogo de Maquinaria con Análisis IA
+Nueva funcionalidad en el formulario de "Nuevo Proyecto" que permite:
+- **Subir Excel** con el catálogo de maquinaria disponible
+- **Parámetros del proyecto**: Área del terreno, espacio de maniobra, distancia entre pilas
+- **Análisis con Gemini AI** que:
+  - Extrae máquinas del Excel (Excavadoras, Perforadoras, Grúas, etc.)
+  - Busca especificaciones técnicas (dimensiones, rendimiento)
+  - **Propone plan de ejecución óptimo por fase:**
+    - Fase 1: Excavación - qué excavadoras usar
+    - Fase 2: Perforación de Pilas - qué perforadoras usar
+    - Fase 3: Anclas - qué perforadoras de anclas usar
+  - Estima tiempos y rendimientos
+  - Considera distribución espacial y seguridad
 
-1. **`/app/backend/core/config.py`** (151 líneas)
-   - Configuración central de la aplicación
-   - Conexión a MongoDB (singleton)
-   - Configuración JWT
-   - Funciones de autenticación: `verify_password`, `get_password_hash`, `create_access_token`
-   - Dependencias: `get_current_user`, `get_current_admin`, `get_optional_user`
-   - Variables de entorno: `RESEND_API_KEY`, `ADMIN_EMAIL`, `EMERGENT_LLM_KEY`
+**Endpoints:**
+- `POST /api/proyectos/analizar-catalogo-maquinaria` - Analiza Excel con IA
+- `POST /api/proyectos/{id}/guardar-catalogo-maquinaria` - Guarda catálogo
+- `GET /api/proyectos/{id}/catalogo-maquinaria` - Obtiene catálogo guardado
 
-2. **`/app/backend/services/helpers.py`** (186 líneas)
-   - `recalcular_avance_proyecto()`: Recalcula avance basado en fases activas
-   - `generar_google_calendar_link()`: Genera links para Google Calendar
-   - `obtener_metricas_proyecto()`: Obtiene métricas acumuladas
+**Formato del Excel esperado:**
+| TIPO DE MAQUINA | MARCA | MODELO | ESTATUS |
+|-----------------|-------|--------|---------|
+| EXCAVADORA | CAT | 320 | OPTIMA |
+| PERFORADORA | XCMG | XR168E | SATISFACTORIO |
+| GRUA | GROVE | RT75 | DISPONIBLE |
 
-3. **`/app/backend/services/email.py`** (293 líneas)
-   - `enviar_alerta_discrepancia()`: Alertas de discrepancias >15%
-   - `enviar_notificacion_solicitud_vuelo()`: Notificación de nuevas solicitudes
-   - `enviar_actualizacion_solicitud()`: Notificación al cliente de cambios de estado
-
-4. **`/app/backend/server.py`** (3254 líneas - reducido 280 líneas)
-   - Ahora importa funciones compartidas de los módulos
-   - Mantiene toda la lógica de endpoints
-   - Código más limpio y mantenible
-
-### Verificación de Refactorización
-- ✅ Todas las funciones de auth funcionando desde `core/config.py`
-- ✅ `recalcular_avance_proyecto` funciona desde `services/helpers.py`
-- ✅ Servicios de email importados correctamente
-- ✅ 39 tests de backend pasando (21 + 18)
-- ✅ Frontend funciona correctamente
+### 2. Formulario de Avance Semanal Simplificado
+- **Removido**: Campo "URL del Modelo 3D (Pix4D)"
+- **Agregado**: Mensaje informativo sobre subir archivo .ply después de crear el avance
+- El modelo 3D ahora se sube localmente desde la vista de detalle del avance
 
 ## Sistema de Fases de Construcción
 
@@ -49,53 +47,38 @@ El archivo monolítico `server.py` (3534 líneas) fue refactorizado:
 
 ### Cálculo de Avance
 - Avance TOTAL = promedio de todas las fases activas
-- Ejemplo: Torre Corporativa Demo
-  - Excavación: 84% (21,000/25,000 m³)
-  - Cimentación: 69% (promedio pilas+anclas)
-  - Edificación: 11% (5/45 muros)
-  - **TOTAL: 52.3%**
+- Ejemplo: Torre Corporativa Demo = 52.26%
 
-## Funcionalidades Implementadas
+## Funcionalidades Existentes
 
 ### Dashboard Principal
 - Mapa interactivo con marcadores de proyectos
-- KPIs: Proyectos activos, Volumen excavado, Avance promedio
-- Lista de proyectos con barras de progreso por fase
+- KPIs: 6 Proyectos, 31.3% Avance, 72,149 m³ Excavación
 
 ### Gestión de Proyectos
 - CRUD completo de proyectos
 - Configuración de fases activas
 - Metas por fase (m³, pilas, anclas, muros)
-- Asignación de clientes
+- **NUEVO**: Catálogo de maquinaria con IA
 
 ### Avances Semanales
 - Registro semanal por proyecto
-- Modelos 3D (archivos .ply)
+- **Modelos 3D (.ply)** - Se suben después de crear el avance
 - Fotos del vuelo
 - Métricas de excavación, pilas, anclas, muros
 
 ### Comparación de Avances con IA
 - Subir PDF del residente
 - Análisis automático con Gemini
-- Comparación lado a lado
 - Alertas automáticas por discrepancias >15%
 
 ### Métricas Históricas
 - Gráficas de evolución por semana
-- Comparativa entre proyectos
 - Exportación a Excel y PDF
 
 ### Reporte Semanal Automático
 - Envío cada viernes 18:00
-- KPIs: Proyectos, Volumen, Pilas, Anclas, Muros
-- Desglose de costos de flotilla
-- Envío manual disponible para admin
-
-### Solicitudes de Vuelo
-- Formulario para clientes
-- Notificación por email al admin
-- Link de Google Calendar
-- Estados: pendiente, confirmado, completado, cancelado
+- KPIs de todos los proyectos
 
 ## Credenciales de Prueba
 - **Admin:** admin@dron.mx / admin123
@@ -107,10 +90,27 @@ El archivo monolítico `server.py` (3534 líneas) fue refactorizado:
 - **IA:** Gemini Vision via emergentintegrations
 - **Email:** Resend
 
-## Integraciones
-- **Gemini Vision**: Análisis de PDFs y fotos
-- **Resend**: Notificaciones por email
-- **OpenStreetMap**: Geocodificación de ubicaciones
+## Arquitectura del Código
+```
+/app/backend/
+├── core/
+│   └── config.py              # Configuración central y auth
+├── models/
+│   └── schemas.py             # Modelos Pydantic
+├── services/
+│   ├── email.py               # Servicios de email
+│   ├── helpers.py             # Funciones auxiliares
+│   └── cronograma_ai.py       # Análisis de cronogramas
+├── uploads/
+└── server.py                  # API principal (~3300 líneas)
+
+/app/frontend/src/components/Projects/
+├── CatalogoMaquinariaSection.jsx  # NUEVO - Sección de catálogo con IA
+├── ProjectFormContent.jsx         # Formulario de proyecto (actualizado)
+├── AvancesSemanalesModal.jsx      # Modal de avances (actualizado)
+├── PointCloudViewer.jsx           # Visor de modelos .ply
+└── ComparacionAvanceModal.jsx     # Comparación dron vs residente
+```
 
 ## Tareas Completadas
 - ✅ Sistema de autenticación JWT
@@ -118,45 +118,25 @@ El archivo monolítico `server.py` (3534 líneas) fue refactorizado:
 - ✅ Avances semanales con modelos 3D
 - ✅ Comparación de avances Dron vs Residente con IA
 - ✅ Alertas automáticas por discrepancias
-- ✅ Reporte semanal automático (viernes 18:00)
+- ✅ Reporte semanal automático
 - ✅ Dashboard de métricas históricas
 - ✅ Exportación a Excel y PDF
-- ✅ **Refactorización del backend** (2025-12-18)
+- ✅ Refactorización del backend
+- ✅ **Catálogo de Maquinaria con análisis IA** (2025-12-18)
+- ✅ **Simplificación formulario de avance** (2025-12-18)
 
 ## Tareas Pendientes
 
 ### Próximas (P1)
-- **Test E2E del Análisis de Fotos con IA**: La UI está integrada en el modal de Avances Semanales pero falta verificar end-to-end con una imagen real
+- **Test E2E del Análisis de Fotos con IA**: La UI está integrada pero falta verificar con imagen real
 
 ### Futuras (P2-P3)
 - **Formulario de Programación de Vuelos**: Crear formulario completo para agendar vuelos
-- **Filtrado por Rol de Cliente**: Usuarios "Cliente" solo deben ver sus proyectos asignados
+- **Filtrado por Rol de Cliente**: Usuarios "Cliente" solo ven sus proyectos asignados
 - **Verificar Pronóstico de Finalización**: Validar lógica de estimación de tiempo
 
-## Arquitectura del Código
-```
-/app/backend/
-├── core/
-│   └── config.py          # Configuración central y auth
-├── models/
-│   └── schemas.py         # Modelos Pydantic
-├── services/
-│   ├── email.py           # Servicios de email
-│   ├── helpers.py         # Funciones auxiliares
-│   ├── cronograma_ai.py   # Análisis de cronogramas con IA
-│   └── database.py        # Conexión a DB
-├── routes/
-│   ├── auth.py            # (preparado para futura modularización)
-│   ├── proyectos.py       # (preparado para futura modularización)
-│   ├── estadisticas.py    # (preparado para futura modularización)
-│   └── vuelos.py          # (preparado para futura modularización)
-├── tests/
-│   └── test_*.py          # Tests automatizados
-└── server.py              # API principal (3254 líneas)
-```
-
 ## Notas Técnicas
-- La comparación de avances usa datos ACUMULADOS del proyecto
-- El nivel de confianza (ALTA/MEDIA/BAJA) indica seguridad de extracción
+- El catálogo de maquinaria usa Gemini AI para analizar y proponer distribución
+- El análisis considera: dimensiones de máquinas, rendimiento, espacio de maniobra
+- Los modelos .ply se suben localmente después de crear el avance semanal
 - PDFs se guardan en `/app/backend/uploads/reportes_residente/`
-- Archivos .laz descartados, se usa .ply como estándar
