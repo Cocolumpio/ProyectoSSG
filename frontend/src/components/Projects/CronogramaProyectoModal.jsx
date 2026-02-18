@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Upload, FileSpreadsheet, Check, AlertCircle, Loader2, Calendar, Layers, RefreshCw, X, Shovel, Anchor, Columns3, Building2, Clock, Download } from 'lucide-react';
+import { Upload, FileSpreadsheet, Check, AlertCircle, Loader2, Calendar, Layers, RefreshCw, X, Shovel, Anchor, Columns3, Building2, Clock, Download, TrendingDown, TrendingUp, Mail, AlertTriangle } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -12,6 +12,8 @@ export function CronogramaProyectoModal({ proyecto, onClose, onSuccess }) {
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
   const [downloadingTemplate, setDownloadingTemplate] = useState(false);
+  const [analizandoDesviacion, setAnalizandoDesviacion] = useState(false);
+  const [analisisDesviacion, setAnalisisDesviacion] = useState(null);
 
   useEffect(() => {
     if (proyecto?.id) {
