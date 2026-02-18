@@ -82,8 +82,10 @@ export function CatalogoMaquinariaSection({ formData, setFormData, onShowSuccess
         
         if (response.data.analisis_ia) {
           setAnalisisIA(response.data.analisis_ia);
+          setShowAnalisis(true); // Expandir automáticamente el análisis
         } else if (response.data.analisis_ia_texto) {
           setAnalisisIA({ resumen_ejecutivo: response.data.analisis_ia_texto });
+          setShowAnalisis(true);
         }
 
         // Guardar en formData
