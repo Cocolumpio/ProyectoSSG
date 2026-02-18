@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Upload, FileSpreadsheet, Check, AlertCircle, Loader2, Calendar, Layers, RefreshCw, X, Shovel, Anchor, Columns3, Building2, Clock } from 'lucide-react';
+import { Upload, FileSpreadsheet, Check, AlertCircle, Loader2, Calendar, Layers, RefreshCw, X, Shovel, Anchor, Columns3, Building2, Clock, Download } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -11,12 +11,35 @@ export function CronogramaProyectoModal({ proyecto, onClose, onSuccess }) {
   const [cronogramaInfo, setCronogramaInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
 
   useEffect(() => {
     if (proyecto?.id) {
       fetchCronogramaInfo();
     }
   }, [proyecto?.id]);
+
+  const handleDownloadTemplate = async () => {
+    setDownloadingTemplate(true);
+    try {
+      const response = await axios.get(`${API}/plantilla-cronograma`, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'plantilla_cronograma_dron.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error descargando plantilla:', err);
+      setError('Error al descargar la plantilla');
+    } finally {
+      setDownloadingTemplate(false);
+    }
+  };
 
   const fetchCronogramaInfo = async () => {
     try {
