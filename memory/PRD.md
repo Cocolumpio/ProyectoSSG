@@ -131,6 +131,38 @@ GET /api/dashboard/comparaciones-resumen
 - Frontend: 5/5 tests passed
 - Test file: `/app/backend/tests/test_comparacion_planes.py`
 
+## Programa de Obra / Cronograma (Nueva Feature - 2025-12-18)
+
+### Descripción
+Funcionalidad para subir y actualizar el programa de obra (cronograma Excel) a proyectos existentes desde la sección de proyectos.
+
+### Endpoints
+```
+GET /api/proyectos/{proyecto_id}/cronograma
+  - Obtiene información del cronograma cargado
+  - Devuelve: tiene_cronograma, archivo, fecha_carga, resumen, frentes
+
+POST /api/proyectos/{proyecto_id}/actualizar-cronograma
+  - Sube/actualiza el cronograma Excel del proyecto
+  - Parsea el archivo, actualiza métricas del proyecto
+  - Recrea los frentes de trabajo
+
+GET /api/plantilla-cronograma
+  - Descarga plantilla Excel de ejemplo
+```
+
+### Componente Frontend
+- `CronogramaProyectoModal.jsx` integrado en `ProyectosView.jsx`
+- Botón con icono CalendarClock en cada tarjeta de proyecto
+- Modal muestra estado actual del cronograma o permite subir nuevo
+- Visualización de frentes y actividades parseadas
+- Indicador "Programa de obra cargado" en tarjetas de proyecto
+
+### Testing
+- Backend: 9/9 tests passed
+- Frontend: 7/7 tests passed
+- Test file: `/app/backend/tests/test_cronograma_proyecto.py`
+
 ## Tareas Pendientes
 
 ### Próximas (P1)
