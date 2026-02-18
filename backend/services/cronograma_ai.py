@@ -314,7 +314,7 @@ Responde EXACTAMENTE en este formato JSON:
                 api_key=EMERGENT_LLM_KEY,
                 session_id=f"analisis-foto-{datetime.now().strftime('%Y%m%d%H%M%S')}",
                 system_message="Eres un experto en análisis de imágenes de construcción civil."
-            )
+            ).with_model("gemini", "gemini-2.0-flash")
             
             # Preparar imagen como FileContentWithMimeType usando la ruta del archivo temporal
             image_file = FileContentWithMimeType(
@@ -322,12 +322,15 @@ Responde EXACTAMENTE en este formato JSON:
                 file_path=temp_path
             )
             
-            # Enviar mensaje con imagen
-            response = await llm.send_message_async(
-                message=prompt,
-                model="gemini-2.0-flash",
+            # Crear mensaje con texto e imagen
+            from emergentintegrations.llm.chat import UserMessage
+            user_message = UserMessage(
+                text=prompt,
                 file_contents=[image_file]
             )
+            
+            # Enviar mensaje
+            response = await llm.send_message(user_message)
             
             # Parsear respuesta JSON
             import json
