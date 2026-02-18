@@ -371,6 +371,14 @@ class ProyectoUpdate(BaseModel):
     volumetria: Optional[Volumetria] = None
     capacidad_camion: Optional[float] = None
     costo_m3: Optional[float] = None
+    # Parámetros del terreno
+    area_terreno: Optional[float] = None
+    espacio_maniobra: Optional[float] = None
+    distancia_pilas: Optional[float] = None
+    # Catálogo de maquinaria
+    catalogo_maquinaria: Optional[List[dict]] = None
+    analisis_maquinaria_ia: Optional[dict] = None
+    parametros_proyecto: Optional[dict] = None
     clientes_asignados: Optional[List[str]] = None
 
 # Modelo para solicitud de vuelo programado
