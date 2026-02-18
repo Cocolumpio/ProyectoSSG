@@ -38,7 +38,6 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
   const [formData, setFormData] = useState({
     semana: 1,
     fecha: '',
-    pix4d_url: '',
     descripcion: '',
     volumen_excavacion: 0
   });
