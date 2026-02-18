@@ -2831,6 +2831,125 @@ async def crear_proyecto_desde_cronograma(data: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.post("/proyectos/{proyecto_id}/actualizar-cronograma")
+async def actualizar_cronograma_proyecto(proyecto_id: str, file: UploadFile = File(...)):
+    """
+    Actualiza el cronograma de un proyecto existente desde un archivo Excel.
+    Permite subir o actualizar el programa de obra.
+    """
+    from services.cronograma_ai import parse_excel_cronograma
+    
+    # Verificar que el proyecto existe
+    proyecto = await db.proyectos.find_one({"id": proyecto_id}, {"_id": 0})
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    # Validar tipo de archivo
+    if not file.filename.lower().endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="Solo se aceptan archivos Excel (.xlsx, .xls)")
+    
+    try:
+        content = await file.read()
+        
+        # Parsear cronograma
+        resultado = parse_excel_cronograma(content)
+        
+        if resultado.get("error"):
+            raise HTTPException(status_code=400, detail=resultado["error"])
+        
+        resumen = resultado.get("resumen", {})
+        frentes_data = resultado.get("frentes", [])
+        
+        # Actualizar datos del proyecto con el nuevo cronograma
+        update_data = {
+            "cronograma_archivo": file.filename,
+            "cronograma_fecha_carga": datetime.now(timezone.utc).isoformat(),
+            "actividades_tipo": resumen.get("tipos_actividades", proyecto.get("actividades_tipo", [])),
+            "semanas_planeadas": resumen.get("semanas_estimadas", proyecto.get("semanas_planeadas", 0)),
+            "semanas_excavacion": resumen.get("semanas_excavacion", 0),
+            "semanas_pilas": resumen.get("semanas_pilas", 0),
+            "semanas_muros": resumen.get("semanas_muros", 0),
+            "cronograma_resumen": resumen,
+            "updated_at": datetime.now(timezone.utc)
+        }
+        
+        # Actualizar métricas planeadas si vienen en el cronograma
+        if resumen.get("total_pilas", 0) > 0:
+            update_data["pilas_planeadas"] = resumen["total_pilas"]
+        if resumen.get("total_anclas", 0) > 0:
+            update_data["anclas_planeadas"] = resumen["total_anclas"]
+        if resumen.get("total_muros", 0) > 0:
+            update_data["muros_planeados"] = resumen["total_muros"]
+        if resumen.get("total_excavacion", 0) > 0:
+            update_data["volumen_total_planeado"] = resumen["total_excavacion"]
+        
+        # Actualizar fechas si vienen en el cronograma y tienen sentido
+        if resumen.get("fecha_inicio"):
+            update_data["fecha_inicio"] = resumen["fecha_inicio"]
+        if resumen.get("fecha_fin"):
+            update_data["fecha_fin_planeada"] = resumen["fecha_fin"]
+        
+        await db.proyectos.update_one({"id": proyecto_id}, {"$set": update_data})
+        
+        # Eliminar frentes anteriores y crear nuevos
+        await db.frentes.delete_many({"proyecto_id": proyecto_id})
+        
+        for idx, frente_data in enumerate(frentes_data):
+            frente = {
+                "id": str(uuid.uuid4()),
+                "proyecto_id": proyecto_id,
+                "nombre": frente_data.get("nombre", f"Frente {idx + 1}"),
+                "descripcion": frente_data.get("descripcion", ""),
+                "actividades": frente_data.get("actividades", []),
+                "orden": idx + 1,
+                "created_at": datetime.now(timezone.utc)
+            }
+            await db.frentes.insert_one(frente)
+        
+        return {
+            "success": True,
+            "mensaje": f"Cronograma actualizado: {len(frentes_data)} frentes, {resumen.get('semanas_estimadas', 0)} semanas",
+            "resumen": resumen,
+            "frentes_creados": len(frentes_data)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error actualizando cronograma: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error procesando archivo: {str(e)}")
+
+
+@api_router.get("/proyectos/{proyecto_id}/cronograma")
+async def obtener_cronograma_proyecto(proyecto_id: str):
+    """Obtiene información del cronograma cargado para un proyecto"""
+    proyecto = await db.proyectos.find_one(
+        {"id": proyecto_id}, 
+        {"_id": 0, "cronograma_archivo": 1, "cronograma_fecha_carga": 1, "cronograma_resumen": 1, 
+         "semanas_planeadas": 1, "fecha_inicio": 1, "fecha_fin_planeada": 1, "nombre": 1}
+    )
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    # Obtener frentes del proyecto
+    frentes = await db.frentes.find({"proyecto_id": proyecto_id}, {"_id": 0}).to_list(100)
+    frentes = sorted(frentes, key=lambda x: x.get("orden", 0))
+    
+    return {
+        "proyecto_nombre": proyecto.get("nombre", ""),
+        "tiene_cronograma": bool(proyecto.get("cronograma_archivo")),
+        "cronograma_archivo": proyecto.get("cronograma_archivo"),
+        "cronograma_fecha_carga": proyecto.get("cronograma_fecha_carga"),
+        "cronograma_resumen": proyecto.get("cronograma_resumen"),
+        "semanas_planeadas": proyecto.get("semanas_planeadas", 0),
+        "fecha_inicio": proyecto.get("fecha_inicio"),
+        "fecha_fin_planeada": proyecto.get("fecha_fin_planeada"),
+        "frentes": frentes
+    }
+
+
 @api_router.get("/proyectos/{proyecto_id}/frentes")
 async def obtener_frentes(proyecto_id: str):
     """Obtiene todos los frentes de un proyecto"""
