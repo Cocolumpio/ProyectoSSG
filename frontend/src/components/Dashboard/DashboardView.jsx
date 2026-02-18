@@ -663,6 +663,30 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                 />
               </div>
             )}
+
+            {/* Botón para ver Comparación de Planes */}
+            {selectedProyecto?.analisis_maquinaria_ia && (
+              <div className="mt-6">
+                <button
+                  onClick={() => setShowComparacion(!showComparacion)}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md"
+                  data-testid="btn-comparar-planes"
+                >
+                  <GitCompare className="h-5 w-5" />
+                  {showComparacion ? 'Ocultar Comparación de Planes' : 'Ver Comparación: Tu Plan vs Plan IA'}
+                </button>
+              </div>
+            )}
+
+            {/* Comparación de Planes IA vs Usuario */}
+            {showComparacion && selectedProyecto && (
+              <div className="mt-6">
+                <ComparacionPlanesView 
+                  proyectoId={selectedProyecto.id}
+                  proyectoNombre={selectedProyecto.nombre}
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
