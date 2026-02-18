@@ -43,6 +43,22 @@ export function CronogramaProyectoModal({ proyecto, onClose, onSuccess }) {
     }
   };
 
+  const handleAnalizarDesviacion = async () => {
+    setAnalizandoDesviacion(true);
+    setError(null);
+    try {
+      const response = await axios.post(`${API}/proyectos/${proyecto.id}/analizar-desviacion`);
+      setAnalisisDesviacion(response.data);
+      if (response.data.alerta_enviada) {
+        onSuccess && onSuccess('Análisis completado y alerta enviada por email');
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Error al analizar desviación');
+    } finally {
+      setAnalizandoDesviacion(false);
+    }
+  };
+
   const fetchCronogramaInfo = async () => {
     try {
       setLoading(true);
