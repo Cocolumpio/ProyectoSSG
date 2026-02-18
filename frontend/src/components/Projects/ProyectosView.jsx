@@ -425,6 +425,17 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
                   >
                     <Users className="h-4 w-4" />
                   </button>
+                  <button 
+                    onClick={() => {
+                      setSelectedProjectForCronograma(proyecto);
+                      setShowCronogramaModal(true);
+                    }} 
+                    className="p-1.5 sm:p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" 
+                    title="Programa de Obra"
+                    data-testid={`cronograma-proyecto-${proyecto.id}`}
+                  >
+                    <CalendarClock className="h-4 w-4" />
+                  </button>
                   <button onClick={() => handleEditClick(proyecto)} className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Editar Proyecto" data-testid={`edit-proyecto-${proyecto.id}`}>
                     <Pencil className="h-4 w-4" />
                   </button>
