@@ -8,6 +8,7 @@ export function PointCloudViewer({ modelUrl, onError }) {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [pointCount, setPointCount] = useState(0);
+  const [loadingMessage, setLoadingMessage] = useState('Iniciando carga...');
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
   const animationRef = useRef(null);
@@ -63,7 +64,9 @@ export function PointCloudViewer({ modelUrl, onError }) {
     
     let lastProgress = 0;
     let stuckCounter = 0;
-    const STUCK_THRESHOLD = 15; // 15 seconds without progress
+    const STUCK_THRESHOLD = 60; // 60 seconds for large files
+    
+    setLoadingMessage('Conectando al servidor...');
     
     timeoutRef.current = setInterval(() => {
       if (progressRef.current === lastProgress && progressRef.current < 100) {
@@ -72,7 +75,7 @@ export function PointCloudViewer({ modelUrl, onError }) {
           if (timeoutRef.current) clearInterval(timeoutRef.current);
           console.warn('Model loading stalled, triggering error callback');
           setLoading(false);
-          if (onError) onError('Timeout: El modelo es demasiado grande');
+          if (onError) onError('Timeout: El modelo es demasiado grande o hay problemas de conexión');
         }
       } else {
         stuckCounter = 0;
@@ -84,6 +87,8 @@ export function PointCloudViewer({ modelUrl, onError }) {
       fullUrl,
       (geometry) => {
         if (timeoutRef.current) clearInterval(timeoutRef.current);
+        setLoadingMessage('Procesando geometría...');
+        
         // Center the geometry
         geometry.computeBoundingBox();
         const center = new THREE.Vector3();
@@ -96,8 +101,40 @@ export function PointCloudViewer({ modelUrl, onError }) {
         box.getSize(size);
         const maxDim = Math.max(size.x, size.y, size.z);
 
+        // Reducir puntos si hay demasiados (más de 5 millones)
+        const originalCount = geometry.getAttribute('position').count;
+        let pointsGeometry = geometry;
+        
+        if (originalCount > 5000000) {
+          setLoadingMessage(`Optimizando ${(originalCount/1000000).toFixed(1)}M puntos...`);
+          
+          // Diezmar la geometría para mejor rendimiento
+          const skipRate = Math.ceil(originalCount / 2000000); // Reducir a ~2M puntos
+          const positions = geometry.getAttribute('position').array;
+          const hasColors = geometry.hasAttribute('color');
+          const colors = hasColors ? geometry.getAttribute('color').array : null;
+          
+          const newPositions = [];
+          const newColors = [];
+          
+          for (let i = 0; i < originalCount; i += skipRate) {
+            newPositions.push(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
+            if (hasColors) {
+              newColors.push(colors[i * 3], colors[i * 3 + 1], colors[i * 3 + 2]);
+            }
+          }
+          
+          pointsGeometry = new THREE.BufferGeometry();
+          pointsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(newPositions, 3));
+          if (hasColors) {
+            pointsGeometry.setAttribute('color', new THREE.Float32BufferAttribute(newColors, 3));
+          }
+          
+          console.log(`Puntos reducidos de ${originalCount.toLocaleString()} a ${(newPositions.length/3).toLocaleString()}`);
+        }
+
         // Check if geometry has colors
-        const hasColors = geometry.hasAttribute('color');
+        const hasColors = pointsGeometry.hasAttribute('color');
         
         // Point material
         const material = new THREE.PointsMaterial({
@@ -110,7 +147,7 @@ export function PointCloudViewer({ modelUrl, onError }) {
         });
 
         // Create points mesh
-        const points = new THREE.Points(geometry, material);
+        const points = new THREE.Points(pointsGeometry, material);
         scene.add(points);
 
         // Remove grid helper once model is loaded
@@ -124,7 +161,7 @@ export function PointCloudViewer({ modelUrl, onError }) {
         controls.update();
 
         // Update state
-        const count = geometry.getAttribute('position').count;
+        const count = pointsGeometry.getAttribute('position').count;
         setPointCount(count);
         setLoading(false);
       },
@@ -133,6 +170,13 @@ export function PointCloudViewer({ modelUrl, onError }) {
           const percentComplete = (xhr.loaded / xhr.total) * 100;
           progressRef.current = Math.round(percentComplete);
           setProgress(Math.round(percentComplete));
+          
+          // Mensaje descriptivo según el progreso
+          const loadedMB = (xhr.loaded / (1024 * 1024)).toFixed(1);
+          const totalMB = (xhr.total / (1024 * 1024)).toFixed(1);
+          if (percentComplete < 100) {
+            setLoadingMessage(`Descargando: ${loadedMB}MB / ${totalMB}MB`);
+          }
         }
       },
       (error) => {
