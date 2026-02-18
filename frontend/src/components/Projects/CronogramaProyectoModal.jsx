@@ -325,13 +325,19 @@ export function CronogramaProyectoModal({ proyecto, onClose, onSuccess }) {
 
                   {/* Link plantilla */}
                   <div className="text-center">
-                    <a 
-                      href={`${API}/plantilla-cronograma`}
-                      download
-                      className="text-sm text-purple-600 hover:text-purple-700 underline"
+                    <button 
+                      onClick={handleDownloadTemplate}
+                      disabled={downloadingTemplate}
+                      className="inline-flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 underline disabled:opacity-50"
+                      data-testid="download-plantilla-btn"
                     >
+                      {downloadingTemplate ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Download className="h-4 w-4" />
+                      )}
                       Descargar plantilla de ejemplo
-                    </a>
+                    </button>
                   </div>
 
                   {/* Error */}
