@@ -2860,9 +2860,37 @@ async def analizar_catalogo_maquinaria(
     # Extraer datos de las máquinas
     maquinas = []
     headers = []
+    
+    # Mapeo flexible de nombres de columnas
+    column_mappings = {
+        'tipo': ['TIPO DE MAQUINA', 'TIPO', 'TIPO_MAQUINA', 'MAQUINA', 'EQUIPO', 'TIPO DE EQUIPO'],
+        'marca': ['MARCA', 'FABRICANTE', 'MANUFACTURER'],
+        'modelo': ['MODELO', 'MODEL', 'NUMERO DE MODELO'],
+        'estatus': ['ESTATUS', 'STATUS', 'ESTADO', 'CONDICION', 'FECHA APROX TERMINO PROYECTO A INICIAR'],
+        'operador': ['OPERADOR', 'OPERATOR', 'CONDUCTOR'],
+        'obra': ['OBRA', 'PROYECTO', 'SITE', 'OBRA ACTUAL'],
+        'ubicacion': ['UBICACIÓN', 'UBICACION', 'LOCATION', 'SITIO']
+    }
+    
+    def find_column_value(row_dict, key_names):
+        """Busca el valor usando múltiples posibles nombres de columna"""
+        for key in key_names:
+            if key in row_dict and row_dict[key]:
+                return row_dict[key]
+        return ''
+    
     for idx, row in enumerate(ws.iter_rows(values_only=True)):
         if idx == 0:
-            headers = [str(h).strip().upper() if h else f"COL_{i}" for i, h in enumerate(row)]
+            # Normalizar headers: quitar espacios, convertir a mayúsculas
+            headers = []
+            for i, h in enumerate(row):
+                if h:
+                    # Limpiar el header: quitar espacios extra, mayúsculas
+                    cleaned = str(h).strip().upper().replace('  ', ' ')
+                    headers.append(cleaned)
+                else:
+                    headers.append(f"COL_{i}")
+            logging.info(f"Headers encontrados en Excel: {headers}")
             continue
         if not any(row):
             continue
@@ -2872,11 +2900,14 @@ async def analizar_catalogo_maquinaria(
             if i < len(headers):
                 row_dict[headers[i]] = value
         
-        # Extraer campos clave
-        tipo = row_dict.get('TIPO DE MAQUINA') or row_dict.get('TIPO') or ''
-        marca = row_dict.get('MARCA') or ''
-        modelo = row_dict.get('MODELO') or ''
-        estatus = row_dict.get('ESTATUS') or row_dict.get('FECHA APROX TERMINO PROYECTO A INICIAR') or ''
+        # Extraer campos clave usando el mapeo flexible
+        tipo = find_column_value(row_dict, column_mappings['tipo'])
+        marca = find_column_value(row_dict, column_mappings['marca'])
+        modelo = find_column_value(row_dict, column_mappings['modelo'])
+        estatus = find_column_value(row_dict, column_mappings['estatus'])
+        operador = find_column_value(row_dict, column_mappings['operador'])
+        obra = find_column_value(row_dict, column_mappings['obra'])
+        ubicacion = find_column_value(row_dict, column_mappings['ubicacion'])
         
         if tipo and str(tipo).strip():
             maquinas.append({
@@ -2884,13 +2915,19 @@ async def analizar_catalogo_maquinaria(
                 "marca": str(marca).strip() if marca else "",
                 "modelo": str(modelo).strip() if modelo else "",
                 "estatus": str(estatus).strip() if estatus else "",
-                "operador": str(row_dict.get('OPERADOR', '')).strip(),
-                "obra_actual": str(row_dict.get('OBRA', '')).strip(),
-                "ubicacion": str(row_dict.get('UBICACIÓN', '')).strip()
+                "operador": str(operador).strip() if operador else "",
+                "obra_actual": str(obra).strip() if obra else "",
+                "ubicacion": str(ubicacion).strip() if ubicacion else ""
             })
     
+    logging.info(f"Máquinas encontradas: {len(maquinas)}")
+    
     if not maquinas:
-        raise HTTPException(status_code=400, detail="No se encontraron máquinas en el archivo")
+        # Dar más información sobre el problema
+        raise HTTPException(
+            status_code=400, 
+            detail=f"No se encontraron máquinas. Headers encontrados: {headers}. Se esperan columnas como: TIPO DE MAQUINA, MARCA, MODELO, ESTATUS"
+        )
     
     # Filtrar máquinas disponibles (OPTIMA, SATISFACTORIO, sin estado definido)
     maquinas_disponibles = [
