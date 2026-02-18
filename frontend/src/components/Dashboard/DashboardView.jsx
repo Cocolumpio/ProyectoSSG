@@ -15,6 +15,7 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
   const [loadingAvances, setLoadingAvances] = useState(false);
   const [showFullViewer, setShowFullViewer] = useState(false);
   const [sendingReport, setSendingReport] = useState(false);
+  const [showComparacion, setShowComparacion] = useState(false);
   
   // Vuelos del proyecto seleccionado
   const vuelosDelProyecto = selectedProyecto
