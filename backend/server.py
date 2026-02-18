@@ -2421,40 +2421,6 @@ async def generar_reporte_ejecutivo(proyecto_id: str):
     )
 
 # --- Solicitudes de Vuelo ---
-def generar_google_calendar_link(titulo, fecha, hora, descripcion, ubicacion=""):
-    """Genera un link para agregar evento a Google Calendar"""
-    # Formatear fecha y hora para Google Calendar
-    fecha_dt = datetime.strptime(fecha, "%Y-%m-%d")
-    
-    if hora:
-        try:
-            hora_dt = datetime.strptime(hora, "%H:%M")
-            fecha_inicio = fecha_dt.replace(hour=hora_dt.hour, minute=hora_dt.minute)
-            fecha_fin = fecha_inicio.replace(hour=hora_dt.hour + 2)  # 2 horas de duración
-        except ValueError:
-            fecha_inicio = fecha_dt.replace(hour=9, minute=0)
-            fecha_fin = fecha_dt.replace(hour=11, minute=0)
-    else:
-        fecha_inicio = fecha_dt.replace(hour=9, minute=0)
-        fecha_fin = fecha_dt.replace(hour=11, minute=0)
-    
-    # Formato para Google Calendar: YYYYMMDDTHHmmSS
-    fecha_inicio_str = fecha_inicio.strftime("%Y%m%dT%H%M%S")
-    fecha_fin_str = fecha_fin.strftime("%Y%m%dT%H%M%S")
-    
-    # Construir URL
-    base_url = "https://calendar.google.com/calendar/render"
-    params = {
-        "action": "TEMPLATE",
-        "text": titulo,
-        "dates": f"{fecha_inicio_str}/{fecha_fin_str}",
-        "details": descripcion,
-        "location": ubicacion
-    }
-    
-    query_string = "&".join([f"{k}={quote(str(v))}" for k, v in params.items()])
-    return f"{base_url}?{query_string}"
-
 @api_router.post("/solicitudes-vuelo", response_model=dict)
 async def crear_solicitud_vuelo(solicitud: SolicitudVueloCreate, credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))):
     """Crear una solicitud de vuelo y enviar notificación por email"""
