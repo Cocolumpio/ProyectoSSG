@@ -229,7 +229,8 @@ class TestDashboardComparacionesResumen:
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
         data = response.json()
-        assert isinstance(data, list), "Response should be a list"
+        assert "proyectos" in data, "Response should have proyectos key"
+        assert isinstance(data["proyectos"], list), "proyectos should be a list"
 
 
 if __name__ == "__main__":
