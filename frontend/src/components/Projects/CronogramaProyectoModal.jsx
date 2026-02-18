@@ -244,6 +244,115 @@ export function CronogramaProyectoModal({ proyecto, onClose, onSuccess }) {
                     </div>
                   )}
 
+                  {/* Análisis de Desviación del Cronograma */}
+                  <div className="bg-white rounded-xl p-5 border border-gray-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                        <TrendingDown className="h-5 w-5 text-orange-600" />
+                        Análisis de Desviación
+                      </h4>
+                      <button
+                        onClick={handleAnalizarDesviacion}
+                        disabled={analizandoDesviacion}
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 transition-colors"
+                        data-testid="btn-analizar-desviacion"
+                      >
+                        {analizandoDesviacion ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Mail className="h-4 w-4" />
+                        )}
+                        Analizar y Alertar
+                      </button>
+                    </div>
+                    
+                    <p className="text-sm text-gray-500 mb-4">
+                      Compara el progreso real vs. el cronograma y envía alerta por email si hay desviaciones significativas (&gt;20%).
+                    </p>
+
+                    {/* Resultado del análisis */}
+                    {analisisDesviacion && (
+                      <div className="space-y-4 mt-4">
+                        {/* Badge de estado */}
+                        <div className={`p-4 rounded-lg border ${
+                          analisisDesviacion.hay_desviacion_critica 
+                            ? 'bg-red-50 border-red-200' 
+                            : analisisDesviacion.hay_desviacion_moderada 
+                              ? 'bg-amber-50 border-amber-200' 
+                              : 'bg-green-50 border-green-200'
+                        }`}>
+                          <div className="flex items-center gap-2 mb-2">
+                            {analisisDesviacion.hay_desviacion_critica ? (
+                              <AlertTriangle className="h-5 w-5 text-red-600" />
+                            ) : analisisDesviacion.hay_desviacion_moderada ? (
+                              <AlertCircle className="h-5 w-5 text-amber-600" />
+                            ) : (
+                              <Check className="h-5 w-5 text-green-600" />
+                            )}
+                            <span className={`font-medium ${
+                              analisisDesviacion.hay_desviacion_critica 
+                                ? 'text-red-700' 
+                                : analisisDesviacion.hay_desviacion_moderada 
+                                  ? 'text-amber-700' 
+                                  : 'text-green-700'
+                            }`}>
+                              {analisisDesviacion.hay_desviacion_critica 
+                                ? 'Alerta Crítica' 
+                                : analisisDesviacion.hay_desviacion_moderada 
+                                  ? 'Alerta Moderada' 
+                                  : 'Sin Desviaciones Críticas'}
+                            </span>
+                            {analisisDesviacion.alerta_enviada && (
+                              <span className="ml-auto text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <Mail className="h-3 w-3" />
+                                Email enviado
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600">
+                            Semana {analisisDesviacion.semana_actual} de {analisisDesviacion.semanas_planeadas} | 
+                            Progreso esperado: {analisisDesviacion.progreso_esperado}%
+                          </p>
+                        </div>
+
+                        {/* Tabla de desviaciones */}
+                        {analisisDesviacion.desviaciones && analisisDesviacion.desviaciones.length > 0 && (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="border-b border-gray-200">
+                                  <th className="text-left py-2 px-2 text-gray-600 font-medium">Fase</th>
+                                  <th className="text-right py-2 px-2 text-gray-600 font-medium">Planeado</th>
+                                  <th className="text-right py-2 px-2 text-gray-600 font-medium">Real</th>
+                                  <th className="text-right py-2 px-2 text-gray-600 font-medium">Desviación</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {analisisDesviacion.desviaciones.map((d, idx) => (
+                                  <tr key={idx} className="border-b border-gray-100">
+                                    <td className="py-2 px-2">{d.fase}</td>
+                                    <td className="py-2 px-2 text-right text-gray-500">{d.planeado?.toFixed(1)}%</td>
+                                    <td className="py-2 px-2 text-right">{d.real?.toFixed(1)}%</td>
+                                    <td className={`py-2 px-2 text-right font-medium ${
+                                      d.desviacion_porcentaje < -20 ? 'text-red-600' :
+                                      d.desviacion_porcentaje < -10 ? 'text-amber-600' :
+                                      d.desviacion_porcentaje > 10 ? 'text-green-600' :
+                                      'text-gray-600'
+                                    }`}>
+                                      {d.desviacion_porcentaje > 0 ? '+' : ''}{d.desviacion_porcentaje?.toFixed(1)}%
+                                      {d.desviacion_porcentaje < -10 && <TrendingDown className="inline h-4 w-4 ml-1" />}
+                                      {d.desviacion_porcentaje > 10 && <TrendingUp className="inline h-4 w-4 ml-1" />}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
                   {/* Frentes */}
                   {cronogramaInfo.frentes && cronogramaInfo.frentes.length > 0 && (
                     <div className="bg-white rounded-xl p-5 border border-gray-200">
