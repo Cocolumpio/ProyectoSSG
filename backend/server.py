@@ -331,6 +331,14 @@ class ProyectoCreate(BaseModel):
     # Configuración de flotilla
     capacidad_camion: float = 25.0
     costo_m3: float = 150.0
+    # Parámetros del terreno
+    area_terreno: float = 0.0
+    espacio_maniobra: float = 0.0
+    distancia_pilas: float = 3.0
+    # Catálogo de maquinaria
+    catalogo_maquinaria: List[dict] = []
+    analisis_maquinaria_ia: Optional[dict] = None
+    parametros_proyecto: Optional[dict] = None
     clientes_asignados: List[str] = []
 
 class ProyectoUpdate(BaseModel):
