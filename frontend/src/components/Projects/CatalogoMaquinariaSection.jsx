@@ -173,9 +173,10 @@ export function CatalogoMaquinariaSection({ formData, setFormData, onShowSuccess
               min="0"
               step="0.5"
               value={parametros.distancia_pilas}
-              onChange={(e) => setParametros(prev => ({ ...prev, distancia_pilas: parseFloat(e.target.value) || 3 }))}
+              onChange={(e) => handleParametroChange('distancia_pilas', parseFloat(e.target.value) || 3)}
               className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
               placeholder="3"
+              data-testid="distancia-pilas-input"
             />
           </div>
         </div>
