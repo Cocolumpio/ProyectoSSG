@@ -298,7 +298,11 @@ Responde EXACTAMENTE en este formato JSON:
 }}"""
         
         # Crear chat con Gemini Vision
-        llm = LlmChat(api_key=EMERGENT_LLM_KEY)
+        llm = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"analisis-foto-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+            system_message="Eres un experto en análisis de imágenes de construcción civil."
+        )
         
         # Preparar imagen como FileContentWithMimeType
         image_file = FileContentWithMimeType(
@@ -306,9 +310,9 @@ Responde EXACTAMENTE en este formato JSON:
             mime_type="image/jpeg"
         )
         
-        # Enviar mensaje con imagen
-        response = await llm.send_async(
-            prompt=prompt,
+        # Enviar mensaje con imagen usando el método correcto
+        response = await llm.send_message_async(
+            message=prompt,
             model="gemini-2.0-flash",
             file_contents=[image_file]
         )
