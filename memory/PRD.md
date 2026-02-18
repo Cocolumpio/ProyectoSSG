@@ -2,64 +2,86 @@
 
 ## Estado Actual (Actualizado: 2025-12-18)
 - **Sistema Funcional**: Dashboard multi-fase completamente operativo
-- **Bugs Corregidos**: Parámetros del terreno + Análisis de fotos con IA
+- **IA 100% Funcional**: Catálogo de Maquinaria + Análisis de Fotos
 
-## Correcciones Realizadas (2025-12-18)
+## Funcionalidades de IA Completadas
 
-### 1. Parámetros del Terreno no se guardaban
-**Problema**: Los campos Área del Terreno, Espacio de Maniobra y Distancia entre Pilas no se guardaban con el proyecto.
+### 1. Catálogo de Maquinaria con Plan de Trabajo IA ✅
+Genera planes de trabajo óptimos basados en las máquinas disponibles:
 
-**Solución**: 
-- Se agregó `handleParametroChange` para sincronizar con formData del proyecto
-- Se agregaron campos al modelo Pydantic: `area_terreno`, `espacio_maniobra`, `distancia_pilas`
-- Se agregaron campos para guardar catálogo de maquinaria
+**Entrada:**
+- Excel con catálogo de máquinas (Tipo, Marca, Modelo, Estatus)
+- Parámetros del proyecto:
+  - Área del terreno (m²)
+  - Espacio de maniobra (m²)
+  - Distancia entre pilas (m)
+  - Volumen de excavación (m³)
+  - Número de pilas
 
-### 2. Análisis de Fotos con IA no funcionaba
-**Problema**: El servicio usaba métodos incorrectos de la librería `emergentintegrations`.
+**Salida del análisis IA:**
+- **plan_excavacion**: Máquinas recomendadas, tiempo estimado, rendimiento m³/día
+- **plan_pilas**: Máquinas recomendadas, tiempo estimado, pilas/día
+- **plan_anclas**: Máquinas recomendadas, tiempo estimado, anclas/día
+- **maquinas_con_specs**: Especificaciones técnicas de cada máquina
+  - Dimensiones (largo × ancho × altura)
+  - Radio de giro
+  - Rendimiento
+  - Si es adecuada para el proyecto
+- **distribucion_espacial**: Recomendaciones de ubicación y seguridad
+- **resumen_ejecutivo**: Resumen del plan completo
 
-**Solución**: 
-- Se corrigió el uso de `LlmChat` con `session_id` y `system_message`
-- Se usa `FileContentWithMimeType` con ruta de archivo temporal
-- Se usa `UserMessage` para enviar texto + imagen
-- Se mejoró el prompt para detectar pilas, anclas, excavaciones y maquinaria
+**Ejemplo de resultado:**
+```
+Plan Excavación: CAT EXC. 324, CAT EXC. 320 → 2 días, 5,000 m³/día
+Plan Pilas: XCMG XR168E, XCMG XR150, SOILMEC SR30 → 6 días, 8 pilas/día
+Plan Anclas: SOILMEC SM14 → 3 días, 6 anclas/día
+Total estimado: 11 días
+```
 
-**Resultado de prueba con imagen real:**
-- ✅ Pilas en proceso detectadas: 2
-- ✅ Excavaciones activas: 3
-- ✅ Maquinaria visible: Excavadoras, grúas, camiones
-- ✅ Estado: RETRASADO (vs planeado)
-- ✅ Confianza: MEDIA
+### 2. Análisis de Fotos de Avance con IA ✅
+Analiza fotos aéreas de dron para detectar:
+- Pilas terminadas y en proceso
+- Anclas instaladas
+- Excavaciones activas
+- Maquinaria visible
+- Estado del proyecto (EN_TIEMPO/RETRASADO/ADELANTADO)
 
-## Funcionalidades Principales
+**Ejemplo de resultado con foto real:**
+```
+Pilas en proceso: 2
+Excavaciones activas: 3
+Maquinaria visible: Excavadoras, grúas, camiones
+Estado: RETRASADO (vs 576 pilas planeadas)
+Confianza: MEDIA
+```
 
-### Análisis de Fotos con IA (Gemini Vision)
-- Detecta pilas terminadas y en proceso
-- Detecta anclas/anclajes instalados
-- Identifica excavaciones activas
-- Reconoce maquinaria visible
-- Estima porcentaje de avance
-- Evalúa estado vs cronograma (EN_TIEMPO/RETRASADO/ADELANTADO)
+## Endpoints de IA
 
-### Catálogo de Maquinaria con IA
-- Subir Excel con catálogo de máquinas
-- Detección automática de headers
-- Análisis con Gemini para distribución óptima
-- Planes de ejecución por fase
+### Catálogo de Maquinaria
+```
+POST /api/proyectos/analizar-catalogo-maquinaria
+  ?area_terreno=10000
+  &volumen_excavacion=50000
+  &num_pilas=576
+  &distancia_pilas=3
+  &espacio_maniobra=5000
+  Body: form-data { file: archivo.xlsx }
+```
 
-### Parámetros del Terreno (ahora se guardan)
-- Área del Terreno (m²)
-- Espacio de Maniobra (m²)
-- Distancia entre Pilas (m)
+### Análisis de Fotos
+```
+POST /api/avances/{avance_id}/analizar-foto
+  Body: { "imagen_base64": "..." }
+```
+
+## Testing
+- **22/22 tests pasados** para catálogo de maquinaria
+- Integración con Gemini AI funcional (usa EMERGENT_LLM_KEY)
+- Archivo de prueba: `/tmp/test_catalogo.xlsx` (36 máquinas, 29 disponibles)
 
 ## Credenciales de Prueba
 - **Admin:** admin@dron.mx / admin123
 - **Cliente:** cliente@test.com / cliente123
-
-## Stack Tecnológico
-- **Frontend:** React, TailwindCSS, Three.js
-- **Backend:** FastAPI, Motor (MongoDB)
-- **IA:** Gemini Vision via emergentintegrations
-- **Email:** Resend
 
 ## Tareas Completadas
 - ✅ Sistema de autenticación JWT
@@ -70,10 +92,9 @@
 - ✅ Reporte semanal automático
 - ✅ Dashboard de métricas históricas
 - ✅ Exportación a Excel y PDF
-- ✅ Refactorización del backend
-- ✅ Catálogo de Maquinaria con IA
-- ✅ **Análisis de Fotos con IA** (corregido 2025-12-18)
-- ✅ **Parámetros del Terreno** (corregido 2025-12-18)
+- ✅ **Catálogo de Maquinaria con IA** (100% funcional)
+- ✅ **Análisis de Fotos con IA** (100% funcional)
+- ✅ **Parámetros del Terreno** guardados
 
 ## Tareas Pendientes
 
