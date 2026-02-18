@@ -95,8 +95,46 @@ POST /api/avances/{avance_id}/analizar-foto
 - ✅ **Catálogo de Maquinaria con IA** (100% funcional)
 - ✅ **Análisis de Fotos con IA** (100% funcional)
 - ✅ **Parámetros del Terreno** guardados
+- ✅ **Comparación de Planes: Real vs Usuario vs IA** (100% funcional) - 2025-12-18
+
+## Comparación de Planes (Nueva Feature)
+
+### Descripción
+Sección del dashboard que compara visualmente tres series de datos:
+1. **Progreso Real**: Datos de avances semanales registrados
+2. **Plan del Usuario**: Cronograma planeado por el usuario (semanas por fase)
+3. **Plan de IA**: Recomendación generada por el análisis de maquinaria
+
+### Endpoints
+```
+POST /api/proyectos/{proyecto_id}/comparar-plan-ia
+  - Genera comparación usando Gemini AI
+  - Guarda resultado en campo 'comparacion_planes' del proyecto
+
+GET /api/proyectos/{proyecto_id}/comparacion-planes
+  - Obtiene la comparación guardada
+
+GET /api/dashboard/comparaciones-resumen
+  - Resumen de comparaciones de todos los proyectos
+```
+
+### Componente Frontend
+- `ComparacionPlanesView.jsx` integrado en `DashboardView.jsx`
+- Gráfica de barras con 3 series usando Recharts
+- Cards por fase (Excavación, Pilas, Anclas)
+- Badge de veredicto: "Plan IA es Mejor" / "Tu Plan es Mejor" / "Similar"
+- Botón toggle para mostrar/ocultar
+- Solo visible para proyectos con `analisis_maquinaria_ia`
+
+### Testing
+- Backend: 14/14 tests passed
+- Frontend: 5/5 tests passed
+- Test file: `/app/backend/tests/test_comparacion_planes.py`
 
 ## Tareas Pendientes
+
+### Próximas (P1)
+- Refactorizar endpoints nuevos de `server.py` a `routes/proyectos.py`
 
 ### Futuras (P2-P3)
 - Formulario de Programación de Vuelos
