@@ -2,69 +2,54 @@
 
 ## Estado Actual (Actualizado: 2025-12-18)
 - **Sistema Funcional**: Dashboard multi-fase completamente operativo
-- **Bugs Corregidos**: Catálogo de maquinaria y visor de modelos 3D
+- **Bugs Corregidos**: Parámetros del terreno + Análisis de fotos con IA
 
-## Correcciones Realizadas Hoy (2025-12-18)
+## Correcciones Realizadas (2025-12-18)
 
-### 1. Bug: Catálogo de Maquinaria - "No se encontraron máquinas"
-**Problema**: El Excel tenía filas vacías al inicio y el parser no detectaba correctamente la fila de headers.
+### 1. Parámetros del Terreno no se guardaban
+**Problema**: Los campos Área del Terreno, Espacio de Maniobra y Distancia entre Pilas no se guardaban con el proyecto.
 
 **Solución**: 
-- Se implementó detección automática de la fila de headers buscando palabras clave (TIPO, MARCA, MODELO)
-- Se agregó mapeo flexible de nombres de columnas (acepta variaciones como "TIPO DE MAQUINA", "TIPO", "EQUIPO")
-- El parser ahora salta filas vacías automáticamente
+- Se agregó `handleParametroChange` para sincronizar con formData del proyecto
+- Se agregaron campos al modelo Pydantic: `area_terreno`, `espacio_maniobra`, `distancia_pilas`
+- Se agregaron campos para guardar catálogo de maquinaria
 
-**Resultado**: 36 máquinas extraídas correctamente del catálogo de prueba (29 disponibles)
+### 2. Análisis de Fotos con IA no funcionaba
+**Problema**: El servicio usaba métodos incorrectos de la librería `emergentintegrations`.
 
-### 2. Bug: Modelo 3D PLY no carga
-**Problema**: Archivos grandes (193MB+) causaban timeout y el visor no mostraba progreso descriptivo.
+**Solución**: 
+- Se corrigió el uso de `LlmChat` con `session_id` y `system_message`
+- Se usa `FileContentWithMimeType` con ruta de archivo temporal
+- Se usa `UserMessage` para enviar texto + imagen
+- Se mejoró el prompt para detectar pilas, anclas, excavaciones y maquinaria
 
-**Solución**:
-- Se aumentó el timeout de 15 a 60 segundos
-- Se agregó diezmado automático de puntos para archivos con más de 5 millones de puntos
-- Se mejoró el indicador de progreso con mensajes descriptivos (tamaño descargado, estado de procesamiento)
-- Se agregó mensaje informativo para archivos grandes
-
-## Sistema de Fases de Construcción
-
-### Fases Implementadas
-- **Excavación**: Volumen total en m³
-- **Cimentación**: Pilas + Anclas  
-- **Edificación**: Muros
-
-### Cálculo de Avance
-- Avance TOTAL = promedio de todas las fases activas
+**Resultado de prueba con imagen real:**
+- ✅ Pilas en proceso detectadas: 2
+- ✅ Excavaciones activas: 3
+- ✅ Maquinaria visible: Excavadoras, grúas, camiones
+- ✅ Estado: RETRASADO (vs planeado)
+- ✅ Confianza: MEDIA
 
 ## Funcionalidades Principales
 
-### Catálogo de Maquinaria con Análisis IA
-- Subir Excel con catálogo de maquinaria
-- Extracción automática: Tipo, Marca, Modelo, Estatus, Operador, Obra, Ubicación
-- Categorización: Excavadoras, Perforadoras, Perforadoras de Anclas, Grúas, Manipuladores
-- Análisis con Gemini AI (opcional): Plan de ejecución óptimo por fase
+### Análisis de Fotos con IA (Gemini Vision)
+- Detecta pilas terminadas y en proceso
+- Detecta anclas/anclajes instalados
+- Identifica excavaciones activas
+- Reconoce maquinaria visible
+- Estima porcentaje de avance
+- Evalúa estado vs cronograma (EN_TIEMPO/RETRASADO/ADELANTADO)
 
-**Formato del Excel aceptado:**
-- Filas vacías al inicio son ignoradas
-- Headers detectados automáticamente
-- Columnas flexibles: "TIPO DE MAQUINA" o "TIPO" o "EQUIPO"
+### Catálogo de Maquinaria con IA
+- Subir Excel con catálogo de máquinas
+- Detección automática de headers
+- Análisis con Gemini para distribución óptima
+- Planes de ejecución por fase
 
-### Avances Semanales
-- Registro semanal sin URL de modelo
-- Modelo 3D (.ply) se sube después de crear el avance
-- Visor mejorado con soporte para archivos grandes (hasta 200MB+)
-
-### Dashboard Principal
-- Mapa interactivo con marcadores
-- KPIs: Proyectos, Volumen, Avance
-
-### Comparación Dron vs Residente
-- Subir PDF del residente
-- Análisis automático con IA
-- Alertas por discrepancias >15%
-
-### Métricas Históricas
-- Gráficas de evolución
-- Exportación Excel/PDF
+### Parámetros del Terreno (ahora se guardan)
+- Área del Terreno (m²)
+- Espacio de Maniobra (m²)
+- Distancia entre Pilas (m)
 
 ## Credenciales de Prueba
 - **Admin:** admin@dron.mx / admin123
@@ -73,19 +58,25 @@
 ## Stack Tecnológico
 - **Frontend:** React, TailwindCSS, Three.js
 - **Backend:** FastAPI, Motor (MongoDB)
-- **IA:** Gemini Vision
+- **IA:** Gemini Vision via emergentintegrations
 - **Email:** Resend
 
-## Tareas Pendientes
+## Tareas Completadas
+- ✅ Sistema de autenticación JWT
+- ✅ CRUD de proyectos con fases
+- ✅ Avances semanales con modelos 3D
+- ✅ Comparación de avances Dron vs Residente
+- ✅ Alertas automáticas por discrepancias
+- ✅ Reporte semanal automático
+- ✅ Dashboard de métricas históricas
+- ✅ Exportación a Excel y PDF
+- ✅ Refactorización del backend
+- ✅ Catálogo de Maquinaria con IA
+- ✅ **Análisis de Fotos con IA** (corregido 2025-12-18)
+- ✅ **Parámetros del Terreno** (corregido 2025-12-18)
 
-### Próximas (P1)
-- **Test E2E del Análisis de Fotos con IA**
+## Tareas Pendientes
 
 ### Futuras (P2-P3)
 - Formulario de Programación de Vuelos
 - Filtrado por Rol de Cliente
-
-## Notas Técnicas
-- Archivos .ply grandes son diezmados automáticamente a ~2M puntos para mejor rendimiento
-- El catálogo detecta automáticamente la fila de headers en el Excel
-- El análisis IA puede no estar disponible temporalmente (límites de API), pero el catálogo siempre se procesa
