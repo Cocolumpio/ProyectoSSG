@@ -2860,6 +2860,7 @@ async def analizar_catalogo_maquinaria(
     # Extraer datos de las máquinas
     maquinas = []
     headers = []
+    header_row_found = False
     
     # Mapeo flexible de nombres de columnas
     column_mappings = {
@@ -2879,22 +2880,35 @@ async def analizar_catalogo_maquinaria(
                 return row_dict[key]
         return ''
     
+    def is_header_row(row):
+        """Detecta si una fila parece ser la fila de headers"""
+        row_values = [str(v).strip().upper() if v else '' for v in row]
+        # Buscar palabras clave de headers
+        keywords = ['TIPO', 'MARCA', 'MODELO', 'MAQUINA', 'EQUIPO']
+        matches = sum(1 for kw in keywords for val in row_values if kw in val)
+        return matches >= 2  # Al menos 2 coincidencias
+    
     for idx, row in enumerate(ws.iter_rows(values_only=True)):
-        if idx == 0:
-            # Normalizar headers: quitar espacios, convertir a mayúsculas
-            headers = []
-            for i, h in enumerate(row):
-                if h:
-                    # Limpiar el header: quitar espacios extra, mayúsculas
-                    cleaned = str(h).strip().upper().replace('  ', ' ')
-                    headers.append(cleaned)
-                else:
-                    headers.append(f"COL_{i}")
-            logging.info(f"Headers encontrados en Excel: {headers}")
-            continue
+        # Saltar filas completamente vacías
         if not any(row):
             continue
         
+        # Buscar la fila de headers
+        if not header_row_found:
+            if is_header_row(row):
+                # Normalizar headers: quitar espacios, convertir a mayúsculas
+                headers = []
+                for i, h in enumerate(row):
+                    if h:
+                        cleaned = str(h).strip().upper().replace('  ', ' ')
+                        headers.append(cleaned)
+                    else:
+                        headers.append(f"COL_{i}")
+                logging.info(f"Headers encontrados en fila {idx}: {headers}")
+                header_row_found = True
+            continue
+        
+        # Procesar filas de datos
         row_dict = {}
         for i, value in enumerate(row):
             if i < len(headers):
