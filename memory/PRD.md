@@ -1,39 +1,44 @@
 # DrON Topografía - Product Requirements Document
 
-## Estado Actual (Actualizado: 2025-12-17)
+## Estado Actual (Actualizado: 2025-12-18)
 - **Sistema Funcional**: Dashboard multi-fase completamente operativo
-- **Bug Fix**: Corregido bug de selección de proyectos (P0)
-- **Nueva Funcionalidad**: Comparación de Avances Dron vs Residente con IA
-- **Testing**: 100% de pruebas pasadas
+- **Refactorización**: Backend modularizado exitosamente
+- **Testing**: 100% de pruebas pasadas (39 tests totales)
 
-## Nueva Funcionalidad: Comparación de Avances con IA
+## Refactorización Completada (2025-12-18)
 
-### Descripción
-Permite comparar automáticamente los avances registrados por el sistema de drones con los reportes PDF del residente de obra, usando Gemini (IA) para extraer y analizar métricas.
+### Cambios Realizados
+El archivo monolítico `server.py` (3534 líneas) fue refactorizado:
 
-### Flujo de Usuario
-1. Abrir modal "Avances Semanales" de un proyecto
-2. Click en botón "Comparar con Residente" en el header
-3. Subir PDF del reporte del residente
-4. El sistema analiza automáticamente con IA y muestra:
-   - Avance general: Dron vs Residente
-   - Tabla comparativa por métrica (excavación, anclas, muros)
-   - Discrepancias detectadas (>5%)
-   - Análisis y recomendaciones de IA
-5. Historial de comparaciones guardado
+1. **`/app/backend/core/config.py`** (151 líneas)
+   - Configuración central de la aplicación
+   - Conexión a MongoDB (singleton)
+   - Configuración JWT
+   - Funciones de autenticación: `verify_password`, `get_password_hash`, `create_access_token`
+   - Dependencias: `get_current_user`, `get_current_admin`, `get_optional_user`
+   - Variables de entorno: `RESEND_API_KEY`, `ADMIN_EMAIL`, `EMERGENT_LLM_KEY`
 
-### Métricas Comparadas
-| Métrica | Unidad | Fuente Dron | Fuente PDF |
-|---------|--------|-------------|------------|
-| Excavación | m³ | volumen_excavacion | Excavación M3 |
-| Pilas | pzas | pilas_completadas | Perforación PZA |
-| Anclas | pzas | anclas_instaladas | Tensado PZA |
-| Muros | m² | muros_completados | Lanzado M2 |
+2. **`/app/backend/services/helpers.py`** (186 líneas)
+   - `recalcular_avance_proyecto()`: Recalcula avance basado en fases activas
+   - `generar_google_calendar_link()`: Genera links para Google Calendar
+   - `obtener_metricas_proyecto()`: Obtiene métricas acumuladas
 
-### Endpoints API
-- `POST /api/proyectos/{id}/comparar-avance` - Subir y analizar PDF
-- `GET /api/proyectos/{id}/comparaciones` - Historial de comparaciones
-- `DELETE /api/proyectos/{id}/comparaciones/{id}` - Eliminar comparación
+3. **`/app/backend/services/email.py`** (293 líneas)
+   - `enviar_alerta_discrepancia()`: Alertas de discrepancias >15%
+   - `enviar_notificacion_solicitud_vuelo()`: Notificación de nuevas solicitudes
+   - `enviar_actualizacion_solicitud()`: Notificación al cliente de cambios de estado
+
+4. **`/app/backend/server.py`** (3254 líneas - reducido 280 líneas)
+   - Ahora importa funciones compartidas de los módulos
+   - Mantiene toda la lógica de endpoints
+   - Código más limpio y mantenible
+
+### Verificación de Refactorización
+- ✅ Todas las funciones de auth funcionando desde `core/config.py`
+- ✅ `recalcular_avance_proyecto` funciona desde `services/helpers.py`
+- ✅ Servicios de email importados correctamente
+- ✅ 39 tests de backend pasando (21 + 18)
+- ✅ Frontend funciona correctamente
 
 ## Sistema de Fases de Construcción
 
@@ -42,27 +47,7 @@ Permite comparar automáticamente los avances registrados por el sistema de dron
 - **Cimentación**: Pilas + Anclas  
 - **Edificación**: Muros
 
-### Formulario de Nuevo Proyecto
-- Checkboxes para seleccionar fases (pueden ser múltiples)
-- Campos condicionales que aparecen al seleccionar cada fase:
-  - Excavación → Volumen Total (m³)
-  - Cimentación → Pilas Planeadas + Anclas Planeadas
-  - Edificación → Muros Planeados
-
-### Dashboard - Resumen del Proyecto
-- **Avance Total**: Promedio de todas las fases activas
-- **Avance por Fase**: Barras de progreso individuales para cada fase
-- **Proyección de semanas**: Si no hay cronograma, calcula "~X sem restantes" basado en ritmo
-
-### Avances Semanales - Campos Editables
-- Pilas Completadas (azul)
-- Anclas Instaladas (teal)
-- Muros Completados (púrpura)
-- Volumen Excavado (naranja)
-- Los campos solo se muestran si el proyecto tiene esa fase configurada
-
 ### Cálculo de Avance
-- Backend recalcula automáticamente al guardar cualquier métrica
 - Avance TOTAL = promedio de todas las fases activas
 - Ejemplo: Torre Corporativa Demo
   - Excavación: 84% (21,000/25,000 m³)
@@ -70,99 +55,108 @@ Permite comparar automáticamente los avances registrados por el sistema de dron
   - Edificación: 11% (5/45 muros)
   - **TOTAL: 52.3%**
 
-## Proyectos de Demo
+## Funcionalidades Implementadas
 
-| Proyecto | Fases | Métricas | Avance |
-|----------|-------|----------|--------|
-| Torre Corporativa Demo | Excavación + Cimentación + Edificación | 25K m³, 120 pilas, 240 anclas, 45 muros | 52.26% |
-| Proyecto Pilas Demo | Cimentación | 576 pilas, 464 anclas | 5.21% |
-| Acuarela | Excavación | 50,000 m³ | 100% |
+### Dashboard Principal
+- Mapa interactivo con marcadores de proyectos
+- KPIs: Proyectos activos, Volumen excavado, Avance promedio
+- Lista de proyectos con barras de progreso por fase
 
-## Credenciales
+### Gestión de Proyectos
+- CRUD completo de proyectos
+- Configuración de fases activas
+- Metas por fase (m³, pilas, anclas, muros)
+- Asignación de clientes
+
+### Avances Semanales
+- Registro semanal por proyecto
+- Modelos 3D (archivos .ply)
+- Fotos del vuelo
+- Métricas de excavación, pilas, anclas, muros
+
+### Comparación de Avances con IA
+- Subir PDF del residente
+- Análisis automático con Gemini
+- Comparación lado a lado
+- Alertas automáticas por discrepancias >15%
+
+### Métricas Históricas
+- Gráficas de evolución por semana
+- Comparativa entre proyectos
+- Exportación a Excel y PDF
+
+### Reporte Semanal Automático
+- Envío cada viernes 18:00
+- KPIs: Proyectos, Volumen, Pilas, Anclas, Muros
+- Desglose de costos de flotilla
+- Envío manual disponible para admin
+
+### Solicitudes de Vuelo
+- Formulario para clientes
+- Notificación por email al admin
+- Link de Google Calendar
+- Estados: pendiente, confirmado, completado, cancelado
+
+## Credenciales de Prueba
 - **Admin:** admin@dron.mx / admin123
 - **Cliente:** cliente@test.com / cliente123
 
 ## Stack Tecnológico
-- Frontend: React, TailwindCSS, Recharts, Three.js
-- Backend: FastAPI, Pydantic, Motor (MongoDB)
-- IA: Gemini Vision via emergentintegrations (Emergent LLM Key)
+- **Frontend:** React, TailwindCSS, Recharts, Three.js
+- **Backend:** FastAPI, Pydantic, Motor (MongoDB)
+- **IA:** Gemini Vision via emergentintegrations
+- **Email:** Resend
 
 ## Integraciones
-- **Gemini Vision**: Análisis de PDFs para comparación de avances
-- **Resend**: Notificaciones por email (pendiente implementación)
+- **Gemini Vision**: Análisis de PDFs y fotos
+- **Resend**: Notificaciones por email
 - **OpenStreetMap**: Geocodificación de ubicaciones
 
-## Tareas Completadas (2025-12-17)
-- ✅ Bug de selección de proyectos en Dashboard
-- ✅ Funcionalidad de Comparación de Avances Dron vs Residente
-- ✅ Análisis automático de PDFs con Gemini
-- ✅ UI de comparación con métricas, discrepancias y análisis IA
-- ✅ Alertas automáticas por email (Resend) cuando discrepancias >15%
-- ✅ Prueba E2E del sistema de 3 fases (Proyecto E2E 3 Fases Test creado)
-- ✅ Reporte semanal automático cada viernes a las 18:00
-- ✅ Botón para enviar reporte semanal manualmente
-- ✅ Desglose de costos de flotilla por proyecto en reportes
-- ✅ Verificación de la interfaz de Análisis de Fotos con IA
-- ✅ Dashboard de Métricas Históricas con gráficas interactivas
-- ✅ Reportes actualizados con pilas, anclas y muros por proyecto
-- ✅ Exportación de métricas históricas a Excel y PDF
-- ✅ Preparación de estructura modular para refactorización (/app/backend/routes/, /app/backend/core/)
-- ✅ Requisito de archivos `.laz` DESCARTADO - Se continuará usando `.ply`
+## Tareas Completadas
+- ✅ Sistema de autenticación JWT
+- ✅ CRUD de proyectos con fases
+- ✅ Avances semanales con modelos 3D
+- ✅ Comparación de avances Dron vs Residente con IA
+- ✅ Alertas automáticas por discrepancias
+- ✅ Reporte semanal automático (viernes 18:00)
+- ✅ Dashboard de métricas históricas
+- ✅ Exportación a Excel y PDF
+- ✅ **Refactorización del backend** (2025-12-18)
 
 ## Tareas Pendientes
-- Ninguna tarea pendiente crítica
 
-## Mejoras Futuras (Backlog)
-- Refactorización gradual del `server.py` usando la estructura modular preparada
-- Integración con Google Calendar para programar vuelos
-- Dashboard de comparación histórica entre dron y residente
+### Próximas (P1)
+- **Test E2E del Análisis de Fotos con IA**: La UI está integrada en el modal de Avances Semanales pero falta verificar end-to-end con una imagen real
 
-## Funcionalidades del Sistema
+### Futuras (P2-P3)
+- **Formulario de Programación de Vuelos**: Crear formulario completo para agendar vuelos
+- **Filtrado por Rol de Cliente**: Usuarios "Cliente" solo deben ver sus proyectos asignados
+- **Verificar Pronóstico de Finalización**: Validar lógica de estimación de tiempo
 
-### Exportación de Métricas (NUEVO)
-- **Ubicación**: Pestaña "Métricas" → Botones Excel/PDF en header
-- **Excel** (verde): Genera archivo .xlsx con 3 hojas
-  - Resumen General: KPIs y métricas por proyecto
-  - Avances Semanales: Detalle por semana de cada proyecto
-  - Comparaciones Residente: Historial de comparaciones IA
-- **PDF** (rojo): Genera reporte ejecutivo con
-  - KPIs Resumen: Proyectos, Volumen, Pilas, Anclas, Muros, Costo
-  - Tabla detalle por proyecto
-  - Desglose de costos de flotilla
-
-### Dashboard de Métricas Históricas
-- **Ubicación**: Pestaña "Métricas" en la navegación principal
-- **KPIs Totales**: Excavación, Pilas, Anclas, Muros
-- **Gráfica de Evolución**: AreaChart por semana
-- **Selector de Vista**: Avance Total, Excavación, Cimentación, Edificación
-- **Comparativa**: BarChart horizontal
-- **Tabla de Detalle**: Métricas completas por proyecto
-
-### Reporte Semanal Automático (ACTUALIZADO)
-- **Programación**: Cada viernes a las 18:00
-- **KPIs del Reporte**:
-  - Proyectos Activos
-  - m³ Excavados Total
-  - Gasto Total Flotillas
-  - Pilas Totales (NUEVO)
-  - Anclas Totales (NUEVO)
-  - Muros Totales (NUEVO)
-- **Por Proyecto**: Muestra pilas, anclas, muros ejecutados vs planeados + incremento semanal
-- **Envío manual**: Botón "Enviar Reporte Semanal" en dashboard
-
-### Análisis de Fotos con IA
-- Ubicación: Modal de Avances Semanales → Detalle de semana → "Analizar Fotos con IA"
-- Detecta: Pilas, anclas, estado del proyecto
-- Modelo: Gemini 2.5 Flash via Emergent LLM Key
-
-### Modelos 3D y Nubes de Puntos
-- **Formato soportado**: `.ply` (Stanford PLY) - tamaño medio recomendado
-- **Otros formatos**: `.xyz`, `.pts`, `.pcd`
-- **Visualización**: Three.js con PLYLoader y OrbitControls
-- **Generación**: Los archivos se generan por computadora después de cada vuelo
-- **Nota**: Archivos `.laz` descartados, se usa `.ply` como estándar
+## Arquitectura del Código
+```
+/app/backend/
+├── core/
+│   └── config.py          # Configuración central y auth
+├── models/
+│   └── schemas.py         # Modelos Pydantic
+├── services/
+│   ├── email.py           # Servicios de email
+│   ├── helpers.py         # Funciones auxiliares
+│   ├── cronograma_ai.py   # Análisis de cronogramas con IA
+│   └── database.py        # Conexión a DB
+├── routes/
+│   ├── auth.py            # (preparado para futura modularización)
+│   ├── proyectos.py       # (preparado para futura modularización)
+│   ├── estadisticas.py    # (preparado para futura modularización)
+│   └── vuelos.py          # (preparado para futura modularización)
+├── tests/
+│   └── test_*.py          # Tests automatizados
+└── server.py              # API principal (3254 líneas)
+```
 
 ## Notas Técnicas
-- La comparación de avances usa comparación ACUMULADA del proyecto
-- El nivel de confianza (ALTA/MEDIA/BAJA) indica qué tan seguro está el modelo de la extracción
-- Los PDFs se guardan en `/app/backend/uploads/reportes_residente/`
+- La comparación de avances usa datos ACUMULADOS del proyecto
+- El nivel de confianza (ALTA/MEDIA/BAJA) indica seguridad de extracción
+- PDFs se guardan en `/app/backend/uploads/reportes_residente/`
+- Archivos .laz descartados, se usa .ply como estándar
