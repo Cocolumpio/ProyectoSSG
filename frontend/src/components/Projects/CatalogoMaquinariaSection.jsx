@@ -14,7 +14,7 @@ export function CatalogoMaquinariaSection({ formData, setFormData, onShowSuccess
   const [showMaquinas, setShowMaquinas] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Parámetros del proyecto para el análisis
+  // Parámetros del proyecto para el análisis - sincronizados con formData
   const [parametros, setParametros] = useState({
     area_terreno: formData.area_terreno || 0,
     espacio_maniobra: formData.espacio_maniobra || 0,
@@ -22,6 +22,21 @@ export function CatalogoMaquinariaSection({ formData, setFormData, onShowSuccess
     num_pilas: formData.pilas_planeadas || 0,
     distancia_pilas: formData.distancia_pilas || 3
   });
+
+  // Guardar parámetros en formData cuando cambian
+  const handleParametroChange = (field, value) => {
+    const newParametros = { ...parametros, [field]: value };
+    setParametros(newParametros);
+    
+    // También actualizar el formData del proyecto
+    setFormData(prev => ({
+      ...prev,
+      area_terreno: newParametros.area_terreno,
+      espacio_maniobra: newParametros.espacio_maniobra,
+      distancia_pilas: newParametros.distancia_pilas,
+      parametros_proyecto: newParametros
+    }));
+  };
 
   const handleFileSelect = async (e) => {
     const file = e.target.files[0];
