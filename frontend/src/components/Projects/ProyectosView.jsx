@@ -21,6 +21,8 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
   const [loadingClients, setLoadingClients] = useState(false);
   const [savingAssignment, setSavingAssignment] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showCronogramaModal, setShowCronogramaModal] = useState(false);
+  const [selectedProjectForCronograma, setSelectedProjectForCronograma] = useState(null);
   const [formData, setFormData] = useState({
     nombre: '', ubicacion: '', direccion: '', coordenadas: { lat: 0, lng: 0 },
     fecha_inicio: '', fecha_fin_planeada: '', descripcion: '', avance_actual: 0,
