@@ -2950,6 +2950,178 @@ async def obtener_cronograma_proyecto(proyecto_id: str):
     }
 
 
+@api_router.post("/proyectos/{proyecto_id}/analizar-desviacion")
+async def analizar_desviacion_cronograma(proyecto_id: str):
+    """
+    Analiza la desviación entre el progreso real y el cronograma planificado.
+    Envía alerta por email si la desviación es significativa (>20%).
+    """
+    from services.email import enviar_alerta_desviacion_cronograma
+    
+    # Obtener proyecto
+    proyecto = await db.proyectos.find_one({"id": proyecto_id}, {"_id": 0})
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    # Verificar que tiene cronograma
+    if not proyecto.get("cronograma_resumen"):
+        raise HTTPException(status_code=400, detail="El proyecto no tiene cronograma cargado")
+    
+    cronograma = proyecto.get("cronograma_resumen", {})
+    fecha_inicio_str = proyecto.get("fecha_inicio")
+    
+    if not fecha_inicio_str:
+        raise HTTPException(status_code=400, detail="El proyecto no tiene fecha de inicio definida")
+    
+    # Calcular semana actual del proyecto
+    try:
+        fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d")
+        dias_transcurridos = (datetime.now() - fecha_inicio).days
+        semana_actual = max(1, dias_transcurridos // 7 + 1)
+    except:
+        semana_actual = 1
+    
+    semanas_planeadas = proyecto.get("semanas_planeadas", 12)
+    progreso_esperado = min(100, (semana_actual / semanas_planeadas) * 100) if semanas_planeadas > 0 else 0
+    
+    # Obtener progreso real por tipo de actividad
+    desviaciones = []
+    
+    # Excavación
+    vol_planeado = proyecto.get("volumen_total_planeado", 0)
+    vol_real = proyecto.get("volumen_ejecutado", 0)
+    if vol_planeado > 0:
+        progreso_real_exc = (vol_real / vol_planeado) * 100
+        desviacion_exc = progreso_real_exc - progreso_esperado
+        desviaciones.append({
+            "fase": "Excavación",
+            "planeado": progreso_esperado,
+            "real": progreso_real_exc,
+            "desviacion_porcentaje": desviacion_exc,
+            "unidades": f"{vol_real:,.0f} / {vol_planeado:,.0f} m³"
+        })
+    
+    # Pilas
+    pilas_planeadas = proyecto.get("pilas_planeadas", 0)
+    pilas_real = proyecto.get("pilas_ejecutadas", 0)
+    if pilas_planeadas > 0:
+        progreso_real_pilas = (pilas_real / pilas_planeadas) * 100
+        desviacion_pilas = progreso_real_pilas - progreso_esperado
+        desviaciones.append({
+            "fase": "Pilas / Cimentación",
+            "planeado": progreso_esperado,
+            "real": progreso_real_pilas,
+            "desviacion_porcentaje": desviacion_pilas,
+            "unidades": f"{pilas_real} / {pilas_planeadas} pilas"
+        })
+    
+    # Anclas
+    anclas_planeadas = proyecto.get("anclas_planeadas", 0)
+    anclas_real = proyecto.get("anclas_ejecutadas", 0)
+    if anclas_planeadas > 0:
+        progreso_real_anclas = (anclas_real / anclas_planeadas) * 100
+        desviacion_anclas = progreso_real_anclas - progreso_esperado
+        desviaciones.append({
+            "fase": "Anclas",
+            "planeado": progreso_esperado,
+            "real": progreso_real_anclas,
+            "desviacion_porcentaje": desviacion_anclas,
+            "unidades": f"{anclas_real} / {anclas_planeadas} anclas"
+        })
+    
+    # Muros
+    muros_planeados = proyecto.get("muros_planeados", 0)
+    muros_real = proyecto.get("muros_ejecutados", 0)
+    if muros_planeados > 0:
+        progreso_real_muros = (muros_real / muros_planeados) * 100
+        desviacion_muros = progreso_real_muros - progreso_esperado
+        desviaciones.append({
+            "fase": "Muros / Estructura",
+            "planeado": progreso_esperado,
+            "real": progreso_real_muros,
+            "desviacion_porcentaje": desviacion_muros,
+            "unidades": f"{muros_real} / {muros_planeados} muros"
+        })
+    
+    # Determinar si hay desviaciones críticas (>20% de retraso)
+    hay_desviacion_critica = any(d["desviacion_porcentaje"] < -20 for d in desviaciones)
+    hay_desviacion_moderada = any(d["desviacion_porcentaje"] < -10 for d in desviaciones)
+    
+    # Generar resumen
+    if hay_desviacion_critica:
+        resumen = f"""⚠️ ALERTA CRÍTICA: El proyecto muestra retrasos significativos.
+
+Situación actual:
+- Semana {semana_actual} de {semanas_planeadas} planeadas
+- Progreso esperado según cronograma: {progreso_esperado:.1f}%
+- Se detectaron fases con retraso mayor al 20%
+
+Recomendaciones inmediatas:
+1. Convocar reunión de emergencia con el equipo de obra
+2. Revisar disponibilidad de maquinaria y recursos
+3. Evaluar posibles causas del retraso (clima, suministros, etc.)
+4. Considerar ajustes al cronograma o recursos adicionales"""
+    elif hay_desviacion_moderada:
+        resumen = f"""📊 ALERTA MODERADA: Algunas fases muestran desviaciones.
+
+Situación actual:
+- Semana {semana_actual} de {semanas_planeadas} planeadas
+- Progreso esperado según cronograma: {progreso_esperado:.1f}%
+- Se detectaron desviaciones entre 10-20%
+
+Recomendaciones:
+1. Monitorear de cerca las actividades con retraso
+2. Verificar si hay obstáculos que resolver
+3. Mantener comunicación con el equipo de obra"""
+    else:
+        resumen = f"""✅ El proyecto avanza dentro de los parámetros esperados.
+
+Situación actual:
+- Semana {semana_actual} de {semanas_planeadas} planeadas
+- Progreso esperado según cronograma: {progreso_esperado:.1f}%
+- Las desviaciones están dentro del rango aceptable (±10%)"""
+    
+    # Enviar alerta por email si hay desviación significativa
+    email_enviado = False
+    if hay_desviacion_critica or hay_desviacion_moderada:
+        email_enviado = await enviar_alerta_desviacion_cronograma(
+            proyecto_nombre=proyecto.get("nombre", "Sin nombre"),
+            proyecto_id=proyecto_id,
+            desviaciones=desviaciones,
+            resumen=resumen,
+            fecha_analisis=datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M UTC")
+        )
+    
+    # Guardar el análisis en el proyecto
+    await db.proyectos.update_one(
+        {"id": proyecto_id},
+        {"$set": {
+            "ultimo_analisis_desviacion": {
+                "fecha": datetime.now(timezone.utc).isoformat(),
+                "semana_actual": semana_actual,
+                "progreso_esperado": progreso_esperado,
+                "desviaciones": desviaciones,
+                "hay_desviacion_critica": hay_desviacion_critica,
+                "hay_desviacion_moderada": hay_desviacion_moderada,
+                "email_enviado": email_enviado
+            }
+        }}
+    )
+    
+    return {
+        "success": True,
+        "proyecto": proyecto.get("nombre"),
+        "semana_actual": semana_actual,
+        "semanas_planeadas": semanas_planeadas,
+        "progreso_esperado": round(progreso_esperado, 1),
+        "desviaciones": desviaciones,
+        "hay_desviacion_critica": hay_desviacion_critica,
+        "hay_desviacion_moderada": hay_desviacion_moderada,
+        "resumen": resumen,
+        "alerta_enviada": email_enviado
+    }
+
+
 @api_router.get("/proyectos/{proyecto_id}/frentes")
 async def obtener_frentes(proyecto_id: str):
     """Obtiene todos los frentes de un proyecto"""
