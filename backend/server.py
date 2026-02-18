@@ -103,7 +103,7 @@ def generate_ply_thumbnail(ply_path: str, output_path: str, width: int = 400, he
                 g = g[indices]
                 b = b[indices]
             colors = np.column_stack([r, g, b])
-        except:
+        except Exception:
             pass
         
         # Centrar los puntos
