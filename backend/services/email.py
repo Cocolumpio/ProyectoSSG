@@ -291,3 +291,136 @@ async def enviar_actualizacion_solicitud(
     except Exception as e:
         logger.error(f"Error enviando email de notificación: {e}")
         return False
+
+
+async def enviar_alerta_desviacion_cronograma(
+    proyecto_nombre: str,
+    proyecto_id: str,
+    desviaciones: list,
+    resumen: str,
+    fecha_analisis: str
+) -> bool:
+    """
+    Envía una alerta por email cuando el progreso real se desvía significativamente
+    del cronograma planificado (>20% de retraso).
+    """
+    if not ADMIN_EMAIL or not RESEND_API_KEY:
+        logger.warning("No se puede enviar alerta: ADMIN_EMAIL o RESEND_API_KEY no configurados")
+        return False
+    
+    # Construir tabla de desviaciones
+    desviaciones_html = ""
+    for d in desviaciones:
+        porcentaje = d.get('desviacion_porcentaje', 0)
+        if porcentaje < -10:
+            color = "#dc2626"  # Rojo - retraso crítico
+            estado = "⚠️ Retraso"
+        elif porcentaje > 10:
+            color = "#059669"  # Verde - adelantado
+            estado = "✅ Adelanto"
+        else:
+            color = "#f59e0b"  # Amarillo - ligera desviación
+            estado = "⏳ En rango"
+        
+        desviaciones_html += f"""
+        <tr>
+            <td style="padding: 12px; border-bottom: 1px solid #e5e5e5;">{d.get('fase', 'N/A')}</td>
+            <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; text-align: right;">{d.get('planeado', 0):.1f}%</td>
+            <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; text-align: right;">{d.get('real', 0):.1f}%</td>
+            <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; text-align: right; color: {color}; font-weight: bold;">
+                {porcentaje:+.1f}%
+            </td>
+            <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; text-align: center;">{estado}</td>
+        </tr>
+        """
+    
+    # Calcular si hay retrasos críticos
+    hay_retrasos_criticos = any(d.get('desviacion_porcentaje', 0) < -20 for d in desviaciones)
+    alerta_nivel = "CRÍTICA" if hay_retrasos_criticos else "MODERADA"
+    alerta_color = "#dc2626" if hay_retrasos_criticos else "#f59e0b"
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"></head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 650px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #994B49 0%, #B85C5A 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">📊 Alerta de Desviación del Cronograma</h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">DrON Topografía - Monitoreo de Progreso</p>
+        </div>
+        
+        <div style="background: #fff; padding: 30px; border: 1px solid #e5e5e5; border-top: none; border-radius: 0 0 10px 10px;">
+            <div style="background: {'#fef2f2' if hay_retrasos_criticos else '#fef3c7'}; border-left: 4px solid {alerta_color}; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                <strong style="color: {alerta_color};">Alerta {alerta_nivel}</strong>
+                <p style="margin: 5px 0 0 0; color: #374151;">
+                    Se detectaron desviaciones significativas entre el progreso real y el cronograma planificado.
+                </p>
+            </div>
+            
+            <h2 style="color: #994B49; border-bottom: 2px solid #994B49; padding-bottom: 10px; margin-top: 0;">
+                📋 Proyecto: {proyecto_nombre}
+            </h2>
+            
+            <p><strong>Fecha del análisis:</strong> {fecha_analisis}</p>
+            
+            <h3 style="color: #374151; margin-top: 25px;">📈 Resumen de Desviaciones</h3>
+            
+            <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                <thead>
+                    <tr style="background: #f3f4f6;">
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e5e5;">Fase</th>
+                        <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e5e5;">Planeado</th>
+                        <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e5e5;">Real</th>
+                        <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e5e5;">Desviación</th>
+                        <th style="padding: 12px; text-align: center; border-bottom: 2px solid #e5e5e5;">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {desviaciones_html}
+                </tbody>
+            </table>
+            
+            <h3 style="color: #994B49; margin-top: 25px;">💡 Análisis y Recomendaciones</h3>
+            <div style="background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e5e5;">
+                <p style="margin: 0; white-space: pre-wrap;">{resumen}</p>
+            </div>
+            
+            <div style="margin-top: 25px; padding: 15px; background: #eff6ff; border-radius: 8px; border: 1px solid #bfdbfe;">
+                <h4 style="margin: 0 0 10px 0; color: #1e40af;">🎯 Acciones Recomendadas</h4>
+                <ul style="margin: 0; padding-left: 20px; color: #1e40af;">
+                    <li>Revisar el avance de las actividades con retraso</li>
+                    <li>Verificar disponibilidad de recursos y maquinaria</li>
+                    <li>Considerar ajustes al cronograma si es necesario</li>
+                    <li>Programar reunión de seguimiento con el equipo</li>
+                </ul>
+            </div>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e5e5;">
+                <p style="color: #6b7280; font-size: 12px; margin: 0;">
+                    Esta alerta se generó automáticamente al detectar diferencias mayores al 20% entre el progreso real 
+                    y el cronograma planificado. El sistema monitorea continuamente el avance del proyecto.
+                </p>
+            </div>
+        </div>
+        
+        <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 12px;">
+            <p>DrON Topografía © {datetime.now().year}</p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    try:
+        params = {
+            "from": "DrON Topografía <onboarding@resend.dev>",
+            "to": [ADMIN_EMAIL],
+            "subject": f"📊 Alerta de Desviación - {proyecto_nombre} ({alerta_nivel})",
+            "html": html_content
+        }
+        
+        await asyncio.to_thread(resend.Emails.send, params)
+        logger.info(f"Alerta de desviación enviada a {ADMIN_EMAIL} para proyecto {proyecto_nombre}")
+        return True
+    except Exception as e:
+        logger.error(f"Error enviando alerta de desviación: {e}")
+        return False
