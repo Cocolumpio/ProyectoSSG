@@ -139,7 +139,7 @@ export function CatalogoMaquinariaSection({ formData, setFormData, onShowSuccess
         <div className="flex items-center gap-2 mb-3">
           <MapPin className="h-4 w-4 text-indigo-600" />
           <span className="text-sm font-medium text-gray-700">Parámetros del Terreno</span>
-          <span className="text-xs text-gray-400">(para optimización con IA)</span>
+          <span className="text-xs text-gray-400">(se guardan con el proyecto)</span>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           <div>
@@ -148,9 +148,10 @@ export function CatalogoMaquinariaSection({ formData, setFormData, onShowSuccess
               type="number"
               min="0"
               value={parametros.area_terreno}
-              onChange={(e) => setParametros(prev => ({ ...prev, area_terreno: parseFloat(e.target.value) || 0 }))}
+              onChange={(e) => handleParametroChange('area_terreno', parseFloat(e.target.value) || 0)}
               className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
               placeholder="5000"
+              data-testid="area-terreno-input"
             />
           </div>
           <div>
@@ -159,9 +160,10 @@ export function CatalogoMaquinariaSection({ formData, setFormData, onShowSuccess
               type="number"
               min="0"
               value={parametros.espacio_maniobra}
-              onChange={(e) => setParametros(prev => ({ ...prev, espacio_maniobra: parseFloat(e.target.value) || 0 }))}
+              onChange={(e) => handleParametroChange('espacio_maniobra', parseFloat(e.target.value) || 0)}
               className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
               placeholder="1000"
+              data-testid="espacio-maniobra-input"
             />
           </div>
           <div>
