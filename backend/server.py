@@ -3021,7 +3021,7 @@ Responde en formato JSON con esta estructura:
             "maquinas_raw": maquinas_disponibles,
             "analisis_ia": resultado_ia
         }
-    except json.JSONDecodeError as e:
+    except json.JSONDecodeError:
         # Si no puede parsear JSON, devolver texto plano
         return {
             "success": True,
