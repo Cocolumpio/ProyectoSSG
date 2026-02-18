@@ -461,6 +461,12 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
                   <span>{proyecto.clientes_asignados.length} cliente(s) asignado(s)</span>
                 </div>
               )}
+              {proyecto.cronograma_archivo && (
+                <div className="mt-2 flex items-center space-x-1 text-xs text-purple-600">
+                  <CalendarClock className="h-3.5 w-3.5" />
+                  <span>Programa de obra cargado</span>
+                </div>
+              )}
             </div>
           </div>
         ))}
