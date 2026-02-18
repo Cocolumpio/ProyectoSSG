@@ -464,6 +464,13 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
         </div>
       </div>
 
+      {/* Catálogo de Maquinaria con IA */}
+      <CatalogoMaquinariaSection 
+        formData={formData} 
+        setFormData={setFormData}
+        onShowSuccess={onShowSuccess}
+      />
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Descripción
