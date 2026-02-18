@@ -238,13 +238,19 @@ export function PointCloudViewer({ modelUrl, onError }) {
       {/* Loading overlay */}
       {loading && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1a1a2e]/90">
-          <div className="w-48 h-2 bg-gray-700 rounded-full overflow-hidden">
+          <div className="w-64 h-3 bg-gray-700 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-[#994B49] transition-all duration-300"
+              className="h-full bg-gradient-to-r from-[#994B49] to-[#B85C5A] transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
-          <p className="text-white/80 text-sm mt-3">Cargando modelo... {progress}%</p>
+          <p className="text-white/90 text-sm mt-3 font-medium">{loadingMessage}</p>
+          <p className="text-white/60 text-xs mt-1">{progress}% completado</p>
+          {progress > 0 && progress < 100 && (
+            <p className="text-white/40 text-xs mt-2">
+              Por favor espera, los archivos grandes pueden tardar varios minutos
+            </p>
+          )}
         </div>
       )}
       
