@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { MapPin, Search, Loader2, Shovel, Columns3, Building2, Anchor, Info } from 'lucide-react';
+import { CatalogoMaquinariaSection } from './CatalogoMaquinariaSection';
 
-export function ProjectFormContent({ formData, setFormData, error, saving, isEdit, onSubmit, onClose }) {
+export function ProjectFormContent({ formData, setFormData, error, saving, isEdit, onSubmit, onClose, onShowSuccess }) {
   const [searchingAddress, setSearchingAddress] = useState(false);
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
