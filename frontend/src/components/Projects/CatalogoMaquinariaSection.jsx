@@ -1,0 +1,391 @@
+import { useState, useRef } from 'react';
+import axios from 'axios';
+import { Upload, Loader2, Truck, Wrench, AlertCircle, CheckCircle, ChevronDown, ChevronUp, FileSpreadsheet, Zap, Clock, MapPin, Info } from 'lucide-react';
+
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
+export function CatalogoMaquinariaSection({ formData, setFormData, onShowSuccess }) {
+  const [uploading, setUploading] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [catalogoData, setCatalogoData] = useState(null);
+  const [analisisIA, setAnalisisIA] = useState(null);
+  const [error, setError] = useState(null);
+  const [showAnalisis, setShowAnalisis] = useState(false);
+  const [showMaquinas, setShowMaquinas] = useState(false);
+  const fileInputRef = useRef(null);
+
+  // Parámetros del proyecto para el análisis
+  const [parametros, setParametros] = useState({
+    area_terreno: formData.area_terreno || 0,
+    espacio_maniobra: formData.espacio_maniobra || 0,
+    volumen_excavacion: formData.volumen_total_planeado || 0,
+    num_pilas: formData.pilas_planeadas || 0,
+    distancia_pilas: formData.distancia_pilas || 3
+  });
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+      setError('Por favor selecciona un archivo Excel (.xlsx o .xls)');
+      return;
+    }
+
+    setUploading(true);
+    setAnalyzing(true);
+    setError(null);
+
+    try {
+      const formDataFile = new FormData();
+      formDataFile.append('file', file);
+      
+      // Agregar parámetros del proyecto
+      const queryParams = new URLSearchParams({
+        area_terreno: parametros.area_terreno || 0,
+        volumen_excavacion: parametros.volumen_excavacion || formData.volumen_total_planeado || 0,
+        num_pilas: parametros.num_pilas || formData.pilas_planeadas || 0,
+        distancia_pilas: parametros.distancia_pilas || 3,
+        espacio_maniobra: parametros.espacio_maniobra || 0
+      });
+
+      const response = await axios.post(
+        `${API}/proyectos/analizar-catalogo-maquinaria?${queryParams.toString()}`,
+        formDataFile,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        }
+      );
+
+      if (response.data.success) {
+        setCatalogoData({
+          total: response.data.total_maquinas,
+          disponibles: response.data.maquinas_disponibles,
+          resumen: response.data.resumen_catalogo,
+          maquinas: response.data.maquinas_raw
+        });
+        
+        if (response.data.analisis_ia) {
+          setAnalisisIA(response.data.analisis_ia);
+        } else if (response.data.analisis_ia_texto) {
+          setAnalisisIA({ resumen_ejecutivo: response.data.analisis_ia_texto });
+        }
+
+        // Guardar en formData
+        setFormData(prev => ({
+          ...prev,
+          catalogo_maquinaria: response.data.maquinas_raw,
+          analisis_maquinaria_ia: response.data.analisis_ia || null,
+          parametros_proyecto: parametros
+        }));
+
+        if (onShowSuccess) {
+          onShowSuccess(`Catálogo analizado: ${response.data.maquinas_disponibles} máquinas disponibles`);
+        }
+      } else {
+        setError(response.data.error || 'Error al analizar el catálogo');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      setError(err.response?.data?.detail || 'Error al procesar el archivo');
+    } finally {
+      setUploading(false);
+      setAnalyzing(false);
+    }
+  };
+
+  const getMaquinaIcon = (tipo) => {
+    const tipoUpper = tipo?.toUpperCase() || '';
+    if (tipoUpper.includes('EXCAVADORA')) return '🚜';
+    if (tipoUpper.includes('PERFORADORA')) return '🔩';
+    if (tipoUpper.includes('GRUA')) return '🏗️';
+    if (tipoUpper.includes('MANIPULADOR')) return '🦾';
+    return '⚙️';
+  };
+
+  const getEstatusColor = (estatus) => {
+    const estatusUpper = estatus?.toUpperCase() || '';
+    if (estatusUpper.includes('OPTIMA')) return 'bg-green-100 text-green-700';
+    if (estatusUpper.includes('SATISFACTORIO')) return 'bg-blue-100 text-blue-700';
+    if (estatusUpper.includes('DESHABILITADA') || estatusUpper.includes('REPARACION')) return 'bg-red-100 text-red-700';
+    return 'bg-gray-100 text-gray-700';
+  };
+
+  return (
+    <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-200">
+      <div className="flex items-center gap-2 mb-4">
+        <Truck className="h-5 w-5 text-indigo-700" />
+        <h4 className="font-semibold text-indigo-900">Catálogo de Maquinaria</h4>
+        <span className="text-xs text-indigo-500 bg-white px-2 py-0.5 rounded">Análisis con IA</span>
+      </div>
+
+      {/* Parámetros del proyecto para análisis */}
+      <div className="bg-white rounded-lg p-4 mb-4 border border-indigo-100">
+        <div className="flex items-center gap-2 mb-3">
+          <MapPin className="h-4 w-4 text-indigo-600" />
+          <span className="text-sm font-medium text-gray-700">Parámetros del Terreno</span>
+          <span className="text-xs text-gray-400">(para optimización con IA)</span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Área del Terreno (m²)</label>
+            <input
+              type="number"
+              min="0"
+              value={parametros.area_terreno}
+              onChange={(e) => setParametros(prev => ({ ...prev, area_terreno: parseFloat(e.target.value) || 0 }))}
+              className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
+              placeholder="5000"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Espacio de Maniobra (m²)</label>
+            <input
+              type="number"
+              min="0"
+              value={parametros.espacio_maniobra}
+              onChange={(e) => setParametros(prev => ({ ...prev, espacio_maniobra: parseFloat(e.target.value) || 0 }))}
+              className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
+              placeholder="1000"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Distancia entre Pilas (m)</label>
+            <input
+              type="number"
+              min="0"
+              step="0.5"
+              value={parametros.distancia_pilas}
+              onChange={(e) => setParametros(prev => ({ ...prev, distancia_pilas: parseFloat(e.target.value) || 3 }))}
+              className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500"
+              placeholder="3"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Upload Button */}
+      <div className="mb-4">
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileSelect}
+          accept=".xlsx,.xls"
+          className="hidden"
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading || analyzing}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {uploading || analyzing ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span>{analyzing ? 'Analizando con IA...' : 'Subiendo...'}</span>
+            </>
+          ) : (
+            <>
+              <FileSpreadsheet className="h-5 w-5" />
+              <span>Subir Catálogo de Maquinaria (Excel)</span>
+            </>
+          )}
+        </button>
+        <p className="text-xs text-indigo-600 mt-2 text-center">
+          Formato esperado: Columnas con Tipo de Máquina, Marca, Modelo, Estatus
+        </p>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4 flex items-start gap-2">
+          <AlertCircle className="h-5 w-5 flex-shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Resumen del Catálogo */}
+      {catalogoData && (
+        <div className="space-y-4">
+          {/* Stats */}
+          <div className="bg-white rounded-lg p-4 border border-indigo-100">
+            <div className="flex items-center justify-between mb-3">
+              <span className="font-medium text-gray-800">Resumen del Catálogo</span>
+              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full flex items-center gap-1">
+                <CheckCircle className="h-3 w-3" />
+                {catalogoData.disponibles} disponibles
+              </span>
+            </div>
+            <div className="grid grid-cols-5 gap-2 text-center">
+              <div className="p-2 bg-amber-50 rounded-lg">
+                <div className="text-lg font-bold text-amber-700">{catalogoData.resumen?.excavadoras || 0}</div>
+                <div className="text-xs text-amber-600">Excavadoras</div>
+              </div>
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <div className="text-lg font-bold text-blue-700">{catalogoData.resumen?.perforadoras || 0}</div>
+                <div className="text-xs text-blue-600">Perforadoras</div>
+              </div>
+              <div className="p-2 bg-teal-50 rounded-lg">
+                <div className="text-lg font-bold text-teal-700">{catalogoData.resumen?.perforadoras_anclas || 0}</div>
+                <div className="text-xs text-teal-600">Perf. Anclas</div>
+              </div>
+              <div className="p-2 bg-purple-50 rounded-lg">
+                <div className="text-lg font-bold text-purple-700">{catalogoData.resumen?.gruas || 0}</div>
+                <div className="text-xs text-purple-600">Grúas</div>
+              </div>
+              <div className="p-2 bg-gray-50 rounded-lg">
+                <div className="text-lg font-bold text-gray-700">{catalogoData.resumen?.manipuladores || 0}</div>
+                <div className="text-xs text-gray-600">Manipuladores</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Lista de Máquinas Colapsable */}
+          <div className="bg-white rounded-lg border border-indigo-100 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setShowMaquinas(!showMaquinas)}
+              className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+            >
+              <span className="font-medium text-gray-700 flex items-center gap-2">
+                <Wrench className="h-4 w-4" />
+                Ver Máquinas ({catalogoData.maquinas?.length || 0})
+              </span>
+              {showMaquinas ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+            </button>
+            {showMaquinas && (
+              <div className="max-h-64 overflow-y-auto p-2">
+                <div className="space-y-1">
+                  {catalogoData.maquinas?.map((m, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{getMaquinaIcon(m.tipo)}</span>
+                        <div>
+                          <div className="font-medium text-gray-800">{m.marca} {m.modelo}</div>
+                          <div className="text-xs text-gray-500">{m.tipo}</div>
+                        </div>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-xs ${getEstatusColor(m.estatus)}`}>
+                        {m.estatus || 'Disponible'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Análisis de IA */}
+          {analisisIA && (
+            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setShowAnalisis(!showAnalisis)}
+                className="w-full px-4 py-3 flex items-center justify-between bg-purple-100/50 hover:bg-purple-100 transition-colors"
+              >
+                <span className="font-medium text-purple-800 flex items-center gap-2">
+                  <Zap className="h-4 w-4" />
+                  Plan de Ejecución Optimizado (IA)
+                </span>
+                {showAnalisis ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </button>
+              {showAnalisis && (
+                <div className="p-4 space-y-4">
+                  {/* Resumen Ejecutivo */}
+                  {analisisIA.resumen_ejecutivo && (
+                    <div className="bg-white rounded-lg p-3 border border-purple-100">
+                      <h5 className="font-medium text-purple-800 mb-2 flex items-center gap-2">
+                        <Info className="h-4 w-4" />
+                        Resumen Ejecutivo
+                      </h5>
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{analisisIA.resumen_ejecutivo}</p>
+                    </div>
+                  )}
+
+                  {/* Plan de Excavación */}
+                  {analisisIA.plan_excavacion && (
+                    <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
+                      <h5 className="font-medium text-amber-800 mb-2">🚜 Fase 1: Excavación</h5>
+                      <div className="text-sm text-gray-700">
+                        <p><strong>Máquinas:</strong> {analisisIA.plan_excavacion.maquinas_recomendadas?.join(', ')}</p>
+                        <p><strong>Estrategia:</strong> {analisisIA.plan_excavacion.estrategia}</p>
+                        <div className="flex gap-4 mt-2">
+                          <span className="flex items-center gap-1 text-amber-700">
+                            <Clock className="h-4 w-4" />
+                            {analisisIA.plan_excavacion.tiempo_estimado_dias} días
+                          </span>
+                          <span className="text-amber-600">
+                            {analisisIA.plan_excavacion.rendimiento_esperado_m3_dia} m³/día
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Plan de Pilas */}
+                  {analisisIA.plan_pilas && (
+                    <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                      <h5 className="font-medium text-blue-800 mb-2">🔩 Fase 2: Perforación de Pilas</h5>
+                      <div className="text-sm text-gray-700">
+                        <p><strong>Máquinas:</strong> {analisisIA.plan_pilas.maquinas_recomendadas?.join(', ')}</p>
+                        <p><strong>Estrategia:</strong> {analisisIA.plan_pilas.estrategia}</p>
+                        <div className="flex gap-4 mt-2">
+                          <span className="flex items-center gap-1 text-blue-700">
+                            <Clock className="h-4 w-4" />
+                            {analisisIA.plan_pilas.tiempo_estimado_dias} días
+                          </span>
+                          <span className="text-blue-600">
+                            {analisisIA.plan_pilas.pilas_por_dia} pilas/día
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Plan de Anclas */}
+                  {analisisIA.plan_anclas && (
+                    <div className="bg-teal-50 rounded-lg p-3 border border-teal-200">
+                      <h5 className="font-medium text-teal-800 mb-2">⚓ Fase 3: Anclas</h5>
+                      <div className="text-sm text-gray-700">
+                        <p><strong>Máquinas:</strong> {analisisIA.plan_anclas.maquinas_recomendadas?.join(', ')}</p>
+                        <p><strong>Estrategia:</strong> {analisisIA.plan_anclas.estrategia}</p>
+                        <div className="flex gap-4 mt-2">
+                          <span className="flex items-center gap-1 text-teal-700">
+                            <Clock className="h-4 w-4" />
+                            {analisisIA.plan_anclas.tiempo_estimado_dias} días
+                          </span>
+                          <span className="text-teal-600">
+                            {analisisIA.plan_anclas.anclas_por_dia} anclas/día
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Distribución Espacial */}
+                  {analisisIA.distribucion_espacial && (
+                    <div className="bg-white rounded-lg p-3 border border-purple-100">
+                      <h5 className="font-medium text-purple-800 mb-2">📍 Distribución Espacial</h5>
+                      <div className="text-sm text-gray-700">
+                        <p>{analisisIA.distribucion_espacial.recomendacion}</p>
+                        {analisisIA.distribucion_espacial.consideraciones_seguridad?.length > 0 && (
+                          <div className="mt-2">
+                            <p className="font-medium text-red-600">⚠️ Consideraciones de Seguridad:</p>
+                            <ul className="list-disc list-inside text-gray-600">
+                              {analisisIA.distribucion_espacial.consideraciones_seguridad.map((c, i) => (
+                                <li key={i}>{c}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
