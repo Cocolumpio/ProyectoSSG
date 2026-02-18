@@ -400,6 +400,71 @@ export function CatalogoMaquinariaSection({ formData, setFormData, onShowSuccess
                       </div>
                     </div>
                   )}
+
+                  {/* Especificaciones Técnicas de Máquinas */}
+                  {analisisIA.maquinas_con_specs && analisisIA.maquinas_con_specs.length > 0 && (
+                    <div className="bg-white rounded-lg p-3 border border-purple-100">
+                      <h5 className="font-medium text-purple-800 mb-2">📋 Especificaciones Técnicas ({analisisIA.maquinas_con_specs.length} máquinas)</h5>
+                      <div className="max-h-48 overflow-y-auto space-y-2">
+                        {analisisIA.maquinas_con_specs.filter(m => m.adecuada_para_proyecto !== false).slice(0, 10).map((m, i) => (
+                          <div key={i} className={`p-2 rounded-lg text-xs ${m.adecuada_para_proyecto === false ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <span className="font-medium text-gray-800">{m.marca} {m.modelo}</span>
+                                <span className="text-gray-500 ml-2">({m.tipo})</span>
+                              </div>
+                              {m.adecuada_para_proyecto !== undefined && (
+                                <span className={`px-1.5 py-0.5 rounded ${m.adecuada_para_proyecto ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`}>
+                                  {m.adecuada_para_proyecto ? '✓ Recomendada' : '✗ No ideal'}
+                                </span>
+                              )}
+                            </div>
+                            {m.dimensiones && (
+                              <div className="mt-1 text-gray-600">
+                                Dimensiones: {m.dimensiones.largo}m × {m.dimensiones.ancho}m × {m.dimensiones.altura}m
+                                {m.radio_giro && ` | Radio giro: ${m.radio_giro}m`}
+                              </div>
+                            )}
+                            {m.rendimiento && (
+                              <div className="text-gray-600">Rendimiento: {m.rendimiento}</div>
+                            )}
+                            {m.razon && (
+                              <div className="text-gray-500 italic mt-1">{m.razon}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tiempo Total Estimado */}
+                  {(analisisIA.plan_excavacion?.tiempo_estimado_dias || analisisIA.plan_pilas?.tiempo_estimado_dias || analisisIA.plan_anclas?.tiempo_estimado_dias) && (
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 border border-green-200">
+                      <h5 className="font-medium text-green-800 mb-2">⏱️ Tiempo Total Estimado</h5>
+                      <div className="grid grid-cols-4 gap-2 text-center">
+                        <div className="p-2 bg-white rounded">
+                          <div className="text-lg font-bold text-amber-600">{analisisIA.plan_excavacion?.tiempo_estimado_dias || 0}</div>
+                          <div className="text-xs text-gray-500">Excavación</div>
+                        </div>
+                        <div className="p-2 bg-white rounded">
+                          <div className="text-lg font-bold text-blue-600">{analisisIA.plan_pilas?.tiempo_estimado_dias || 0}</div>
+                          <div className="text-xs text-gray-500">Pilas</div>
+                        </div>
+                        <div className="p-2 bg-white rounded">
+                          <div className="text-lg font-bold text-teal-600">{analisisIA.plan_anclas?.tiempo_estimado_dias || 0}</div>
+                          <div className="text-xs text-gray-500">Anclas</div>
+                        </div>
+                        <div className="p-2 bg-green-100 rounded">
+                          <div className="text-lg font-bold text-green-700">
+                            {(analisisIA.plan_excavacion?.tiempo_estimado_dias || 0) + 
+                             (analisisIA.plan_pilas?.tiempo_estimado_dias || 0) + 
+                             (analisisIA.plan_anclas?.tiempo_estimado_dias || 0)}
+                          </div>
+                          <div className="text-xs text-green-600 font-medium">TOTAL días</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
