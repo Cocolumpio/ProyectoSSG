@@ -254,80 +254,80 @@ async def analizar_foto_avance(
     - Pronóstico de avance
     """
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+        from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContentWithMimeType
         
         if not EMERGENT_LLM_KEY:
             return {"success": False, "error": "EMERGENT_LLM_KEY no configurada"}
         
-        # Crear chat con Gemini Vision
-        chat = LlmChat(
-            api_key=EMERGENT_LLM_KEY,
-            session_id=f"analisis-avance-{datetime.now().isoformat()}",
-            system_message="""Eres un experto en análisis de imágenes de construcción civil, especializado en:
-- Detección de pilas de cimentación (columnas circulares de concreto que salen del suelo)
-- Detección de anclas de acero (barras de refuerzo que sobresalen de las pilas)
-- Análisis de progreso de obra
-
-Tu trabajo es analizar fotos aéreas de dron de sitios de construcción y proporcionar:
-1. Conteo preciso de elementos visibles
-2. Comparación con fotos anteriores si se proporcionan
-3. Evaluación del progreso vs lo planeado
-
-Responde SIEMPRE en formato JSON estructurado."""
-        ).with_model("gemini", "gemini-2.5-flash")
-        
-        # Preparar contenido de imagen
-        image_content = ImageContent(image_base64=imagen_base64)
-        
-        # Construir prompt
-        prompt = f"""Analiza esta imagen aérea de una obra de construcción.
+        # Construir prompt detallado
+        prompt = f"""Analiza esta imagen aérea de una obra de construcción de cimentaciones profundas.
 
 CONTEXTO:
 - Semana actual del proyecto: {semana_actual}
 - Pilas planeadas hasta esta semana: {pilas_planeadas}
 - Anclas planeadas hasta esta semana: {anclas_planeadas}
 
+QUÉ BUSCAR:
+1. PILAS DE CIMENTACIÓN: Son columnas circulares de concreto que emergen del suelo, típicamente de 60cm a 120cm de diámetro. Se ven como círculos o cilindros grises desde arriba.
+
+2. ANCLAS/ANCLAJES: Son barras de acero (varillas) que sobresalen de las pilas ya construidas. Se ven como puntos oscuros o pequeñas estructuras metálicas encima de las pilas terminadas.
+
+3. PILAS EN PROCESO: Áreas donde se está excavando (agujeros en el suelo) o donde hay maquinaria de perforación trabajando.
+
+4. EXCAVACIÓN: Áreas donde se ha removido tierra, taludes, rampas de acceso.
+
 INSTRUCCIONES:
-1. Cuenta el número de PILAS visibles (columnas circulares de concreto que emergen del suelo)
-2. Cuenta el número de ANCLAS visibles (barras de acero que sobresalen de las pilas)
-3. Evalúa si el avance visual corresponde con lo planeado
+- Cuenta TODOS los elementos que puedas identificar claramente
+- Si hay duda, incluye el elemento pero indica confianza media/baja
+- Describe qué ves en la imagen
 
 Responde EXACTAMENTE en este formato JSON:
 {{
-    "pilas_detectadas": <número>,
-    "anclas_detectadas": <número>,
-    "pilas_en_proceso": <número de pilas que parecen estar en construcción>,
-    "porcentaje_avance_estimado": <porcentaje 0-100>,
-    "estado_proyecto": "<EN_TIEMPO | ADELANTADO | RETRASADO>",
+    "pilas_detectadas": <número de pilas terminadas visibles>,
+    "anclas_detectadas": <número de anclas/anclajes visibles>,
+    "pilas_en_proceso": <número de pilas en construcción>,
+    "excavaciones_activas": <número de puntos de excavación>,
+    "porcentaje_avance_estimado": <porcentaje 0-100 basado en lo visible>,
+    "estado_proyecto": "<EN_TIEMPO | ADELANTADO | RETRASADO | NO_DETERMINABLE>",
     "confianza_deteccion": "<ALTA | MEDIA | BAJA>",
-    "observaciones": "<descripción breve de lo que se observa>",
-    "recomendaciones": "<sugerencias si hay retraso>"
+    "elementos_identificados": "<lista de lo que se puede ver claramente>",
+    "observaciones": "<descripción detallada de lo que se observa en la imagen>",
+    "condiciones_terreno": "<estado del terreno, clima visible, etc>",
+    "maquinaria_visible": "<descripción de equipos visibles>",
+    "recomendaciones": "<sugerencias basadas en lo observado>"
 }}"""
         
-        # Si hay imagen anterior, agregar comparación
-        if imagen_anterior_base64:
-            prompt += """
-
-COMPARACIÓN CON SEMANA ANTERIOR:
-También se proporciona la imagen de la semana anterior. Compara ambas y agrega:
-- pilas_nuevas: número de pilas nuevas desde la semana anterior
-- anclas_nuevas: número de anclas nuevas desde la semana anterior
-- cambio_observado: descripción del progreso visible"""
+        # Crear chat con Gemini Vision
+        llm = LlmChat(api_key=EMERGENT_LLM_KEY)
         
-        # Enviar mensaje con imagen
-        user_message = UserMessage(
-            text=prompt,
-            image_contents=[image_content]
+        # Preparar imagen como FileContentWithMimeType
+        image_file = FileContentWithMimeType(
+            file_base64=imagen_base64,
+            mime_type="image/jpeg"
         )
         
-        response = await chat.send_message(user_message)
+        # Enviar mensaje con imagen
+        response = await llm.send_async(
+            prompt=prompt,
+            model="gemini-2.0-flash",
+            file_contents=[image_file]
+        )
         
         # Parsear respuesta JSON
         import json
         import re
         
+        # Limpiar respuesta
+        response_text = response.strip()
+        if response_text.startswith("```json"):
+            response_text = response_text[7:]
+        if response_text.startswith("```"):
+            response_text = response_text[3:]
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]
+        
         # Extraer JSON de la respuesta
-        json_match = re.search(r'\{[\s\S]*\}', response)
+        json_match = re.search(r'\{[\s\S]*\}', response_text)
         if json_match:
             result = json.loads(json_match.group())
             result["success"] = True
