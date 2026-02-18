@@ -1646,7 +1646,6 @@ async def enviar_reporte_semanal_manual(current_user: dict = Depends(get_current
 
 # --- Exportación de Métricas Históricas ---
 import pandas as pd
-from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils.dataframe import dataframe_to_rows
 
