@@ -3190,6 +3190,283 @@ async def obtener_catalogo_maquinaria(proyecto_id: str):
     }
 
 
+# --- Comparación de Plan IA vs Cronograma del Usuario ---
+@api_router.post("/proyectos/{proyecto_id}/comparar-plan-ia")
+async def comparar_plan_ia_vs_cronograma(proyecto_id: str):
+    """
+    Compara el plan generado por IA vs el cronograma planificado por el usuario.
+    Usa IA para analizar y determinar si el plan propuesto es mejor, igual o peor.
+    """
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    import json as json_module
+    
+    proyecto = await db.proyectos.find_one({"id": proyecto_id}, {"_id": 0})
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    analisis_ia = proyecto.get("analisis_maquinaria_ia", {})
+    if not analisis_ia:
+        raise HTTPException(status_code=400, detail="No hay análisis de IA para este proyecto. Primero sube el catálogo de maquinaria.")
+    
+    # Obtener datos del cronograma del usuario
+    semanas_excavacion = proyecto.get("semanas_excavacion", 0)
+    semanas_pilas = proyecto.get("semanas_pilas", 0)
+    semanas_muros = proyecto.get("semanas_muros", 0)
+    semanas_planeadas = proyecto.get("semanas_planeadas", 0)
+    volumen_total = proyecto.get("volumen_total_planeado", 0)
+    pilas_planeadas = proyecto.get("pilas_planeadas", 0)
+    anclas_planeadas = proyecto.get("anclas_planeadas", 0)
+    
+    # Obtener datos del avance real
+    avances = await db.avances_semanales.find({"proyecto_id": proyecto_id}, {"_id": 0}).to_list(100)
+    semanas_reales = len(avances)
+    volumen_real = sum((a.get("volumen_excavacion", 0) or 0) for a in avances)
+    pilas_real = sum((a.get("pilas_completadas", 0) or 0) for a in avances)
+    anclas_real = sum((a.get("anclas_instaladas", 0) or 0) for a in avances)
+    
+    # Datos del plan de IA
+    plan_excavacion_ia = analisis_ia.get("plan_excavacion", {})
+    plan_pilas_ia = analisis_ia.get("plan_pilas", {})
+    plan_anclas_ia = analisis_ia.get("plan_anclas", {})
+    
+    dias_excavacion_ia = plan_excavacion_ia.get("tiempo_estimado_dias", 0)
+    dias_pilas_ia = plan_pilas_ia.get("tiempo_estimado_dias", 0)
+    dias_anclas_ia = plan_anclas_ia.get("tiempo_estimado_dias", 0)
+    
+    # Convertir días a semanas (5 días laborales = 1 semana)
+    semanas_excavacion_ia = round(dias_excavacion_ia / 5, 1) if dias_excavacion_ia else 0
+    semanas_pilas_ia = round(dias_pilas_ia / 5, 1) if dias_pilas_ia else 0
+    semanas_anclas_ia = round(dias_anclas_ia / 5, 1) if dias_anclas_ia else 0
+    
+    # Crear prompt para análisis comparativo
+    prompt = f"""Eres un experto en planificación de obras de construcción.
+
+DATOS DEL PROYECTO: {proyecto.get('nombre', 'Sin nombre')}
+
+CRONOGRAMA PLANIFICADO POR EL USUARIO:
+- Semanas para excavación: {semanas_excavacion} semanas
+- Semanas para pilas: {semanas_pilas} semanas
+- Semanas para anclas/muros: {semanas_muros} semanas
+- Total semanas planeadas: {semanas_planeadas} semanas
+- Volumen a excavar: {volumen_total} m³
+- Pilas a perforar: {pilas_planeadas}
+- Anclas a instalar: {anclas_planeadas}
+
+PLAN GENERADO POR IA:
+- Semanas para excavación: {semanas_excavacion_ia} semanas ({dias_excavacion_ia} días)
+- Semanas para pilas: {semanas_pilas_ia} semanas ({dias_pilas_ia} días)  
+- Semanas para anclas: {semanas_anclas_ia} semanas ({dias_anclas_ia} días)
+- Rendimiento excavación: {plan_excavacion_ia.get('rendimiento_esperado_m3_dia', 0)} m³/día
+- Rendimiento pilas: {plan_pilas_ia.get('pilas_por_dia', 0)} pilas/día
+- Rendimiento anclas: {plan_anclas_ia.get('anclas_por_dia', 0)} anclas/día
+- Máquinas recomendadas excavación: {plan_excavacion_ia.get('maquinas_recomendadas', [])}
+- Máquinas recomendadas pilas: {plan_pilas_ia.get('maquinas_recomendadas', [])}
+
+AVANCE REAL HASTA AHORA (Semana {semanas_reales}):
+- Volumen excavado: {volumen_real} m³
+- Pilas completadas: {pilas_real}
+- Anclas instaladas: {anclas_real}
+
+TAREA:
+1. Compara los tres escenarios: Plan del Usuario, Plan IA, y Avance Real
+2. Determina cuál plan es más realista y eficiente
+3. Analiza si el avance real va acorde a alguno de los planes
+4. Proporciona recomendaciones para optimizar
+
+Responde en formato JSON:
+{{
+    "comparacion_general": {{
+        "plan_usuario_dias_total": <número>,
+        "plan_ia_dias_total": <número>,
+        "diferencia_dias": <número positivo si IA es más rápido>,
+        "porcentaje_mejora": <porcentaje de mejora del plan IA vs usuario>
+    }},
+    "evaluacion_excavacion": {{
+        "usuario_semanas": {semanas_excavacion},
+        "ia_semanas": {semanas_excavacion_ia},
+        "mejor_plan": "<usuario | ia | similar>",
+        "razon": "<explicación>"
+    }},
+    "evaluacion_pilas": {{
+        "usuario_semanas": {semanas_pilas},
+        "ia_semanas": {semanas_pilas_ia},
+        "mejor_plan": "<usuario | ia | similar>",
+        "razon": "<explicación>"
+    }},
+    "evaluacion_anclas": {{
+        "usuario_semanas": {semanas_muros},
+        "ia_semanas": {semanas_anclas_ia},
+        "mejor_plan": "<usuario | ia | similar>",
+        "razon": "<explicación>"
+    }},
+    "estado_avance_real": {{
+        "porcentaje_excavacion": <% completado>,
+        "porcentaje_pilas": <% completado>,
+        "porcentaje_anclas": <% completado>,
+        "alineado_con": "<plan_usuario | plan_ia | retrasado | adelantado>",
+        "semanas_restantes_estimadas": <número>
+    }},
+    "veredicto": "<PLAN_IA_MEJOR | PLAN_USUARIO_MEJOR | SIMILAR>",
+    "confianza": "<ALTA | MEDIA | BAJA>",
+    "resumen": "<resumen ejecutivo de 2-3 oraciones>",
+    "recomendaciones": ["<recomendación 1>", "<recomendación 2>", ...]
+}}"""
+    
+    try:
+        llm = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"comparacion-plan-{proyecto_id}-{uuid.uuid4()}",
+            system_message="Eres un experto en planificación de obras de construcción. Siempre respondes en JSON válido."
+        ).with_model("gemini", "gemini-2.0-flash")
+        
+        user_message = UserMessage(text=prompt)
+        response = await llm.send_message(user_message)
+        
+        # Parsear respuesta
+        response_text = response.strip()
+        if response_text.startswith("```json"):
+            response_text = response_text[7:]
+        if response_text.startswith("```"):
+            response_text = response_text[3:]
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]
+        
+        import re
+        json_match = re.search(r'\{[\s\S]*\}', response_text)
+        if json_match:
+            comparacion_ia = json_module.loads(json_match.group())
+        else:
+            comparacion_ia = json_module.loads(response_text.strip())
+        
+        # Guardar comparación en el proyecto
+        comparacion_completa = {
+            "fecha_comparacion": datetime.now(timezone.utc).isoformat(),
+            "datos_usuario": {
+                "semanas_excavacion": semanas_excavacion,
+                "semanas_pilas": semanas_pilas,
+                "semanas_anclas": semanas_muros,
+                "semanas_total": semanas_planeadas,
+                "volumen_total": volumen_total,
+                "pilas_planeadas": pilas_planeadas,
+                "anclas_planeadas": anclas_planeadas
+            },
+            "datos_ia": {
+                "semanas_excavacion": semanas_excavacion_ia,
+                "semanas_pilas": semanas_pilas_ia,
+                "semanas_anclas": semanas_anclas_ia,
+                "semanas_total": semanas_excavacion_ia + semanas_pilas_ia + semanas_anclas_ia,
+                "rendimiento_excavacion_m3_dia": plan_excavacion_ia.get("rendimiento_esperado_m3_dia", 0),
+                "rendimiento_pilas_dia": plan_pilas_ia.get("pilas_por_dia", 0),
+                "rendimiento_anclas_dia": plan_anclas_ia.get("anclas_por_dia", 0)
+            },
+            "datos_reales": {
+                "semanas_transcurridas": semanas_reales,
+                "volumen_excavado": volumen_real,
+                "pilas_completadas": pilas_real,
+                "anclas_instaladas": anclas_real
+            },
+            "analisis_ia": comparacion_ia
+        }
+        
+        await db.proyectos.update_one(
+            {"id": proyecto_id},
+            {"$set": {
+                "comparacion_planes": comparacion_completa,
+                "updated_at": datetime.now(timezone.utc)
+            }}
+        )
+        
+        return {
+            "success": True,
+            "comparacion": comparacion_completa
+        }
+        
+    except Exception as e:
+        logging.error(f"Error comparando planes: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        # Devolver comparación básica sin IA
+        comparacion_basica = {
+            "fecha_comparacion": datetime.now(timezone.utc).isoformat(),
+            "datos_usuario": {
+                "semanas_excavacion": semanas_excavacion,
+                "semanas_pilas": semanas_pilas,
+                "semanas_anclas": semanas_muros,
+                "semanas_total": semanas_planeadas
+            },
+            "datos_ia": {
+                "semanas_excavacion": semanas_excavacion_ia,
+                "semanas_pilas": semanas_pilas_ia,
+                "semanas_anclas": semanas_anclas_ia,
+                "semanas_total": semanas_excavacion_ia + semanas_pilas_ia + semanas_anclas_ia
+            },
+            "datos_reales": {
+                "semanas_transcurridas": semanas_reales,
+                "volumen_excavado": volumen_real,
+                "pilas_completadas": pilas_real,
+                "anclas_instaladas": anclas_real
+            },
+            "error_ia": str(e)
+        }
+        
+        await db.proyectos.update_one(
+            {"id": proyecto_id},
+            {"$set": {
+                "comparacion_planes": comparacion_basica,
+                "updated_at": datetime.now(timezone.utc)
+            }}
+        )
+        
+        return {
+            "success": True,
+            "comparacion": comparacion_basica,
+            "mensaje": "Comparación guardada. El análisis de IA no está disponible."
+        }
+
+
+@api_router.get("/proyectos/{proyecto_id}/comparacion-planes")
+async def obtener_comparacion_planes(proyecto_id: str):
+    """Obtiene la comparación de planes guardada para un proyecto"""
+    proyecto = await db.proyectos.find_one(
+        {"id": proyecto_id},
+        {"_id": 0, "comparacion_planes": 1, "nombre": 1}
+    )
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    return {
+        "proyecto_nombre": proyecto.get("nombre", ""),
+        "comparacion": proyecto.get("comparacion_planes", None)
+    }
+
+
+@api_router.get("/dashboard/comparaciones-resumen")
+async def obtener_comparaciones_dashboard():
+    """Obtiene un resumen de comparaciones de todos los proyectos para el dashboard"""
+    proyectos = await db.proyectos.find(
+        {"comparacion_planes": {"$exists": True}},
+        {"_id": 0, "id": 1, "nombre": 1, "comparacion_planes": 1, "avance_actual": 1}
+    ).to_list(100)
+    
+    resumen = []
+    for p in proyectos:
+        comp = p.get("comparacion_planes", {})
+        if comp:
+            resumen.append({
+                "proyecto_id": p["id"],
+                "proyecto_nombre": p.get("nombre", ""),
+                "avance_actual": p.get("avance_actual", 0),
+                "datos_usuario": comp.get("datos_usuario", {}),
+                "datos_ia": comp.get("datos_ia", {}),
+                "datos_reales": comp.get("datos_reales", {}),
+                "veredicto": comp.get("analisis_ia", {}).get("veredicto", "NO_ANALIZADO"),
+                "fecha_comparacion": comp.get("fecha_comparacion", "")
+            })
+    
+    return {"proyectos": resumen}
+
+
 @api_router.post("/avances/{avance_id}/analizar-foto")
 async def analizar_foto_avance(avance_id: str, data: dict):
     """
