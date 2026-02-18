@@ -3000,13 +3000,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
 
 # --- Reporte Semanal Automático ---
 async def generar_reporte_semanal():
@@ -3014,7 +3007,7 @@ async def generar_reporte_semanal():
     Genera y envía un reporte semanal con el resumen de avance de todos los proyectos.
     Se ejecuta automáticamente cada viernes a las 18:00.
     """
-    if not ADMIN_EMAIL or not resend.api_key:
+    if not ADMIN_EMAIL or not RESEND_API_KEY:
         logging.warning("No se puede enviar reporte semanal: ADMIN_EMAIL o RESEND_API_KEY no configurados")
         return
     
