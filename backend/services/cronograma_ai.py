@@ -253,14 +253,26 @@ async def analizar_foto_avance(
     - Comparación con semana anterior
     - Pronóstico de avance
     """
+    import tempfile
+    import os
+    
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContentWithMimeType
+        from emergentintegrations.llm.chat import LlmChat, FileContentWithMimeType
         
         if not EMERGENT_LLM_KEY:
             return {"success": False, "error": "EMERGENT_LLM_KEY no configurada"}
         
-        # Construir prompt detallado
-        prompt = f"""Analiza esta imagen aérea de una obra de construcción de cimentaciones profundas.
+        # Guardar imagen temporalmente
+        import base64
+        image_data = base64.b64decode(imagen_base64)
+        
+        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp_file:
+            tmp_file.write(image_data)
+            temp_path = tmp_file.name
+        
+        try:
+            # Construir prompt detallado
+            prompt = f"""Analiza esta imagen aérea de una obra de construcción de cimentaciones profundas.
 
 CONTEXTO:
 - Semana actual del proyecto: {semana_actual}
@@ -296,56 +308,60 @@ Responde EXACTAMENTE en este formato JSON:
     "maquinaria_visible": "<descripción de equipos visibles>",
     "recomendaciones": "<sugerencias basadas en lo observado>"
 }}"""
-        
-        # Crear chat con Gemini Vision
-        llm = LlmChat(
-            api_key=EMERGENT_LLM_KEY,
-            session_id=f"analisis-foto-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-            system_message="Eres un experto en análisis de imágenes de construcción civil."
-        )
-        
-        # Preparar imagen como FileContentWithMimeType
-        image_file = FileContentWithMimeType(
-            file_base64=imagen_base64,
-            mime_type="image/jpeg"
-        )
-        
-        # Enviar mensaje con imagen usando el método correcto
-        response = await llm.send_message_async(
-            message=prompt,
-            model="gemini-2.0-flash",
-            file_contents=[image_file]
-        )
-        
-        # Parsear respuesta JSON
-        import json
-        import re
-        
-        # Limpiar respuesta
-        response_text = response.strip()
-        if response_text.startswith("```json"):
-            response_text = response_text[7:]
-        if response_text.startswith("```"):
-            response_text = response_text[3:]
-        if response_text.endswith("```"):
-            response_text = response_text[:-3]
-        
-        # Extraer JSON de la respuesta
-        json_match = re.search(r'\{[\s\S]*\}', response_text)
-        if json_match:
-            result = json.loads(json_match.group())
-            result["success"] = True
-            result["raw_response"] = response
-            return result
-        else:
-            return {
-                "success": True,
-                "raw_response": response,
-                "pilas_detectadas": 0,
-                "anclas_detectadas": 0,
-                "observaciones": response,
-                "confianza_deteccion": "BAJA"
-            }
+            
+            # Crear chat con Gemini Vision
+            llm = LlmChat(
+                api_key=EMERGENT_LLM_KEY,
+                session_id=f"analisis-foto-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                system_message="Eres un experto en análisis de imágenes de construcción civil."
+            )
+            
+            # Preparar imagen como FileContentWithMimeType usando la ruta del archivo temporal
+            image_file = FileContentWithMimeType(
+                mime_type="image/jpeg",
+                file_path=temp_path
+            )
+            
+            # Enviar mensaje con imagen
+            response = await llm.send_message_async(
+                message=prompt,
+                model="gemini-2.0-flash",
+                file_contents=[image_file]
+            )
+            
+            # Parsear respuesta JSON
+            import json
+            import re
+            
+            # Limpiar respuesta
+            response_text = response.strip()
+            if response_text.startswith("```json"):
+                response_text = response_text[7:]
+            if response_text.startswith("```"):
+                response_text = response_text[3:]
+            if response_text.endswith("```"):
+                response_text = response_text[:-3]
+            
+            # Extraer JSON de la respuesta
+            json_match = re.search(r'\{[\s\S]*\}', response_text)
+            if json_match:
+                result = json.loads(json_match.group())
+                result["success"] = True
+                result["raw_response"] = response
+                return result
+            else:
+                return {
+                    "success": True,
+                    "raw_response": response,
+                    "pilas_detectadas": 0,
+                    "anclas_detectadas": 0,
+                    "observaciones": response,
+                    "confianza_deteccion": "BAJA"
+                }
+        finally:
+            # Limpiar archivo temporal
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
             
     except Exception as e:
         logging.error(f"Error analizando imagen: {e}")
