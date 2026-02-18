@@ -2832,6 +2832,269 @@ async def crear_frente(proyecto_id: str, frente: dict):
     return frente_data
 
 
+# --- Catálogo de Maquinaria con IA ---
+@api_router.post("/proyectos/analizar-catalogo-maquinaria")
+async def analizar_catalogo_maquinaria(
+    file: UploadFile = File(...),
+    area_terreno: float = 0,
+    volumen_excavacion: float = 0,
+    num_pilas: int = 0,
+    distancia_pilas: float = 0,
+    espacio_maniobra: float = 0
+):
+    """
+    Analiza un catálogo de maquinaria en Excel y usa IA para:
+    1. Extraer información de las máquinas
+    2. Buscar especificaciones técnicas
+    3. Proponer distribución óptima para el proyecto
+    """
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="El archivo debe ser Excel (.xlsx o .xls)")
+    
+    # Leer el archivo Excel
+    content = await file.read()
+    wb = load_workbook(filename=io.BytesIO(content))
+    ws = wb.active
+    
+    # Extraer datos de las máquinas
+    maquinas = []
+    headers = []
+    for idx, row in enumerate(ws.iter_rows(values_only=True)):
+        if idx == 0:
+            headers = [str(h).strip().upper() if h else f"COL_{i}" for i, h in enumerate(row)]
+            continue
+        if not any(row):
+            continue
+        
+        row_dict = {}
+        for i, value in enumerate(row):
+            if i < len(headers):
+                row_dict[headers[i]] = value
+        
+        # Extraer campos clave
+        tipo = row_dict.get('TIPO DE MAQUINA') or row_dict.get('TIPO') or ''
+        marca = row_dict.get('MARCA') or ''
+        modelo = row_dict.get('MODELO') or ''
+        estatus = row_dict.get('ESTATUS') or row_dict.get('FECHA APROX TERMINO PROYECTO A INICIAR') or ''
+        
+        if tipo and str(tipo).strip():
+            maquinas.append({
+                "tipo": str(tipo).strip(),
+                "marca": str(marca).strip() if marca else "",
+                "modelo": str(modelo).strip() if modelo else "",
+                "estatus": str(estatus).strip() if estatus else "",
+                "operador": str(row_dict.get('OPERADOR', '')).strip(),
+                "obra_actual": str(row_dict.get('OBRA', '')).strip(),
+                "ubicacion": str(row_dict.get('UBICACIÓN', '')).strip()
+            })
+    
+    if not maquinas:
+        raise HTTPException(status_code=400, detail="No se encontraron máquinas en el archivo")
+    
+    # Filtrar máquinas disponibles (OPTIMA, SATISFACTORIO, sin estado definido)
+    maquinas_disponibles = [
+        m for m in maquinas 
+        if m.get('estatus', '').upper() not in ['DESHABILITADA', 'EN REPARACION']
+    ]
+    
+    # Categorizar máquinas
+    excavadoras = [m for m in maquinas_disponibles if 'EXCAVADORA' in m['tipo'].upper()]
+    perforadoras = [m for m in maquinas_disponibles if 'PERFORADORA' in m['tipo'].upper() and 'ANCLA' not in m['tipo'].upper()]
+    perforadoras_anclas = [m for m in maquinas_disponibles if 'PERFORADORA ANCLAS' in m['tipo'].upper() or 'ANCLA' in m['tipo'].upper()]
+    gruas = [m for m in maquinas_disponibles if 'GRUA' in m['tipo'].upper()]
+    manipuladores = [m for m in maquinas_disponibles if 'MANIPULADOR' in m['tipo'].upper()]
+    
+    # Preparar prompt para IA
+    maquinas_texto = ""
+    for m in maquinas_disponibles:
+        maquinas_texto += f"- {m['tipo']}: {m['marca']} {m['modelo']} (Estado: {m['estatus'] or 'Disponible'})\n"
+    
+    prompt = f"""Eres un experto en maquinaria de construcción y planificación de obras.
+
+CATÁLOGO DE MAQUINARIA DISPONIBLE:
+{maquinas_texto}
+
+DATOS DEL PROYECTO:
+- Área del terreno: {area_terreno} m²
+- Volumen de excavación: {volumen_excavacion} m³
+- Número de pilas a perforar: {num_pilas}
+- Distancia entre pilas: {distancia_pilas} m
+- Espacio de maniobra disponible: {espacio_maniobra} m²
+
+TAREA:
+1. Para cada máquina del catálogo, proporciona las especificaciones técnicas aproximadas:
+   - Dimensiones (largo x ancho x altura en metros)
+   - Radio de giro
+   - Rendimiento estimado (m³/hora para excavadoras, pilas/día para perforadoras)
+   - Peso operativo
+
+2. Analiza qué máquinas son más adecuadas para este proyecto considerando:
+   - Espacio disponible para maniobras
+   - Volumen de trabajo
+   - Eficiencia esperada
+
+3. Propón un PLAN DE EJECUCIÓN ÓPTIMO:
+   - FASE 1 EXCAVACIÓN: Qué excavadoras usar y en qué orden
+   - FASE 2 PERFORACIÓN DE PILAS: Qué perforadoras usar
+   - FASE 3 ANCLAS: Qué perforadoras de anclas usar
+   - Distribución espacial recomendada
+
+4. Calcula:
+   - Tiempo estimado para excavación
+   - Tiempo estimado para perforación de pilas
+   - Tiempo estimado para anclas
+   - Recomendaciones para optimizar el uso del espacio
+
+Responde en formato JSON con esta estructura:
+{{
+    "maquinas_con_specs": [
+        {{
+            "tipo": "...",
+            "marca": "...",
+            "modelo": "...",
+            "dimensiones": {{"largo": 0, "ancho": 0, "altura": 0}},
+            "radio_giro": 0,
+            "rendimiento": "...",
+            "peso_operativo": 0,
+            "adecuada_para_proyecto": true/false,
+            "razon": "..."
+        }}
+    ],
+    "plan_excavacion": {{
+        "maquinas_recomendadas": ["..."],
+        "estrategia": "...",
+        "tiempo_estimado_dias": 0,
+        "rendimiento_esperado_m3_dia": 0
+    }},
+    "plan_pilas": {{
+        "maquinas_recomendadas": ["..."],
+        "estrategia": "...",
+        "tiempo_estimado_dias": 0,
+        "pilas_por_dia": 0
+    }},
+    "plan_anclas": {{
+        "maquinas_recomendadas": ["..."],
+        "estrategia": "...",
+        "tiempo_estimado_dias": 0,
+        "anclas_por_dia": 0
+    }},
+    "distribucion_espacial": {{
+        "recomendacion": "...",
+        "zonas_trabajo": ["..."],
+        "consideraciones_seguridad": ["..."]
+    }},
+    "resumen_ejecutivo": "..."
+}}
+"""
+    
+    try:
+        llm = LlmChat(api_key=EMERGENT_LLM_KEY)
+        response = await llm.send_async(
+            prompt=prompt,
+            model="gemini-2.0-flash"
+        )
+        
+        # Parsear respuesta JSON
+        response_text = response.strip()
+        if response_text.startswith("```json"):
+            response_text = response_text[7:]
+        if response_text.startswith("```"):
+            response_text = response_text[3:]
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]
+        
+        import json
+        resultado_ia = json.loads(response_text.strip())
+        
+        return {
+            "success": True,
+            "total_maquinas": len(maquinas),
+            "maquinas_disponibles": len(maquinas_disponibles),
+            "resumen_catalogo": {
+                "excavadoras": len(excavadoras),
+                "perforadoras": len(perforadoras),
+                "perforadoras_anclas": len(perforadoras_anclas),
+                "gruas": len(gruas),
+                "manipuladores": len(manipuladores)
+            },
+            "maquinas_raw": maquinas_disponibles,
+            "analisis_ia": resultado_ia
+        }
+    except json.JSONDecodeError as e:
+        # Si no puede parsear JSON, devolver texto plano
+        return {
+            "success": True,
+            "total_maquinas": len(maquinas),
+            "maquinas_disponibles": len(maquinas_disponibles),
+            "resumen_catalogo": {
+                "excavadoras": len(excavadoras),
+                "perforadoras": len(perforadoras),
+                "perforadoras_anclas": len(perforadoras_anclas),
+                "gruas": len(gruas),
+                "manipuladores": len(manipuladores)
+            },
+            "maquinas_raw": maquinas_disponibles,
+            "analisis_ia_texto": response if 'response' in dir() else "Error procesando respuesta de IA"
+        }
+    except Exception as e:
+        logging.error(f"Error analizando catálogo: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "total_maquinas": len(maquinas),
+            "maquinas_disponibles": len(maquinas_disponibles),
+            "maquinas_raw": maquinas_disponibles,
+            "resumen_catalogo": {
+                "excavadoras": len(excavadoras),
+                "perforadoras": len(perforadoras),
+                "perforadoras_anclas": len(perforadoras_anclas),
+                "gruas": len(gruas),
+                "manipuladores": len(manipuladores)
+            }
+        }
+
+
+@api_router.post("/proyectos/{proyecto_id}/guardar-catalogo-maquinaria")
+async def guardar_catalogo_maquinaria(proyecto_id: str, data: dict):
+    """
+    Guarda el catálogo de maquinaria y el análisis de IA en el proyecto.
+    """
+    proyecto = await db.proyectos.find_one({"id": proyecto_id})
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    await db.proyectos.update_one(
+        {"id": proyecto_id},
+        {"$set": {
+            "catalogo_maquinaria": data.get("maquinas", []),
+            "analisis_maquinaria_ia": data.get("analisis_ia", {}),
+            "parametros_proyecto": data.get("parametros", {}),
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    return {"success": True, "message": "Catálogo guardado correctamente"}
+
+
+@api_router.get("/proyectos/{proyecto_id}/catalogo-maquinaria")
+async def obtener_catalogo_maquinaria(proyecto_id: str):
+    """Obtiene el catálogo de maquinaria de un proyecto"""
+    proyecto = await db.proyectos.find_one(
+        {"id": proyecto_id}, 
+        {"_id": 0, "catalogo_maquinaria": 1, "analisis_maquinaria_ia": 1, "parametros_proyecto": 1}
+    )
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    return {
+        "catalogo": proyecto.get("catalogo_maquinaria", []),
+        "analisis_ia": proyecto.get("analisis_maquinaria_ia", {}),
+        "parametros": proyecto.get("parametros_proyecto", {})
+    }
+
+
 @api_router.post("/avances/{avance_id}/analizar-foto")
 async def analizar_foto_avance(avance_id: str, data: dict):
     """
