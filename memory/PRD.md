@@ -147,6 +147,11 @@ POST /api/proyectos/{proyecto_id}/actualizar-cronograma
   - Parsea el archivo, actualiza métricas del proyecto
   - Recrea los frentes de trabajo
 
+POST /api/proyectos/{proyecto_id}/analizar-desviacion
+  - Compara progreso real vs cronograma planificado
+  - Envía alerta por email (Resend) si desviación >20%
+  - Retorna: desviaciones por fase, progreso esperado, estado alerta
+
 GET /api/plantilla-cronograma
   - Descarga plantilla Excel de ejemplo
 ```
@@ -155,8 +160,10 @@ GET /api/plantilla-cronograma
 - `CronogramaProyectoModal.jsx` integrado en `ProyectosView.jsx`
 - Botón con icono CalendarClock en cada tarjeta de proyecto
 - Modal muestra estado actual del cronograma o permite subir nuevo
-- Visualización de frentes y actividades parseadas
-- Indicador "Programa de obra cargado" en tarjetas de proyecto
+- **Sección "Análisis de Desviación"** con botón "Analizar y Alertar"
+- Visualización de desviaciones por fase con tabla comparativa
+- Badge de estado: Alerta Crítica / Moderada / Sin Desviaciones
+- Indicador "Email enviado" cuando se envía alerta
 
 ### Testing
 - Backend: 9/9 tests passed
