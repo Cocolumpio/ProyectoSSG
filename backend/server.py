@@ -3086,13 +3086,15 @@ Responde en formato JSON con esta estructura:
                 "manipuladores": len(manipuladores)
             },
             "maquinas_raw": maquinas_disponibles,
-            "analisis_ia_texto": response if 'response' in dir() else "Error procesando respuesta de IA"
+            "analisis_ia_texto": response if 'response' in dir() else "Error procesando respuesta de IA",
+            "mensaje": "Catálogo procesado. El análisis de IA no pudo ser parseado como JSON pero el texto está disponible."
         }
     except Exception as e:
-        logging.error(f"Error analizando catálogo: {e}")
+        logging.error(f"Error analizando catálogo con IA: {e}")
+        # Devolver éxito parcial - tenemos las máquinas pero no el análisis IA
         return {
-            "success": False,
-            "error": str(e),
+            "success": True,
+            "error_ia": str(e),
             "total_maquinas": len(maquinas),
             "maquinas_disponibles": len(maquinas_disponibles),
             "maquinas_raw": maquinas_disponibles,
@@ -3102,7 +3104,8 @@ Responde en formato JSON con esta estructura:
                 "perforadoras_anclas": len(perforadoras_anclas),
                 "gruas": len(gruas),
                 "manipuladores": len(manipuladores)
-            }
+            },
+            "mensaje": f"Catálogo procesado exitosamente ({len(maquinas_disponibles)} máquinas disponibles). El análisis con IA no está disponible temporalmente."
         }
 
 
