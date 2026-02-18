@@ -374,6 +374,21 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
         </div>
       )}
 
+      {/* Modal de Cronograma/Programa de Obra */}
+      {showCronogramaModal && selectedProjectForCronograma && (
+        <CronogramaProyectoModal
+          proyecto={selectedProjectForCronograma}
+          onClose={() => {
+            setShowCronogramaModal(false);
+            setSelectedProjectForCronograma(null);
+          }}
+          onSuccess={(msg) => {
+            onShowSuccess && onShowSuccess(msg);
+            onRefresh && onRefresh();
+          }}
+        />
+      )}
+
       {/* Grid de Proyectos */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" data-testid="proyectos-grid">
         {proyectos.map((proyecto) => (
