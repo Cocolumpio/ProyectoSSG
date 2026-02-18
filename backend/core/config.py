@@ -146,6 +146,6 @@ async def get_optional_user(credentials: Optional[HTTPAuthorizationCredentials] 
             db = get_db()
             user = await db.usuarios.find_one({"id": user_id}, {"_id": 0})
             return user
-    except:
+    except Exception:
         pass
     return None
