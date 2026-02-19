@@ -194,6 +194,8 @@ class ProyectoUpdate(BaseModel):
     avance_actual: Optional[float] = None
     # Tipos de actividades
     actividades_tipo: Optional[List[str]] = None
+    # Fases activas
+    fases_activas: Optional[List[str]] = None
     # Métricas planeadas
     volumen_total_planeado: Optional[float] = None
     pilas_planeadas: Optional[int] = None
