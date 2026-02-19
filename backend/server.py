@@ -1414,79 +1414,8 @@ async def obtener_modelo_3d_gridfs(file_id: str):
 
 
 # Mantener endpoint legacy para archivos ya guardados en filesystem
-    old_model = avance.get('modelo_3d_url')
-    old_thumbnail = avance.get('thumbnail_url')
-    if old_model:
-        try:
-            old_filename = old_model.split("/")[-1]
-            old_file_path = models_dir / old_filename
-            if old_file_path.exists():
-                old_file_path.unlink()
-        except Exception as e:
-            logging.error(f"Error eliminando modelo anterior: {e}")
-    if old_thumbnail:
-        try:
-            old_thumb_filename = old_thumbnail.split("/")[-1]
-            old_thumb_path = models_dir / old_thumb_filename
-            if old_thumb_path.exists():
-                old_thumb_path.unlink()
-        except Exception as e:
-            logging.error(f"Error eliminando thumbnail anterior: {e}")
-    
-    # Generar nombre único para el modelo
-    unique_id = str(uuid.uuid4())
-    unique_filename = f"{unique_id}{file_extension}"
-    file_path = models_dir / unique_filename
-    
-    # Guardar el archivo
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    # Generar URL del modelo
-    model_url = f"/api/modelos3d/{proyecto_id}/{avance_id}/{unique_filename}"
-    
-    # Generar thumbnail (solo para archivos PLY)
-    thumbnail_url = None
-    if file_extension == '.ply':
-        thumbnail_filename = f"{unique_id}_thumb.png"
-        thumbnail_path = models_dir / thumbnail_filename
-        
-        # Generar thumbnail en background (no bloquea la respuesta)
-        try:
-            success = await generate_thumbnail_async(str(file_path), str(thumbnail_path))
-            if success:
-                thumbnail_url = f"/api/modelos3d/{proyecto_id}/{avance_id}/{thumbnail_filename}"
-                logging.info(f"Thumbnail generado exitosamente: {thumbnail_url}")
-        except Exception as e:
-            logging.error(f"Error generando thumbnail: {e}")
-    
-    # Actualizar el avance con la URL del modelo y thumbnail
-    update_data = {
-        "modelo_3d_url": model_url, 
-        "modelo_3d_tipo": "local"
-    }
-    if thumbnail_url:
-        update_data["thumbnail_url"] = thumbnail_url
-    
-    await db.avances_semanales.update_one(
-        {"id": avance_id},
-        {"$set": update_data}
-    )
-    
-    # Obtener tamaño del archivo
-    file_size = file_path.stat().st_size
-    file_size_mb = round(file_size / (1024 * 1024), 2)
-    
-    return {
-        "url": model_url, 
-        "filename": unique_filename,
-        "size_mb": file_size_mb,
-        "tipo": "local",
-        "thumbnail_url": thumbnail_url
-    }
-
 @api_router.get("/modelos3d/{proyecto_id}/{avance_id}/{filename}")
-async def obtener_modelo_3d(proyecto_id: str, avance_id: str, filename: str):
+async def obtener_modelo_3d_legacy(proyecto_id: str, avance_id: str, filename: str):
     """Obtener un modelo 3D o thumbnail de un avance semanal"""
     file_path = UPLOAD_DIR / "modelos3d" / proyecto_id / avance_id / filename
     if not file_path.exists():
