@@ -293,10 +293,14 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
               <input
                 type="checkbox"
                 checked={formData.fases?.cimentacion || false}
-                onChange={() => setFormData(prev => ({
-                  ...prev,
-                  fases: { ...prev.fases, cimentacion: !prev.fases?.cimentacion }
-                }))}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  setFormData(prev => ({
+                    ...prev,
+                    fases: { ...prev.fases, cimentacion: !prev.fases?.cimentacion }
+                  }));
+                }}
+                onClick={(e) => e.stopPropagation()}
                 className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
               />
               <Columns3 className="h-5 w-5 text-blue-600" />
