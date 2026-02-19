@@ -486,7 +486,18 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
     } catch (err) {
       console.error('Error subiendo modelo 3D:', err);
       setUploadProgress(p => ({ ...p, status: 'Error en la subida' }));
-      alert(err.response?.data?.detail || 'Error al subir el modelo 3D. Intente nuevamente.');
+      
+      // Mensaje de error más específico
+      let errorMessage = 'Error al subir el modelo 3D. Intente nuevamente.';
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        errorMessage = 'La conexión tardó demasiado. Para archivos muy grandes, el servidor puede tardar varios minutos en procesar. Intente nuevamente.';
+      } else if (err.response?.data?.detail) {
+        errorMessage = err.response.data.detail;
+      } else if (err.response?.status === 520 || err.response?.status === 504) {
+        errorMessage = 'Timeout del servidor. El archivo es muy grande y el procesamiento tardó demasiado. Intente nuevamente.';
+      }
+      
+      alert(errorMessage);
     } finally {
       setTimeout(() => {
         setUploadingModel(false);
