@@ -50,9 +50,13 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
   const [error, setError] = useState(null);
 
   // Determinar qué fases están activas en el proyecto
-  const tieneExcavacion = proyecto.fases_activas?.includes('excavacion') || proyecto.volumen_total_planeado > 0;
-  const tieneCimentacion = proyecto.fases_activas?.includes('cimentacion') || proyecto.pilas_planeadas > 0 || proyecto.anclas_planeadas > 0;
-  const tieneEdificacion = proyecto.fases_activas?.includes('edificacion') || proyecto.muros_planeados > 0;
+  // Usar fases_activas guardadas si existen, sino calcular basado en datos
+  const tieneExcavacion = proyecto.fases_activas?.includes('excavacion') || 
+    (!proyecto.fases_activas && (proyecto.volumen_total_planeado > 0));
+  const tieneCimentacion = proyecto.fases_activas?.includes('cimentacion') || 
+    (!proyecto.fases_activas && (proyecto.pilas_planeadas > 0 || proyecto.anclas_planeadas > 0));
+  const tieneEdificacion = proyecto.fases_activas?.includes('edificacion') || 
+    (!proyecto.fases_activas && (proyecto.muros_planeados > 0));
 
   useEffect(() => {
     const loadAvances = async () => {
