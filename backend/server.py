@@ -1286,6 +1286,217 @@ async def descargar_imagenes_zip(proyecto_id: str, avance_id: str):
     )
 
 # --- Modelos 3D (Nubes de Puntos) ---
+
+# Sistema de subida por chunks para archivos grandes
+@api_router.post("/proyectos/{proyecto_id}/avances-semanales/{avance_id}/modelo3d/init-upload")
+async def iniciar_upload_modelo_3d(
+    proyecto_id: str, 
+    avance_id: str,
+    filename: str,
+    total_size: int,
+    total_chunks: int
+):
+    """
+    Inicia una subida de archivo grande por chunks.
+    Retorna un upload_id para identificar la sesión de subida.
+    """
+    # Verificar que el avance existe
+    avance = await db.avances_semanales.find_one({"id": avance_id, "proyecto_id": proyecto_id})
+    if not avance:
+        raise HTTPException(status_code=404, detail="Avance semanal no encontrado")
+    
+    # Verificar extensión del archivo
+    file_extension = Path(filename).suffix.lower()
+    allowed_extensions = ['.ply', '.xyz', '.pts', '.pcd']
+    if file_extension not in allowed_extensions:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Formato no soportado. Use: {', '.join(allowed_extensions)}"
+        )
+    
+    # Crear sesión de upload
+    upload_id = str(uuid.uuid4())
+    
+    await db.uploads_temp.insert_one({
+        "upload_id": upload_id,
+        "proyecto_id": proyecto_id,
+        "avance_id": avance_id,
+        "filename": filename,
+        "total_size": total_size,
+        "total_chunks": total_chunks,
+        "received_chunks": [],
+        "chunks_data": {},
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "status": "in_progress"
+    })
+    
+    return {
+        "upload_id": upload_id,
+        "message": "Upload iniciado",
+        "total_chunks": total_chunks
+    }
+
+
+@api_router.post("/proyectos/{proyecto_id}/avances-semanales/{avance_id}/modelo3d/upload-chunk")
+async def subir_chunk_modelo_3d(
+    proyecto_id: str,
+    avance_id: str,
+    upload_id: str = Form(...),
+    chunk_index: int = Form(...),
+    chunk: UploadFile = File(...)
+):
+    """
+    Sube un chunk individual del archivo.
+    """
+    # Verificar sesión de upload
+    upload_session = await db.uploads_temp.find_one({"upload_id": upload_id})
+    if not upload_session:
+        raise HTTPException(status_code=404, detail="Sesión de upload no encontrada")
+    
+    if upload_session.get("status") != "in_progress":
+        raise HTTPException(status_code=400, detail="Upload ya completado o cancelado")
+    
+    try:
+        # Leer chunk
+        chunk_data = await chunk.read()
+        
+        # Guardar chunk en la sesión (como base64 para MongoDB)
+        import base64
+        chunk_b64 = base64.b64encode(chunk_data).decode('utf-8')
+        
+        # Actualizar sesión
+        await db.uploads_temp.update_one(
+            {"upload_id": upload_id},
+            {
+                "$push": {"received_chunks": chunk_index},
+                "$set": {f"chunks_data.{chunk_index}": chunk_b64}
+            }
+        )
+        
+        return {
+            "success": True,
+            "chunk_index": chunk_index,
+            "chunk_size": len(chunk_data)
+        }
+        
+    except Exception as e:
+        logging.error(f"Error subiendo chunk {chunk_index}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/proyectos/{proyecto_id}/avances-semanales/{avance_id}/modelo3d/complete-upload")
+async def completar_upload_modelo_3d(proyecto_id: str, avance_id: str, upload_id: str):
+    """
+    Completa la subida, ensamblando todos los chunks y guardando en GridFS.
+    """
+    from services.storage import get_storage
+    import base64
+    
+    # Obtener sesión de upload
+    upload_session = await db.uploads_temp.find_one({"upload_id": upload_id})
+    if not upload_session:
+        raise HTTPException(status_code=404, detail="Sesión de upload no encontrada")
+    
+    try:
+        total_chunks = upload_session.get("total_chunks", 0)
+        received_chunks = upload_session.get("received_chunks", [])
+        
+        # Verificar que todos los chunks fueron recibidos
+        if len(received_chunks) != total_chunks:
+            missing = set(range(total_chunks)) - set(received_chunks)
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Faltan chunks: {missing}"
+            )
+        
+        # Ensamblar el archivo
+        chunks_data = upload_session.get("chunks_data", {})
+        file_content = b""
+        for i in range(total_chunks):
+            chunk_b64 = chunks_data.get(str(i))
+            if chunk_b64:
+                file_content += base64.b64decode(chunk_b64)
+        
+        filename = upload_session.get("filename", "model.ply")
+        file_extension = Path(filename).suffix.lower()
+        unique_id = str(uuid.uuid4())
+        unique_filename = f"{unique_id}{file_extension}"
+        
+        # Eliminar modelo anterior de GridFS si existe
+        avance = await db.avances_semanales.find_one({"id": avance_id, "proyecto_id": proyecto_id})
+        if avance:
+            old_file_id = avance.get('modelo_3d_gridfs_id')
+            if old_file_id:
+                try:
+                    storage = get_storage(db)
+                    await storage.delete_file(old_file_id)
+                except Exception as e:
+                    logging.warning(f"Error eliminando modelo anterior: {e}")
+        
+        # Guardar en GridFS
+        storage = get_storage(db)
+        file_id = await storage.save_file(
+            content=file_content,
+            filename=unique_filename,
+            content_type="application/octet-stream",
+            metadata={
+                "proyecto_id": proyecto_id,
+                "avance_id": avance_id,
+                "original_filename": filename,
+                "extension": file_extension,
+                "size_bytes": len(file_content)
+            }
+        )
+        
+        file_size_mb = round(len(file_content) / (1024 * 1024), 2)
+        model_url = f"/api/modelos3d/gridfs/{file_id}"
+        
+        # Actualizar el avance
+        await db.avances_semanales.update_one(
+            {"id": avance_id},
+            {"$set": {
+                "modelo_3d_url": model_url,
+                "modelo_3d_gridfs_id": file_id,
+                "modelo_3d_filename": unique_filename,
+                "modelo_3d_original_name": filename,
+                "modelo_3d_tipo": "gridfs",
+                "modelo_3d_size_mb": file_size_mb
+            }}
+        )
+        
+        # Marcar upload como completado y limpiar
+        await db.uploads_temp.update_one(
+            {"upload_id": upload_id},
+            {"$set": {"status": "completed", "chunks_data": {}}}
+        )
+        
+        # Limpiar sesión después de un tiempo
+        await db.uploads_temp.delete_one({"upload_id": upload_id})
+        
+        logging.info(f"Modelo 3D guardado en GridFS: {file_id} ({file_size_mb} MB)")
+        
+        return {
+            "success": True,
+            "url": model_url,
+            "filename": unique_filename,
+            "original_name": filename,
+            "size_mb": file_size_mb,
+            "gridfs_id": file_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error completando upload: {e}")
+        # Marcar como fallido
+        await db.uploads_temp.update_one(
+            {"upload_id": upload_id},
+            {"$set": {"status": "failed", "error": str(e)}}
+        )
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Endpoint original para archivos pequeños (menos de 50MB)
 @api_router.post("/proyectos/{proyecto_id}/avances-semanales/{avance_id}/modelo3d")
 async def subir_modelo_3d(proyecto_id: str, avance_id: str, file: UploadFile = File(...)):
     """Subir un modelo 3D (nube de puntos PLY) a un avance semanal"""
