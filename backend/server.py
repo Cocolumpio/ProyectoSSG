@@ -4320,8 +4320,17 @@ async def startup_event():
         id='reporte_semanal',
         replace_existing=True
     )
+    
+    # Programar análisis de desviaciones cada lunes a las 9:00
+    scheduler.add_job(
+        analizar_desviaciones_todos_proyectos,
+        CronTrigger(day_of_week='mon', hour=9, minute=0),
+        id='analisis_desviaciones',
+        replace_existing=True
+    )
+    
     scheduler.start()
-    logging.info("Scheduler iniciado - Reporte semanal programado para viernes 18:00")
+    logging.info("Scheduler iniciado - Reporte semanal (viernes 18:00) y Análisis de desviaciones (lunes 9:00)")
 
 
 @app.on_event("shutdown")
