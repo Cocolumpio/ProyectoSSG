@@ -456,13 +456,16 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
         );
       }
       
-      // Paso 3: Completar el upload
+      // Paso 3: Completar el upload (puede tardar para archivos grandes)
       setUploadProgress(p => ({ ...p, percent: 95, status: 'Ensamblando archivo...' }));
       
       const completeResponse = await axios.post(
         `${API}/proyectos/${proyecto.id}/avances-semanales/${selectedAvance.id}/modelo3d/complete-upload`,
         null,
-        { params: { upload_id: uploadId } }
+        { 
+          params: { upload_id: uploadId },
+          timeout: 300000 // 5 minutos para el ensamblaje de archivos grandes
+        }
       );
       
       setUploadProgress({ percent: 100, currentChunk: totalChunks, totalChunks, status: '¡Completado!' });
