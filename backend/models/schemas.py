@@ -385,3 +385,38 @@ class ComparacionAvance(BaseModel):
 class ComparacionAvanceCreate(BaseModel):
     semana: int
     pdf_nombre: str
+
+
+# --- Notificaciones ---
+class NotificationType:
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+    SUCCESS = "success"
+    ALERT = "alert"
+
+
+class Notificacion(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tipo: str = "info"  # info, warning, error, success, alert
+    titulo: str
+    mensaje: str
+    proyecto_id: Optional[str] = None
+    proyecto_nombre: Optional[str] = None
+    usuario_id: Optional[str] = None  # None = para todos los admins
+    leida: bool = False
+    fecha: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    link: Optional[str] = None  # Link opcional para navegar
+    metadata: Optional[dict] = None  # Datos adicionales
+
+
+class NotificacionCreate(BaseModel):
+    tipo: str = "info"
+    titulo: str
+    mensaje: str
+    proyecto_id: Optional[str] = None
+    proyecto_nombre: Optional[str] = None
+    usuario_id: Optional[str] = None
+    link: Optional[str] = None
+    metadata: Optional[dict] = None
