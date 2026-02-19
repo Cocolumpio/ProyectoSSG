@@ -126,6 +126,8 @@ class Proyecto(BaseModel):
     avance_actual: float = 0.0
     # Tipos de actividades del proyecto
     actividades_tipo: List[str] = []
+    # Fases activas del proyecto (excavacion, cimentacion, edificacion)
+    fases_activas: List[str] = []
     # Métricas planeadas
     volumen_total_planeado: float = 0.0
     pilas_planeadas: int = 0
