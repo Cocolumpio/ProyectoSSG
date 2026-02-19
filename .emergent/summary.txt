@@ -16,71 +16,89 @@ PRODUCT REQUIREMENTS:
 - **New Feature:** Create a new section on the main dashboard to visually compare three data series on a graph: **Real Progress** (from weekly reports) vs. **User's Plan** (from uploaded schedule) vs. **AI's Plan** (from machinery analysis).
 - The application must manage three distinct construction phases: **Excavación** (Excavation), **Cimentación** (Foundation), and **Edificación** (Structure).
 - The project creation form must allow users to select active phases and set quantitative goals for each.
-- The dashboard must show progress for each active phase individually, as well as a total project progress percentage.
-- The weekly progress modal must allow admins to edit the number of completed units for all activity types.
-- Implement an AI-powered comparison between drone data and a resident engineer's PDF report.
-- Implement automatic email alerts (via Resend) when the AI comparison detects significant discrepancies.
-- Implement a weekly executive email report summarizing project progress and costs.
-- Create a Métricas Históricas (Historical Metrics) dashboard with interactive charts and export-to-Excel/PDF functionality.
+- **New Feature:** Allow users to upload/update the work schedule () for existing projects.
+- **New Feature:** The weekly progress form must adapt dynamically to show input fields only for the project's active phases (e.g., piles, walls, anchors).
+- **New Feature:** Implement an AI-powered feature in the weekly progress form where a user can upload a photo, have the AI analyze it to count elements, and pre-fill the form fields, allowing for manual correction before saving.
+- **New Feature:** Implement automatic email alerts (via Resend) when the actual progress deviates significantly from the uploaded schedule.
+- **New Feature:** Implement an in-app notification panel on the dashboard to show alerts.
+- **Bug Fix:** The template download link for the work schedule was not working.
+- **Bug Fix:** Users could not deselect a construction phase (e.g., Muros) in the project edit form once it was selected.
+- **Deployment Bug:** Uploading large 3D models ( files) fails in the deployed environment but works in the preview environment.
 
 **User's preferred language**: Spanish
 
 **what currently exists?**
-A full-stack React/FastAPI application for construction project management. The backend's monolithic  has been successfully refactored into a modular structure with services and routes. Several new features have been implemented and debugged:
-1.  **AI Machinery Analysis:** A new workflow allows users to upload an Excel catalog of machinery during project creation. The backend uses Gemini AI to analyze the catalog, find machine specifications, and generate an optimal work plan.
-2.  **AI Photo Analysis:** A bug was fixed in the existing feature for analyzing construction photos. The AI can now correctly process real-world site images to identify and count elements like piles and machinery.
-3.  **Bug Fixes:**
-    *   The form for creating a new project now correctly saves the Terrain Parameters to the project's data.
-    *   The machinery catalog Excel parser was made more robust to handle empty rows and header variations.
-    *   The 3D model viewer was improved to show better progress feedback for large  files.
-    *   The weekly progress form was updated to use a local file upload for  models instead of a URL input.
+A full-stack React/FastAPI application for construction project management. The application now includes a dynamic dashboard, user roles, project and progress management.
 
-The latest request is to visualize a comparison between the AI's generated plan, the user's uploaded schedule, and the actual project progress. The agent has already created the placeholder component and backend endpoint for this feature.
+Key features implemented:
+-   **AI Plan Comparison:** A dashboard chart compares Real Progress vs. User's Plan vs. AI's Plan.
+-   **Dynamic Progress Form:** The weekly progress form now dynamically shows fields based on the project's active construction phases and includes an AI photo analysis feature to pre-fill data.
+-   **Schedule Management:** Users can upload and update work schedules for existing projects.
+-   **Automated Alerts & Notifications:** A scheduled job analyzes schedule deviations weekly, sending both email alerts and in-app notifications.
+-   **Role-Based Access:** Client users have a read-only view, filtered to their assigned projects.
+-   **File Storage:** 3D models were migrated from the local filesystem to MongoDB GridFS to support deployment, but this did not solve issues with large file uploads.
+
+The application is stable in the preview environment, but a critical bug prevents the upload of large 3D models in the production/deployed environment.
 
 **Last working item**:
-- **Last item agent was working:** Implementing a new dashboard section to compare the AI-generated work plan, the user's planned schedule, and the project's real progress. The agent created a new backend endpoint  and a new frontend component , and integrated it into the main dashboard view.
+- **Last item agent was working:** Fixing a deployment issue where uploading large 3D models ( files over ~10MB, with user example being 202MB) fails. The agent identified this as an ingress/proxy body size limit in the production environment and began implementing a chunked (multi-part) file upload system to bypass this limitation.
 - **Status:** IN PROGRESS
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** both. The backend endpoint needs to be tested for data processing, and the frontend component needs to be tested to ensure the chart renders correctly with the three data series.
+- **Which testing method agent to use?** both. The backend chunking endpoints (, , ) need to be tested for correctly assembling large files. The frontend component () needs to be tested to ensure it correctly splits the file, uploads chunks, and provides progress feedback.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-*   None.
+- **Issue 1: Large file uploads fail in the deployed environment (P0)**
+    - **Attempted fixes:** The agent migrated file storage from the local filesystem to MongoDB GridFS. This solved the file persistence problem in Kubernetes but did not resolve the upload size limit imposed by the ingress controller. The agent then started creating backend endpoints for chunked uploads.
+    - **Next debug checklist:**
+        1.  **Frontend ():** The file upload logic needs to be completely replaced.
+            -   Implement a function to slice large files into smaller chunks (e.g., 5MB each).
+            -   Call the new  endpoint to get an .
+            -   Iterate through the chunks, sending each one to the  endpoint along with the  and chunk number.
+            -   Update the UI to show a detailed progress bar based on the number of uploaded chunks.
+            -   After all chunks are sent, call the  endpoint.
+            -   On success, proceed with the rest of the form submission as normal, using the  returned from the complete endpoint.
+    - **Why fix this issue and what will be achieved with the fix?** This is a critical bug blocking a core feature. Fixing it will allow users to upload large, real-world 3D drone models, making the application viable for production use.
+    - **Status:** IN PROGRESS
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** both
+    - **Blocked on other issue:** No.
 
 **In progress Task List**:
-- **Task 1: Complete AI vs. User Plan Comparison Chart (P0)**
-    - **Where to resume:**
-        1.  **Backend ():** Flesh out the logic within the  endpoint. It needs to retrieve the saved AI analysis and the user's  from the project document, process both datasets into a comparable format (e.g., cumulative progress over time), fetch the real progress from , and return all three data series in a structured format suitable for charting.
-        2.  **Frontend ():** Implement the component to fetch data from the  endpoint. Use  to render a line or bar chart that displays the three series: Real Progress, User Plan, and AI Plan.
-    - **What will be achieved with this?** The user will be able to visually assess the efficiency of their own planning versus the AI's recommendation and track real progress against both baselines.
+- **Task 1: Complete Chunked File Upload Implementation (P0)**
+    - **Where to resume:** The backend endpoints have been created in . The work must resume on the frontend in  to implement the client-side chunking and upload logic.
+    - **What will be achieved with this?** A robust file upload system that can handle large files in a production environment.
     - **Status:** IN PROGRESS
     - **Should Test frontend/backend/both after fix?** Both
     - **Blocked on something:** No.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **(P1) Refactor New Endpoints:** Move the newly created endpoints in  (like  and ) into their appropriate route files (e.g., ) to maintain the clean, modular architecture.
+    *   **(P1) Refactor New Endpoints:** Move the numerous new endpoints recently added to  (for notifications, schedule analysis, chunked uploads, etc.) into the appropriate route files in  to maintain the modular architecture.
 
 *   **Future Tasks:**
     *   **(P2) Implement Flight Scheduling Form:** Build the UI and backend logic for scheduling drone flights, including email notifications.
-    *   **(P3) Implement Client Role View Filtering:** Implement backend logic so users with the Client role can only see data for projects they are assigned to.
-    *   **(P3) Verify Project Completion Forecasting:** Formally test the existing logic that forecasts project completion dates.
+    *   **(P3) Real-time Notifications:** Upgrade the notification system to use WebSockets for instant updates without needing a page reload.
+    *   **(P3) AI Volume Calculation:** Add a feature for the AI to automatically calculate excavated volumes by comparing new 3D models with the original terrain model.
 
 **Completed work in this session**
-- **Task:** Completed a major backend refactoring, breaking down the monolithic  into modular routes and services.
-- **Feature:** Implemented the full end-to-end feature for AI analysis of an uploaded machinery catalog to generate an optimal work plan.
-- **Bugfix:** Corrected the AI photo analysis feature, which was failing due to incorrect API usage and model selection.
-- **Bugfix:** Ensured that user-entered Terrain Parameters are correctly saved when creating a new project.
-- **Bugfix:** Improved the Excel parser for the machinery catalog to be more robust.
-- **Enhancement:** Changed the Weekly Progress form to support local  file uploads instead of a URL.
-- **Enhancement:** Improved the 3D model viewer to provide better feedback when loading large files.
-- **Testing:** Used the testing agent to validate the backend refactoring and the new AI machinery analysis feature, achieving 100% pass rates.
+- **Feature:** Completed the AI vs. User vs. Real Plan comparison chart on the dashboard.
+- **Feature:** Implemented functionality to upload/update work schedules for existing projects.
+- **Feature:** Implemented automated weekly analysis of schedule deviations with email alerts.
+- **Feature:** Implemented a dashboard notification panel for in-app alerts.
+- **Feature:** Made the weekly progress form dynamic to match project phases and added an AI photo analysis option to pre-fill form data.
+- **Feature:** Implemented role-based access, providing a filtered, read-only experience for Client users.
+- **Bugfix:** Fixed an issue preventing the download of the schedule template file by changing the download mechanism from a simple  to a programmatic fetch.
+- **Bugfix:** Corrected a bug in the project edit form that prevented users from deselecting active construction phases by adding  to checkbox handlers.
+- **Refactor:** Migrated 3D model and other file storage from the local filesystem to MongoDB GridFS to ensure file persistence in a Kubernetes environment.
 
 **Earlier issues found/mentioned but not fixed**
 *   None.
 
 **Known issue recurrence from previous fork**
-*   None.
+- **Issue recurrence:** Adding new business logic and endpoints directly to  instead of the modular  and  directories.
+- **Recurrence count:** 2+
+- **Status:** NOT STARTED. This is a recurring technical debt issue that should be addressed after the current P0 task.
 
 **Code Architecture**
 
@@ -88,78 +106,86 @@ The latest request is to visualize a comparison between the AI's generated plan,
 **Key Technical Concepts**
 - **Frontend:** React, TailwindCSS, Recharts, Axios, Three.js
 - **Backend:** FastAPI, Pydantic, Motor, APScheduler
-- **Database:** MongoDB
-- **Integrations:** Gemini (via emergentintegrations), Resend, ReportLab, Openpyxl
-- **File Parsing:**  for Excel files.
+- **Database:** MongoDB, **GridFS** for large file storage.
+- **Integrations:** Gemini (via emergentintegrations), Resend
+- **File Handling:** , Chunked file uploads
 
 **key DB schema**
-- ****: Updated to store new fields  and .
-- ****: Stores weekly progress data, including the path to the locally stored  model.
-- ****: Stores results of AI comparison between drone and resident reports.
+- ****: Updated with  to correctly manage UI state.
+- ****:  field now stores a dictionary like  instead of a file path.
+- ****: New collection to store user notifications. 
 
 **changes in tech stack**
-- No new technologies were added, but  and  were heavily used.
+- No new technologies, but a fundamental change in file storage strategy from local filesystem to MongoDB GridFS.
 
 **All files of reference**
-- : Majorly refactored and updated with new endpoints for machinery analysis and plan comparison.
-- : Updated with Pydantic models for terrain parameters and AI analysis results.
-- : Fixed for AI photo analysis.
-- : Integrated the new machinery catalog section.
-- : New component for machinery catalog upload and AI analysis display.
-- : Modified to handle local  file uploads.
-- : New stub component for the comparison chart.
-- : Updated with all new features and bug fixes.
+- : Heavily modified with new endpoints for plan comparison, schedule updates, deviation analysis, notifications, and chunked file uploads. **Needs refactoring.**
+- : New service created to abstract GridFS operations.
+- : Updated with models for  and added  to .
+- : Significantly reworked to support dynamic fields, AI photo analysis, and now requires implementation for chunked uploads.
+- : Bug fixed to allow deselecting project phases.
+- : Updated to handle modals and pass user role information.
+- : New component for uploading/updating project schedules.
+- : New component for displaying in-app notifications.
+- : Modified to integrate the notification panel and role-based view switching.
 
 **Areas that need refactoring**:
-- The new endpoints recently added to  should be moved to the appropriate files in  to complete the modularization effort.
+- : This file has become a monolith again. All new endpoints (notifications, schedule analysis, chunked uploads, plan comparison, etc.) must be moved into their respective files under  and their business logic into . This is the most critical refactoring task.
 
 **key api endpoints**
-- : (New) Uploads machinery catalog Excel, runs AI analysis, and returns a work plan.
-- : (Fixed) Uploads a photo for AI analysis of construction elements.
-- : (New, In-Progress) Endpoint intended to return data for the Real vs. User Plan vs. AI Plan comparison chart.
+- : Generates plan comparison.
+- : Retrieves saved plan comparison.
+- : Uploads/updates a project's schedule.
+- : Triggers deviation analysis and sends alerts.
+- , : Endpoints for the notification panel.
+- : Analyzes a photo to pre-fill progress form.
+- : (New) Initiates a chunked file upload.
+- : (New) Uploads a single file chunk.
+- : (New) Finalizes a chunked upload.
+- : (New) Serves files from GridFS.
 
 **Critical Info for New Agent**
-- The immediate task is to complete the Plan Comparison feature. This involves implementing the backend logic to gather and process the three data sources (real, user plan, AI plan) and then building out the frontend component to render this data in a chart.
-- The AI analysis for the machinery catalog is now working correctly. The next step is to persist its output and use it for the comparison.
-- The backend has been refactored, but new development has added endpoints directly to  again. A good follow-up task after completing the current feature would be to move these new routes into  to maintain code hygiene.
+- The absolute top priority (P0) is to fix the large file upload issue in the deployed environment by completing the chunked upload implementation on the frontend.
+- The backend part for chunked uploads is already in  but has not been tested end-to-end. The frontend () needs a complete overhaul of its file submission logic.
+- After fixing the upload issue, the next most important task is to refactor . The file has grown very large and contains logic that belongs in separate route and service files. Adhering to the established modular architecture is crucial for maintainability.
 
 **documents and test reports created in this job**
 -  (updated)
--  (Backend Refactor Test)
--  (New Feature Integration Test)
--  (AI Machinery Analysis E2E Test)
+- 
+- 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (LATEST):** Requested saving the AI analysis, comparing it against the user's own schedule, and displaying a comparison graph (Real vs. User Plan vs. AI Plan) on the dashboard.
-2.  **Agent:** Finished implementation and confirmed the AI machinery analysis works 100%.
-3.  **User:** Asked the agent to make the AI recommendation for the work plan 100% functional.
-4.  **Agent:** Finished fixing bugs related to terrain parameters and AI photo analysis.
-5.  **User:** Reported that terrain data wasn't saving and the AI photo analysis wasn't detecting anything in a real site photo.
-6.  **Agent:** Finished fixing bugs with the machinery catalog parsing and 3D model loading.
-7.  **User:** Reported an error when trying to upload the machinery catalog and that the  model wasn't loading.
-8.  **Agent:** Finished implementing the machinery catalog feature and the change from URL to file upload for  models.
-9.  **User:** Provided the Excel file for the machinery catalog and clarified the requirements for the AI analysis.
-10. **Agent:** Asked for clarification on the new feature requests.
+1.  **User (LATEST):** Reports that uploading  files is still failing in the deployed environment, providing a screenshot of the error and a large (202MB) example file.
+2.  **Agent:** Completed the fix for the project phase selection bug.
+3.  **User:** Reported a bug where they couldn't deselect a construction phase (like Muros) in the project edit form.
+4.  **Agent:** Completed the implementation of the dynamic weekly progress form with AI photo analysis.
+5.  **User:** Requested a major feature: make the weekly progress form dynamic based on project phases and add an AI photo analysis feature to pre-fill the form.
+6.  **Agent:** Completed the implementation of the in-app notification panel.
+7.  **User:** Approved the idea of an in-app notification panel.
+8.  **Agent:** Completed the implementation of scheduled deviation analysis and client-role view filtering.
+9.  **User:** Requested that the deviation analysis run automatically each week and that client-role views be filtered.
+10. **Agent:** Completed the bug fix for the template download and implemented the email alert for schedule deviations.
 
 **Project Health Check:**
-- **Broken:** No. The app is stable.
-- **Mocked:** The new dashboard component  is a placeholder and does not yet render any data.
+- **Broken:** Yes. The core feature of uploading 3D models is broken for large files in the production environment, which blocks users.
+- **Mocked:** None.
 
 **3rd Party Integrations**
 - **Gemini Vision:** (via ) Used for AI analysis of PDFs, photos, and machinery data. Uses Emergent LLM Key.
 - **Resend:** Used for sending email alerts and reports.
 - **Three.js:** Used for rendering 3D  models.
-- **APScheduler:** Used for scheduling backend jobs.
+- **APScheduler:** Used for scheduling backend jobs (weekly reports, deviation analysis).
 - **ReportLab & Openpyxl:** Used for server-side generation of PDF and Excel files.
 
 **Testing status**
-- **Testing agent used after significant changes:** YES. Used after the backend refactor and after implementing the AI machinery analysis feature.
+- **Testing agent used after significant changes:** YES. It was used after completing major features.
+- **Troubleshoot agent used after agent stuck in loop:** NO.
 - **Test files created:** None.
-- **Known regressions:** None.
+- **Known regressions:** The large file upload that used to work for smaller files is now completely broken pending the new chunked implementation.
 
 **Credentials to test flow:**
 - **Admin:**  / 
 - **Client:**  / 
 
 **What agent forgot to execute**
-- The agent has been adding new endpoint logic directly to  after completing the refactoring. While not a functional omission, it goes against the newly established modular pattern. These new routes should be moved to the appropriate route files as a next step.</analysis>
+- The agent has consistently added new endpoints and business logic directly into , ignoring the previously established modular architecture. This technical debt is accumulating and makes the backend harder to maintain. A dedicated refactoring effort is required.</analysis>
