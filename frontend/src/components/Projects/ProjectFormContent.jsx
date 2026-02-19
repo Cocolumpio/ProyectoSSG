@@ -272,29 +272,34 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
           </div>
 
           {/* Cimentación */}
-          <div className={`rounded-lg p-4 border-2 transition-all cursor-pointer ${
+          <div className={`rounded-lg p-4 border-2 transition-all ${
             formData.fases?.cimentacion 
               ? 'bg-blue-50 border-blue-400 shadow-md' 
               : 'bg-white border-gray-200 hover:border-blue-300'
           }`}
-            onClick={() => setFormData(prev => ({
-              ...prev,
-              fases: { ...prev.fases, cimentacion: !prev.fases?.cimentacion }
-            }))}
             data-testid="fase-cimentacion-toggle"
           >
-            <div className="flex items-center gap-2 mb-2">
+            <div 
+              className="flex items-center gap-2 mb-2 cursor-pointer"
+              onClick={() => setFormData(prev => ({
+                ...prev,
+                fases: { ...prev.fases, cimentacion: !prev.fases?.cimentacion }
+              }))}
+            >
               <input
                 type="checkbox"
                 checked={formData.fases?.cimentacion || false}
-                onChange={() => {}}
-                className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+                onChange={() => setFormData(prev => ({
+                  ...prev,
+                  fases: { ...prev.fases, cimentacion: !prev.fases?.cimentacion }
+                }))}
+                className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
               />
               <Columns3 className="h-5 w-5 text-blue-600" />
               <span className="font-medium text-gray-800">Cimentación</span>
             </div>
             {formData.fases?.cimentacion && (
-              <div className="mt-3 space-y-2" onClick={e => e.stopPropagation()}>
+              <div className="mt-3 space-y-2">
                 <div>
                   <label className="text-xs text-blue-700 font-medium">Pilas Planeadas</label>
                   <input
