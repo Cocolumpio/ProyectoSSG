@@ -181,6 +181,16 @@ GET /api/plantilla-cronograma
 
 ## Tareas Completadas Recientemente
 
+### Formulario Dinámico de Avances Semanales con IA (2025-12-19)
+- **Formulario adaptativo**: Muestra campos según las fases activas del proyecto
+  - Excavación: Campo de volumen excavado (m³)
+  - Cimentación: Campos de pilas y anclas completadas
+  - Edificación: Campo de muros completados
+- **Análisis con IA**: Botón para subir foto y detectar avance automáticamente
+  - Sube foto → IA analiza → Rellena formulario → Usuario revisa y ajusta
+  - Endpoint: `POST /api/analisis/foto-avance`
+- **Meta visible**: Muestra la meta planeada junto a cada campo
+
 ### Panel de Notificaciones (2025-12-19)
 - **Botón en header** con badge de notificaciones no leídas
 - **Panel deslizable** con lista de notificaciones
