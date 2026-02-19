@@ -17,6 +17,7 @@ import { SolicitarVueloForm } from './components/Flights/SolicitarVueloForm';
 import { SolicitudesAdminView } from './components/Admin/SolicitudesAdminView';
 import { UsuariosAdminView } from './components/Admin/UsuariosAdminView';
 import { MisSolicitudesView } from './components/Client/MisSolicitudesView';
+import { NotificacionesPanel, NotificacionesBadge } from './components/common/NotificacionesPanel';
 
 // Configuración de Leaflet
 import './utils/leafletConfig';
