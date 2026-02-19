@@ -354,10 +354,14 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
               <input
                 type="checkbox"
                 checked={formData.fases?.edificacion || false}
-                onChange={() => setFormData(prev => ({
-                  ...prev,
-                  fases: { ...prev.fases, edificacion: !prev.fases?.edificacion }
-                }))}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  setFormData(prev => ({
+                    ...prev,
+                    fases: { ...prev.fases, edificacion: !prev.fases?.edificacion }
+                  }));
+                }}
+                onClick={(e) => e.stopPropagation()}
                 className="h-4 w-4 text-purple-600 rounded focus:ring-purple-500 cursor-pointer"
               />
               <Building2 className="h-5 w-5 text-purple-600" />
