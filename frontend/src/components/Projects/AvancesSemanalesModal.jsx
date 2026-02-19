@@ -93,9 +93,29 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
     setError(null);
 
     try {
-      await axios.post(`${API}/proyectos/${proyecto.id}/avances-semanales`, formData);
+      // Preparar datos a enviar
+      const dataToSend = {
+        semana: formData.semana,
+        fecha: formData.fecha,
+        descripcion: formData.descripcion,
+        volumen_excavacion: tieneExcavacion ? formData.volumen_excavacion : 0,
+        pilas_completadas: tieneCimentacion ? formData.pilas_completadas : 0,
+        anclas_completadas: tieneCimentacion ? formData.anclas_completadas : 0,
+        muros_completados: tieneEdificacion ? formData.muros_completados : 0
+      };
+      
+      await axios.post(`${API}/proyectos/${proyecto.id}/avances-semanales`, dataToSend);
       setShowAddForm(false);
-      setFormData({ semana: avances.length + 2, fecha: '', descripcion: '', volumen_excavacion: 0 });
+      setFormData({ 
+        semana: avances.length + 2, 
+        fecha: '', 
+        descripcion: '', 
+        volumen_excavacion: 0,
+        pilas_completadas: 0,
+        anclas_completadas: 0,
+        muros_completados: 0
+      });
+      setFotoParaAnalizar(null);
       fetchAvances();
       if (onShowSuccess) {
         onShowSuccess(`Avance de Semana ${formData.semana} agregado correctamente`);
