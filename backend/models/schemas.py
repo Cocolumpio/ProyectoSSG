@@ -165,6 +165,8 @@ class ProyectoCreate(BaseModel):
     avance_actual: float = 0.0
     # Tipos de actividades
     actividades_tipo: List[str] = []
+    # Fases activas
+    fases_activas: List[str] = []
     # Métricas planeadas
     volumen_total_planeado: float = 0.0
     pilas_planeadas: int = 0
