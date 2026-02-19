@@ -191,6 +191,12 @@ GET /api/plantilla-cronograma
   - Endpoint: `POST /api/analisis/foto-avance`
 - **Meta visible**: Muestra la meta planeada junto a cada campo
 
+### Fix: Fases de Construcción en Edición de Proyectos (2025-12-19)
+- **Bug corregido**: Ahora se pueden deseleccionar fases al editar proyectos
+- **Nuevo campo `fases_activas`**: Se guarda en el proyecto para recordar selección
+- **Checkboxes funcionales**: stopPropagation para evitar doble-toggle
+- **Formulario de avances actualizado**: Usa `fases_activas` del proyecto
+
 ### Panel de Notificaciones (2025-12-19)
 - **Botón en header** con badge de notificaciones no leídas
 - **Panel deslizable** con lista de notificaciones
