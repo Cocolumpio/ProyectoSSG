@@ -215,6 +215,32 @@ GET /api/plantilla-cronograma
 - **Integración automática** con análisis de desviación
 - Refresco automático cada 30 segundos
 
+### Subida de Archivos Grandes por Chunks (2025-12-19) ✅
+- **Problema resuelto**: Archivos .ply de más de 10MB fallaban en producción por límite de ingress/proxy
+- **Solución**: Sistema de subida por chunks (5MB cada uno) con almacenamiento temporal en GridFS
+- **Flujo**:
+  1. `init-upload`: Crea sesión de subida, devuelve `upload_id`
+  2. `upload-chunk`: Guarda cada chunk directamente en GridFS (evita límite BSON 16MB)
+  3. `complete-upload`: Ensambla chunks, guarda archivo final, elimina chunks temporales
+- **Verificado con archivo de 192.7 MB** (39 chunks) exitosamente
+- **Frontend actualizado**: Barra de progreso con porcentaje, estado de cada parte
+- **Tests**: 11/11 backend + 100% frontend UI tests
+
+### Endpoints de Upload por Chunks
+```
+POST /api/proyectos/{id}/avances-semanales/{avance_id}/modelo3d/init-upload
+  Query: filename, total_size, total_chunks
+  Response: { upload_id, message, total_chunks }
+
+POST /api/proyectos/{id}/avances-semanales/{avance_id}/modelo3d/upload-chunk
+  Form: upload_id, chunk_index, chunk (file)
+  Response: { success, chunk_index, chunk_size }
+
+POST /api/proyectos/{id}/avances-semanales/{avance_id}/modelo3d/complete-upload
+  Query: upload_id
+  Response: { success, url, filename, original_name, size_mb, gridfs_id }
+```
+
 ### Endpoints de Notificaciones
 ```
 GET /api/notificaciones - Lista notificaciones del usuario
