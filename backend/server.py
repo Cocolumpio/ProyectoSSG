@@ -1325,7 +1325,7 @@ async def iniciar_upload_modelo_3d(
         "total_size": total_size,
         "total_chunks": total_chunks,
         "received_chunks": [],
-        "chunks_data": {},
+        "chunk_ids": {},
         "created_at": datetime.now(timezone.utc).isoformat(),
         "status": "in_progress"
     })
