@@ -405,35 +405,90 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
       return;
     }
 
+    const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB por chunk
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+
     setUploadingModel(true);
+    setUploadProgress({ percent: 0, currentChunk: 0, totalChunks, status: 'Iniciando...' });
+
     try {
-      const formDataUpload = new FormData();
-      formDataUpload.append('file', file);
+      // Paso 1: Iniciar la sesión de upload
+      setUploadProgress(p => ({ ...p, status: `Preparando archivo (${fileSizeMB} MB)...` }));
       
-      const response = await axios.post(
-        `${API}/proyectos/${proyecto.id}/avances-semanales/${selectedAvance.id}/modelo3d`,
-        formDataUpload,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
+      const initResponse = await axios.post(
+        `${API}/proyectos/${proyecto.id}/avances-semanales/${selectedAvance.id}/modelo3d/init-upload`,
+        null,
+        { 
+          params: { 
+            filename: file.name, 
+            total_size: file.size, 
+            total_chunks: totalChunks 
+          } 
+        }
       );
+      
+      const uploadId = initResponse.data.upload_id;
+      
+      // Paso 2: Subir cada chunk
+      for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+        const start = chunkIndex * CHUNK_SIZE;
+        const end = Math.min(start + CHUNK_SIZE, file.size);
+        const chunk = file.slice(start, end);
+        
+        const formData = new FormData();
+        formData.append('upload_id', uploadId);
+        formData.append('chunk_index', chunkIndex.toString());
+        formData.append('chunk', chunk);
+        
+        const percent = Math.round(((chunkIndex + 1) / totalChunks) * 90); // 90% para chunks
+        setUploadProgress({ 
+          percent, 
+          currentChunk: chunkIndex + 1, 
+          totalChunks, 
+          status: `Subiendo parte ${chunkIndex + 1} de ${totalChunks}...` 
+        });
+        
+        await axios.post(
+          `${API}/proyectos/${proyecto.id}/avances-semanales/${selectedAvance.id}/modelo3d/upload-chunk`,
+          formData,
+          { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
+      }
+      
+      // Paso 3: Completar el upload
+      setUploadProgress(p => ({ ...p, percent: 95, status: 'Ensamblando archivo...' }));
+      
+      const completeResponse = await axios.post(
+        `${API}/proyectos/${proyecto.id}/avances-semanales/${selectedAvance.id}/modelo3d/complete-upload`,
+        null,
+        { params: { upload_id: uploadId } }
+      );
+      
+      setUploadProgress({ percent: 100, currentChunk: totalChunks, totalChunks, status: '¡Completado!' });
       
       // Actualizar el avance seleccionado localmente
       const updatedAvance = { 
         ...selectedAvance, 
-        modelo_3d_url: response.data.url,
-        modelo_3d_tipo: 'local'
+        modelo_3d_url: completeResponse.data.url,
+        modelo_3d_tipo: 'gridfs'
       };
       setSelectedAvance(updatedAvance);
       setAvances(avances.map(a => a.id === selectedAvance.id ? updatedAvance : a));
       setViewerMode('local');
       
       if (onShowSuccess) {
-        onShowSuccess(`Modelo 3D subido (${response.data.size_mb} MB)`);
+        onShowSuccess(`Modelo 3D subido exitosamente (${completeResponse.data.size_mb} MB)`);
       }
     } catch (err) {
       console.error('Error subiendo modelo 3D:', err);
-      alert(err.response?.data?.detail || 'Error al subir el modelo 3D');
+      setUploadProgress(p => ({ ...p, status: 'Error en la subida' }));
+      alert(err.response?.data?.detail || 'Error al subir el modelo 3D. Intente nuevamente.');
     } finally {
-      setUploadingModel(false);
+      setTimeout(() => {
+        setUploadingModel(false);
+        setUploadProgress({ percent: 0, currentChunk: 0, totalChunks: 0, status: '' });
+      }, 1500);
       e.target.value = '';
     }
   };
