@@ -176,5 +176,20 @@ GET /api/plantilla-cronograma
 - Refactorizar endpoints nuevos de `server.py` a `routes/proyectos.py`
 
 ### Futuras (P2-P3)
-- Formulario de Programación de Vuelos
-- Filtrado por Rol de Cliente
+- ~~Filtrado por Rol de Cliente~~ ✅ Completado
+- Formulario de Programación de Vuelos con notificaciones
+
+## Tareas Completadas Recientemente
+
+### Análisis Automático de Desviación Semanal (2025-12-19)
+- Job programado con APScheduler: **Lunes 9:00 AM**
+- Analiza todos los proyectos con cronograma cargado
+- Envía alertas por email solo si hay desviaciones >10%
+- Guarda resultado del análisis en cada proyecto
+
+### Filtrado de Vistas para Rol "Cliente" (2025-12-19)
+- Backend filtra automáticamente según el token JWT
+- Endpoint `/api/proyectos` y `/api/estadisticas/resumen` filtrados
+- Clientes solo ven proyectos asignados a ellos
+- Frontend muestra vista de solo lectura para clientes
+- Navegación adaptada: oculta opciones de administración
