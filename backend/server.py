@@ -2687,16 +2687,37 @@ async def actualizar_estado_solicitud(solicitud_id: str, update_data: SolicitudV
 
 # --- Estadísticas ---
 @api_router.get("/estadisticas/resumen")
-async def obtener_estadisticas():
-    total_proyectos = await db.proyectos.count_documents({})
-    total_vuelos = await db.vuelos.count_documents({})
+async def obtener_estadisticas(current_user: dict = Depends(get_optional_user)):
+    """
+    Obtiene estadísticas generales.
+    - Para clientes: Solo estadísticas de sus proyectos asignados
+    - Para admins: Estadísticas de todos los proyectos
+    """
+    query = {}
+    
+    # Si es cliente, filtrar solo sus proyectos
+    if current_user and current_user.get("rol") == "client":
+        query = {"clientes_asignados": current_user.get("id")}
+    
+    total_proyectos = await db.proyectos.count_documents(query)
+    
+    # Obtener IDs de proyectos filtrados
+    proyectos = await db.proyectos.find(query, {"id": 1, "avance_actual": 1, "_id": 0}).to_list(1000)
+    proyecto_ids = [p.get("id") for p in proyectos]
+    
+    # Contar vuelos solo de esos proyectos
+    if proyecto_ids:
+        vuelos_query = {"proyecto_id": {"$in": proyecto_ids}}
+    else:
+        vuelos_query = {} if not query else {"proyecto_id": {"$in": []}}
+    
+    total_vuelos = await db.vuelos.count_documents(vuelos_query)
     
     # Calcular avance promedio
-    proyectos = await db.proyectos.find({}, {"avance_actual": 1, "_id": 0}).to_list(1000)
     avance_promedio = sum(p.get('avance_actual', 0) for p in proyectos) / max(total_proyectos, 1)
     
     # Volumetría total
-    vuelos = await db.vuelos.find({}, {"volumetria": 1, "_id": 0}).to_list(1000)
+    vuelos = await db.vuelos.find(vuelos_query, {"volumetria": 1, "_id": 0}).to_list(1000)
     vol_total = {
         "excavacion": sum(v.get('volumetria', {}).get('excavacion', 0) for v in vuelos),
         "relleno": sum(v.get('volumetria', {}).get('relleno', 0) for v in vuelos),
