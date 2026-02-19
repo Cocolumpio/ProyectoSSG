@@ -1346,8 +1346,10 @@ async def subir_chunk_modelo_3d(
     chunk: UploadFile = File(...)
 ):
     """
-    Sube un chunk individual del archivo.
+    Sube un chunk individual del archivo directamente a GridFS.
     """
+    from services.storage import get_storage
+    
     # Verificar sesión de upload
     upload_session = await db.uploads_temp.find_one({"upload_id": upload_id})
     if not upload_session:
@@ -1360,16 +1362,26 @@ async def subir_chunk_modelo_3d(
         # Leer chunk
         chunk_data = await chunk.read()
         
-        # Guardar chunk en la sesión (como base64 para MongoDB)
-        import base64
-        chunk_b64 = base64.b64encode(chunk_data).decode('utf-8')
+        # Guardar chunk directamente en GridFS
+        storage = get_storage(db)
+        chunk_filename = f"chunk_{upload_id}_{chunk_index}"
+        chunk_gridfs_id = await storage.save_file(
+            content=chunk_data,
+            filename=chunk_filename,
+            content_type="application/octet-stream",
+            metadata={
+                "upload_id": upload_id,
+                "chunk_index": chunk_index,
+                "is_chunk": True
+            }
+        )
         
-        # Actualizar sesión
+        # Actualizar sesión con el ID del chunk en GridFS
         await db.uploads_temp.update_one(
             {"upload_id": upload_id},
             {
                 "$push": {"received_chunks": chunk_index},
-                "$set": {f"chunks_data.{chunk_index}": chunk_b64}
+                "$set": {f"chunk_ids.{chunk_index}": chunk_gridfs_id}
             }
         )
         
