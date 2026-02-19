@@ -1430,7 +1430,7 @@ async def completar_upload_modelo_3d(proyecto_id: str, avance_id: str, upload_id
         for i in range(total_chunks):
             chunk_gridfs_id = chunk_ids.get(str(i))
             if chunk_gridfs_id:
-                chunk_data = await storage.get_file(chunk_gridfs_id)
+                chunk_data, _ = await storage.get_file(chunk_gridfs_id)
                 if chunk_data:
                     file_content += chunk_data
                     chunk_ids_to_delete.append(chunk_gridfs_id)
