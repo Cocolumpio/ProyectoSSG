@@ -100,7 +100,7 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
         descripcion: formData.descripcion,
         volumen_excavacion: tieneExcavacion ? formData.volumen_excavacion : 0,
         pilas_completadas: tieneCimentacion ? formData.pilas_completadas : 0,
-        anclas_completadas: tieneCimentacion ? formData.anclas_completadas : 0,
+        anclas_instaladas: tieneCimentacion ? formData.anclas_completadas : 0,
         muros_completados: tieneEdificacion ? formData.muros_completados : 0
       };
       
