@@ -1399,7 +1399,8 @@ async def subir_chunk_modelo_3d(
 @api_router.post("/proyectos/{proyecto_id}/avances-semanales/{avance_id}/modelo3d/complete-upload")
 async def completar_upload_modelo_3d(proyecto_id: str, avance_id: str, upload_id: str):
     """
-    Completa la subida, ensamblando todos los chunks desde GridFS y guardando el archivo final.
+    Completa la subida, ensamblando todos los chunks usando streaming directo a GridFS.
+    Optimizado para archivos grandes sin cargar todo en memoria.
     """
     from services.storage import get_storage
     
@@ -1409,7 +1410,6 @@ async def completar_upload_modelo_3d(proyecto_id: str, avance_id: str, upload_id
         raise HTTPException(status_code=404, detail="Sesión de upload no encontrada")
     
     storage = get_storage(db)
-    chunk_ids_to_delete = []
     
     try:
         total_chunks = upload_session.get("total_chunks", 0)
@@ -1424,23 +1424,13 @@ async def completar_upload_modelo_3d(proyecto_id: str, avance_id: str, upload_id
                 detail=f"Faltan chunks: {missing}"
             )
         
-        # Ensamblar el archivo leyendo cada chunk desde GridFS
-        logging.info(f"Ensamblando {total_chunks} chunks para upload {upload_id}")
-        file_content = b""
-        for i in range(total_chunks):
-            chunk_gridfs_id = chunk_ids.get(str(i))
-            if chunk_gridfs_id:
-                chunk_data, _ = await storage.get_file(chunk_gridfs_id)
-                if chunk_data:
-                    file_content += chunk_data
-                    chunk_ids_to_delete.append(chunk_gridfs_id)
-                else:
-                    raise HTTPException(status_code=500, detail=f"Error leyendo chunk {i}")
-        
         filename = upload_session.get("filename", "model.ply")
         file_extension = Path(filename).suffix.lower()
         unique_id = str(uuid.uuid4())
         unique_filename = f"{unique_id}{file_extension}"
+        
+        # Preparar lista ordenada de chunk IDs
+        ordered_chunk_ids = [chunk_ids.get(str(i)) for i in range(total_chunks)]
         
         # Eliminar modelo anterior de GridFS si existe
         avance = await db.avances_semanales.find_one({"id": avance_id, "proyecto_id": proyecto_id})
@@ -1452,21 +1442,21 @@ async def completar_upload_modelo_3d(proyecto_id: str, avance_id: str, upload_id
                 except Exception as e:
                     logging.warning(f"Error eliminando modelo anterior: {e}")
         
-        # Guardar archivo final en GridFS
-        file_id = await storage.save_file(
-            content=file_content,
+        # Ensamblar chunks usando streaming (más eficiente en memoria)
+        logging.info(f"Ensamblando {total_chunks} chunks para upload {upload_id}")
+        file_id, total_size = await storage.assemble_chunks_to_file(
+            chunk_ids=ordered_chunk_ids,
             filename=unique_filename,
             content_type="application/octet-stream",
             metadata={
                 "proyecto_id": proyecto_id,
                 "avance_id": avance_id,
                 "original_filename": filename,
-                "extension": file_extension,
-                "size_bytes": len(file_content)
+                "extension": file_extension
             }
         )
         
-        file_size_mb = round(len(file_content) / (1024 * 1024), 2)
+        file_size_mb = round(total_size / (1024 * 1024), 2)
         model_url = f"/api/modelos3d/gridfs/{file_id}"
         
         # Actualizar el avance
@@ -1482,12 +1472,13 @@ async def completar_upload_modelo_3d(proyecto_id: str, avance_id: str, upload_id
             }}
         )
         
-        # Eliminar chunks temporales de GridFS
-        for chunk_id in chunk_ids_to_delete:
-            try:
-                await storage.delete_file(chunk_id)
-            except Exception as e:
-                logging.warning(f"Error eliminando chunk temporal {chunk_id}: {e}")
+        # Eliminar chunks temporales de GridFS en background
+        for chunk_id in ordered_chunk_ids:
+            if chunk_id:
+                try:
+                    await storage.delete_file(chunk_id)
+                except Exception as e:
+                    logging.warning(f"Error eliminando chunk temporal {chunk_id}: {e}")
         
         # Limpiar sesión de upload
         await db.uploads_temp.delete_one({"upload_id": upload_id})
