@@ -1458,102 +1458,261 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
 
         {/* Modal para agregar avance */}
         {showAddForm && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
-            <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
-              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col">
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
                 <h4 className="text-lg font-semibold text-gray-900">Nuevo Avance Semanal</h4>
-                <button onClick={() => setShowAddForm(false)} className="text-gray-400 hover:text-gray-600">
+                <button onClick={() => { setShowAddForm(false); setFotoParaAnalizar(null); }} className="text-gray-400 hover:text-gray-600">
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <form onSubmit={handleAddAvance} className="p-6 space-y-4">
-                {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>
-                )}
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Semana *</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={formData.semana}
-                      onChange={(e) => setFormData(prev => ({ ...prev, semana: parseInt(e.target.value) || 1 }))}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-                      data-testid="avance-semana-input"
-                    />
+              
+              <div className="flex-1 overflow-y-auto">
+                <form onSubmit={handleAddAvance} className="p-6 space-y-4">
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>
+                  )}
+                  
+                  {/* Sección de Análisis con IA */}
+                  <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Sparkles className="h-5 w-5 text-purple-600" />
+                      <span className="font-medium text-purple-800">Análisis con IA (Opcional)</span>
+                    </div>
+                    
+                    <p className="text-sm text-purple-600 mb-3">
+                      Sube una foto del sitio y la IA detectará automáticamente el avance
+                    </p>
+                    
+                    <div className="flex items-center gap-3">
+                      <label className="flex-1">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) handleAnalizarFotoIA(file);
+                          }}
+                          className="hidden"
+                          disabled={analizandoFoto}
+                        />
+                        <div className={`flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                          analizandoFoto 
+                            ? 'border-purple-300 bg-purple-100' 
+                            : 'border-purple-300 hover:border-purple-500 hover:bg-purple-50'
+                        }`}>
+                          {analizandoFoto ? (
+                            <>
+                              <Loader2 className="h-5 w-5 text-purple-600 animate-spin" />
+                              <span className="text-sm text-purple-600">Analizando foto...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Camera className="h-5 w-5 text-purple-600" />
+                              <span className="text-sm text-purple-600">Subir foto para analizar</span>
+                            </>
+                          )}
+                        </div>
+                      </label>
+                    </div>
+                    
+                    {/* Preview de foto analizada */}
+                    {fotoParaAnalizar && (
+                      <div className="mt-3 p-3 bg-white rounded-lg border border-purple-200">
+                        <div className="flex gap-3">
+                          <img 
+                            src={fotoParaAnalizar.preview} 
+                            alt="Foto analizada" 
+                            className="w-20 h-20 object-cover rounded-lg"
+                          />
+                          <div className="flex-1 text-sm">
+                            <p className="font-medium text-green-700 flex items-center gap-1">
+                              <Check className="h-4 w-4" />
+                              Foto analizada
+                            </p>
+                            {fotoParaAnalizar.resultado?.descripcion_ia && (
+                              <p className="text-gray-600 mt-1 text-xs line-clamp-2">
+                                {fotoParaAnalizar.resultado.descripcion_ia}
+                              </p>
+                            )}
+                            <p className="text-purple-600 text-xs mt-1">
+                              Revisa y ajusta los valores abajo antes de guardar
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Fecha *</label>
-                    <input
-                      type="date"
-                      value={formData.fecha}
-                      onChange={(e) => setFormData(prev => ({ ...prev, fecha: e.target.value }))}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-                      data-testid="avance-fecha-input"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Volumen Excavado (m³)</label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      value={formData.volumen_excavacion}
-                      onChange={(e) => setFormData(prev => ({ ...prev, volumen_excavacion: parseFloat(e.target.value) || 0 }))}
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-                      placeholder="Ej: 3500"
-                      data-testid="avance-volumen-input"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">m³</span>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Volumen de material excavado esta semana</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-                  <textarea
-                    value={formData.descripcion}
-                    onChange={(e) => setFormData(prev => ({ ...prev, descripcion: e.target.value }))}
-                    rows={2}
-                    placeholder="Notas sobre el avance de esta semana..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
-                    data-testid="avance-descripcion-input"
-                  />
-                </div>
-
-                {/* Info sobre modelo 3D */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <div className="flex items-start gap-2">
-                    <Box className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-blue-800 font-medium">Modelo 3D (.ply)</p>
-                      <p className="text-xs text-blue-600 mt-1">
-                        Una vez creado el avance, podrás subir el modelo 3D en formato .ply desde la vista de detalle del avance.
-                      </p>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Semana *</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={formData.semana}
+                        onChange={(e) => setFormData(prev => ({ ...prev, semana: parseInt(e.target.value) || 1 }))}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+                        data-testid="avance-semana-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Fecha *</label>
+                      <input
+                        type="date"
+                        value={formData.fecha}
+                        onChange={(e) => setFormData(prev => ({ ...prev, fecha: e.target.value }))}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+                        data-testid="avance-fecha-input"
+                      />
                     </div>
                   </div>
-                </div>
 
-                <div className="flex justify-end space-x-3 pt-2">
-                  <button type="button" onClick={() => setShowAddForm(false)} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="px-4 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors disabled:opacity-50"
-                    data-testid="avance-submit-btn"
-                  >
-                    {saving ? 'Guardando...' : 'Agregar Avance'}
-                  </button>
-                </div>
-              </form>
+                  {/* Campos dinámicos según las fases del proyecto */}
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium text-gray-700">Avances por Fase:</p>
+                    
+                    {/* Excavación */}
+                    {tieneExcavacion && (
+                      <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                        <label className="flex items-center gap-2 text-sm font-medium text-amber-800 mb-2">
+                          <Shovel className="h-4 w-4" />
+                          Volumen Excavado (m³)
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.1"
+                            value={formData.volumen_excavacion}
+                            onChange={(e) => setFormData(prev => ({ ...prev, volumen_excavacion: parseFloat(e.target.value) || 0 }))}
+                            className="w-full px-3 py-2 pr-10 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+                            placeholder="Ej: 3500"
+                            data-testid="avance-volumen-input"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-600 text-sm">m³</span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Pilas - Solo si tiene cimentación */}
+                    {tieneCimentacion && (
+                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <label className="flex items-center gap-2 text-sm font-medium text-blue-800 mb-2">
+                          <Columns3 className="h-4 w-4" />
+                          Pilas Completadas
+                          {proyecto.pilas_planeadas > 0 && (
+                            <span className="text-xs text-blue-500 font-normal">
+                              (Meta: {proyecto.pilas_planeadas})
+                            </span>
+                          )}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={formData.pilas_completadas}
+                          onChange={(e) => setFormData(prev => ({ ...prev, pilas_completadas: parseInt(e.target.value) || 0 }))}
+                          className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                          placeholder="Ej: 15"
+                          data-testid="avance-pilas-input"
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Anclas - Solo si tiene cimentación */}
+                    {tieneCimentacion && (
+                      <div className="p-3 bg-teal-50 rounded-lg border border-teal-200">
+                        <label className="flex items-center gap-2 text-sm font-medium text-teal-800 mb-2">
+                          <Anchor className="h-4 w-4" />
+                          Anclas Completadas
+                          {proyecto.anclas_planeadas > 0 && (
+                            <span className="text-xs text-teal-500 font-normal">
+                              (Meta: {proyecto.anclas_planeadas})
+                            </span>
+                          )}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={formData.anclas_completadas}
+                          onChange={(e) => setFormData(prev => ({ ...prev, anclas_completadas: parseInt(e.target.value) || 0 }))}
+                          className="w-full px-3 py-2 border border-teal-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
+                          placeholder="Ej: 30"
+                          data-testid="avance-anclas-input"
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Muros - Solo si tiene edificación */}
+                    {tieneEdificacion && (
+                      <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                        <label className="flex items-center gap-2 text-sm font-medium text-purple-800 mb-2">
+                          <Building2 className="h-4 w-4" />
+                          Muros Completados
+                          {proyecto.muros_planeados > 0 && (
+                            <span className="text-xs text-purple-500 font-normal">
+                              (Meta: {proyecto.muros_planeados})
+                            </span>
+                          )}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={formData.muros_completados}
+                          onChange={(e) => setFormData(prev => ({ ...prev, muros_completados: parseInt(e.target.value) || 0 }))}
+                          className="w-full px-3 py-2 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
+                          placeholder="Ej: 5"
+                          data-testid="avance-muros-input"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                    <textarea
+                      value={formData.descripcion}
+                      onChange={(e) => setFormData(prev => ({ ...prev, descripcion: e.target.value }))}
+                      rows={2}
+                      placeholder="Notas sobre el avance de esta semana..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+                      data-testid="avance-descripcion-input"
+                    />
+                  </div>
+
+                  {/* Info sobre modelo 3D */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div className="flex items-start gap-2">
+                      <Box className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm text-blue-800 font-medium">Modelo 3D (.ply)</p>
+                        <p className="text-xs text-blue-600 mt-1">
+                          Una vez creado el avance, podrás subir el modelo 3D en formato .ply desde la vista de detalle del avance.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end space-x-3 pt-2">
+                    <button type="button" onClick={() => { setShowAddForm(false); setFotoParaAnalizar(null); }} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="px-4 py-2 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors disabled:opacity-50"
+                      data-testid="avance-submit-btn"
+                    >
+                      {saving ? 'Guardando...' : 'Agregar Avance'}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         )}
