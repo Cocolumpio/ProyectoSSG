@@ -3884,6 +3884,153 @@ app.add_middleware(
 )
 
 
+# --- Análisis Automático de Desviación Semanal ---
+async def analizar_desviaciones_todos_proyectos():
+    """
+    Analiza la desviación de todos los proyectos con cronograma cargado.
+    Se ejecuta automáticamente cada lunes a las 9:00.
+    Envía alertas por email solo para proyectos con desviaciones significativas.
+    """
+    from services.email import enviar_alerta_desviacion_cronograma
+    
+    if not ADMIN_EMAIL or not RESEND_API_KEY:
+        logging.warning("No se puede enviar alertas: ADMIN_EMAIL o RESEND_API_KEY no configurados")
+        return
+    
+    try:
+        logging.info("Iniciando análisis automático de desviaciones...")
+        
+        # Obtener proyectos con cronograma
+        proyectos = await db.proyectos.find(
+            {"cronograma_resumen": {"$exists": True, "$ne": None}},
+            {"_id": 0}
+        ).to_list(100)
+        
+        if not proyectos:
+            logging.info("No hay proyectos con cronograma para analizar")
+            return
+        
+        alertas_enviadas = 0
+        proyectos_analizados = 0
+        
+        for proyecto in proyectos:
+            proyecto_id = proyecto.get("id")
+            fecha_inicio_str = proyecto.get("fecha_inicio")
+            
+            if not fecha_inicio_str:
+                continue
+            
+            try:
+                # Calcular semana actual del proyecto
+                fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d")
+                dias_transcurridos = (datetime.now() - fecha_inicio).days
+                semana_actual = max(1, dias_transcurridos // 7 + 1)
+                
+                semanas_planeadas = proyecto.get("semanas_planeadas", 12)
+                progreso_esperado = min(100, (semana_actual / semanas_planeadas) * 100) if semanas_planeadas > 0 else 0
+                
+                # Calcular desviaciones por fase
+                desviaciones = []
+                
+                # Excavación
+                vol_planeado = proyecto.get("volumen_total_planeado", 0)
+                vol_real = proyecto.get("volumen_ejecutado", 0)
+                if vol_planeado > 0:
+                    progreso_real = (vol_real / vol_planeado) * 100
+                    desviaciones.append({
+                        "fase": "Excavación",
+                        "planeado": progreso_esperado,
+                        "real": progreso_real,
+                        "desviacion_porcentaje": progreso_real - progreso_esperado
+                    })
+                
+                # Pilas
+                pilas_planeadas = proyecto.get("pilas_planeadas", 0)
+                pilas_real = proyecto.get("pilas_ejecutadas", 0)
+                if pilas_planeadas > 0:
+                    progreso_real = (pilas_real / pilas_planeadas) * 100
+                    desviaciones.append({
+                        "fase": "Pilas / Cimentación",
+                        "planeado": progreso_esperado,
+                        "real": progreso_real,
+                        "desviacion_porcentaje": progreso_real - progreso_esperado
+                    })
+                
+                # Anclas
+                anclas_planeadas = proyecto.get("anclas_planeadas", 0)
+                anclas_real = proyecto.get("anclas_ejecutadas", 0)
+                if anclas_planeadas > 0:
+                    progreso_real = (anclas_real / anclas_planeadas) * 100
+                    desviaciones.append({
+                        "fase": "Anclas",
+                        "planeado": progreso_esperado,
+                        "real": progreso_real,
+                        "desviacion_porcentaje": progreso_real - progreso_esperado
+                    })
+                
+                # Muros
+                muros_planeados = proyecto.get("muros_planeados", 0)
+                muros_real = proyecto.get("muros_ejecutados", 0)
+                if muros_planeados > 0:
+                    progreso_real = (muros_real / muros_planeados) * 100
+                    desviaciones.append({
+                        "fase": "Muros / Estructura",
+                        "planeado": progreso_esperado,
+                        "real": progreso_real,
+                        "desviacion_porcentaje": progreso_real - progreso_esperado
+                    })
+                
+                proyectos_analizados += 1
+                
+                # Verificar si hay desviaciones críticas (>20%)
+                hay_desviacion_critica = any(d["desviacion_porcentaje"] < -20 for d in desviaciones)
+                hay_desviacion_moderada = any(d["desviacion_porcentaje"] < -10 for d in desviaciones)
+                
+                # Solo enviar alerta si hay desviación significativa
+                if hay_desviacion_critica or hay_desviacion_moderada:
+                    resumen = f"Análisis automático semanal - Semana {semana_actual} de {semanas_planeadas}"
+                    if hay_desviacion_critica:
+                        resumen += "\n⚠️ Se detectaron retrasos críticos (>20%) que requieren atención inmediata."
+                    else:
+                        resumen += "\n📊 Se detectaron desviaciones moderadas (10-20%) que deben monitorearse."
+                    
+                    email_enviado = await enviar_alerta_desviacion_cronograma(
+                        proyecto_nombre=proyecto.get("nombre", "Sin nombre"),
+                        proyecto_id=proyecto_id,
+                        desviaciones=desviaciones,
+                        resumen=resumen,
+                        fecha_analisis=datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M UTC")
+                    )
+                    
+                    if email_enviado:
+                        alertas_enviadas += 1
+                    
+                    # Guardar resultado del análisis
+                    await db.proyectos.update_one(
+                        {"id": proyecto_id},
+                        {"$set": {
+                            "ultimo_analisis_desviacion": {
+                                "fecha": datetime.now(timezone.utc).isoformat(),
+                                "semana_actual": semana_actual,
+                                "progreso_esperado": progreso_esperado,
+                                "desviaciones": desviaciones,
+                                "hay_desviacion_critica": hay_desviacion_critica,
+                                "email_enviado": email_enviado,
+                                "automatico": True
+                            }
+                        }}
+                    )
+                    
+            except Exception as e:
+                logging.error(f"Error analizando proyecto {proyecto_id}: {e}")
+                continue
+        
+        logging.info(f"Análisis automático completado: {proyectos_analizados} proyectos analizados, {alertas_enviadas} alertas enviadas")
+        
+    except Exception as e:
+        logging.error(f"Error en análisis automático de desviaciones: {e}")
+
+
 # --- Reporte Semanal Automático ---
 async def generar_reporte_semanal():
     """
