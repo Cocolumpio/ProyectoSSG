@@ -571,13 +571,23 @@ async def crear_proyecto(proyecto: ProyectoCreate):
     return proyecto_obj
 
 @api_router.get("/proyectos", response_model=List[Proyecto])
-async def listar_proyectos(cliente_id: Optional[str] = None):
+async def listar_proyectos(
+    cliente_id: Optional[str] = None,
+    current_user: dict = Depends(get_optional_user)
+):
     """
-    Listar proyectos. Si se proporciona cliente_id, filtra por proyectos asignados a ese cliente.
+    Listar proyectos. 
+    - Si el usuario es 'client', solo muestra proyectos asignados a él.
+    - Si el usuario es 'admin', muestra todos los proyectos.
+    - Si se proporciona cliente_id explícito (admin), filtra por ese cliente.
     """
     query = {}
-    if cliente_id:
-        # Filtrar proyectos donde el cliente está en la lista de asignados
+    
+    # Si hay usuario autenticado y es cliente, filtrar automáticamente
+    if current_user and current_user.get("rol") == "client":
+        query = {"clientes_asignados": current_user.get("id")}
+    elif cliente_id:
+        # Admin puede filtrar por cliente específico
         query = {"clientes_asignados": cliente_id}
     
     proyectos = await db.proyectos.find(query, {"_id": 0}).to_list(1000)
