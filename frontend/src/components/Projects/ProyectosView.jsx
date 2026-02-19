@@ -95,17 +95,27 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
     try {
       // Construir actividades_tipo basado en las fases seleccionadas
       const actividades_tipo = [];
-      if (formData.fases?.excavacion) actividades_tipo.push('excavacion');
+      const fases_activas = [];
+      
+      if (formData.fases?.excavacion) {
+        actividades_tipo.push('excavacion');
+        fases_activas.push('excavacion');
+      }
       if (formData.fases?.cimentacion) {
         actividades_tipo.push('pilas');
+        fases_activas.push('cimentacion');
         if (formData.anclas_planeadas > 0) actividades_tipo.push('anclas');
       }
-      if (formData.fases?.edificacion) actividades_tipo.push('muros');
+      if (formData.fases?.edificacion) {
+        actividades_tipo.push('muros');
+        fases_activas.push('edificacion');
+      }
       
       const dataToSend = {
         ...formData,
         actividades_tipo,
-        fases: undefined // No enviar fases al backend
+        fases_activas, // Guardar las fases seleccionadas
+        fases: undefined // No enviar el objeto fases temporal
       };
       delete dataToSend.fases;
       
