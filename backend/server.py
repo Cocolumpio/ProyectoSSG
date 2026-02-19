@@ -3265,6 +3265,24 @@ Situación actual:
             resumen=resumen,
             fecha_analisis=datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M UTC")
         )
+        
+        # Crear notificación en el sistema
+        tipo_notif = "error" if hay_desviacion_critica else "warning"
+        titulo_notif = "Alerta Crítica de Desviación" if hay_desviacion_critica else "Desviación Detectada"
+        await crear_notificacion_sistema(
+            tipo=tipo_notif,
+            titulo=titulo_notif,
+            mensaje=f"Semana {semana_actual}/{semanas_planeadas} - Progreso esperado: {progreso_esperado:.1f}%",
+            proyecto_id=proyecto_id,
+            proyecto_nombre=proyecto.get("nombre"),
+            link=f"/proyectos?id={proyecto_id}",
+            metadata={
+                "semana_actual": semana_actual,
+                "progreso_esperado": progreso_esperado,
+                "hay_desviacion_critica": hay_desviacion_critica,
+                "desviaciones_count": len(desviaciones)
+            }
+        )
     
     # Guardar el análisis en el proyecto
     await db.proyectos.update_one(
