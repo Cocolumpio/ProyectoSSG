@@ -35,14 +35,24 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
   const [viewerMode, setViewerMode] = useState('auto'); // 'auto', 'local', 'pix4d'
   const [showAnalisisIA, setShowAnalisisIA] = useState(false);
   const [showComparacion, setShowComparacion] = useState(false);
+  const [analizandoFoto, setAnalizandoFoto] = useState(false);
+  const [fotoParaAnalizar, setFotoParaAnalizar] = useState(null);
   const [formData, setFormData] = useState({
     semana: 1,
     fecha: '',
     descripcion: '',
-    volumen_excavacion: 0
+    volumen_excavacion: 0,
+    pilas_completadas: 0,
+    anclas_completadas: 0,
+    muros_completados: 0
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+
+  // Determinar qué fases están activas en el proyecto
+  const tieneExcavacion = proyecto.fases_activas?.includes('excavacion') || proyecto.volumen_total_planeado > 0;
+  const tieneCimentacion = proyecto.fases_activas?.includes('cimentacion') || proyecto.pilas_planeadas > 0 || proyecto.anclas_planeadas > 0;
+  const tieneEdificacion = proyecto.fases_activas?.includes('edificacion') || proyecto.muros_planeados > 0;
 
   useEffect(() => {
     const loadAvances = async () => {
