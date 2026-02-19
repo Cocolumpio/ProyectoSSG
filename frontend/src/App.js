@@ -41,10 +41,28 @@ function AppContent() {
   const [selectedProyecto, setSelectedProyecto] = useState(null);
   const [mapCenter, setMapCenter] = useState({ lat: 20.6597, lng: -103.3496 });
   const [globalSuccessMessage, setGlobalSuccessMessage] = useState(null);
+  const [showNotificaciones, setShowNotificaciones] = useState(false);
 
   const showGlobalSuccess = (message) => {
     setGlobalSuccessMessage(message);
     setTimeout(() => setGlobalSuccessMessage(null), 5000);
+  };
+
+  const handleNotificationClick = (notif) => {
+    // Navegar según el link de la notificación
+    if (notif.link) {
+      if (notif.link.includes('/proyectos')) {
+        setActiveView('proyectos');
+        // Si hay un ID de proyecto, seleccionarlo
+        if (notif.proyecto_id) {
+          const proyecto = proyectos.find(p => p.id === notif.proyecto_id);
+          if (proyecto) {
+            setSelectedProyecto(proyecto);
+            setActiveView('dashboard');
+          }
+        }
+      }
+    }
   };
 
   const fetchData = useCallback(async () => {
