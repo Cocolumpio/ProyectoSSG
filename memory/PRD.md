@@ -191,6 +191,15 @@ GET /api/plantilla-cronograma
   - Endpoint: `POST /api/analisis/foto-avance`
 - **Meta visible**: Muestra la meta planeada junto a cada campo
 
+### Fix: Almacenamiento de Modelos 3D para Producción (2025-12-19)
+- **Problema**: Los archivos .ply se guardaban en filesystem local, que no persiste en Kubernetes
+- **Solución**: Implementado almacenamiento en MongoDB GridFS
+- **Nuevo servicio**: `/app/backend/services/storage.py` con clase `GridFSStorage`
+- **Endpoints actualizados**:
+  - `POST /api/proyectos/{id}/avances-semanales/{avance_id}/modelo3d` - Guarda en GridFS
+  - `GET /api/modelos3d/gridfs/{file_id}` - Obtiene de GridFS
+  - Endpoint legacy mantenido para compatibilidad
+
 ### Fix: Fases de Construcción en Edición de Proyectos (2025-12-19)
 - **Bug corregido**: Ahora se pueden deseleccionar fases al editar proyectos
 - **Nuevo campo `fases_activas`**: Se guarda en el proyecto para recordar selección
