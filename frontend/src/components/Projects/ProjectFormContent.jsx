@@ -240,10 +240,14 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
               <input
                 type="checkbox"
                 checked={formData.fases?.excavacion || false}
-                onChange={() => setFormData(prev => ({
-                  ...prev,
-                  fases: { ...prev.fases, excavacion: !prev.fases?.excavacion }
-                }))}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  setFormData(prev => ({
+                    ...prev,
+                    fases: { ...prev.fases, excavacion: !prev.fases?.excavacion }
+                  }));
+                }}
+                onClick={(e) => e.stopPropagation()}
                 className="h-4 w-4 text-amber-600 rounded focus:ring-amber-500 cursor-pointer"
               />
               <Shovel className="h-5 w-5 text-amber-600" />
