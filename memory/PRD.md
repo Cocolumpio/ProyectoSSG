@@ -181,10 +181,29 @@ GET /api/plantilla-cronograma
 
 ## Tareas Completadas Recientemente
 
+### Panel de Notificaciones (2025-12-19)
+- **Botón en header** con badge de notificaciones no leídas
+- **Panel deslizable** con lista de notificaciones
+- Filtro "Solo no leídas"
+- Acciones: Marcar como leída, Ver detalles, Eliminar
+- Marcar todas como leídas
+- **Integración automática** con análisis de desviación
+- Refresco automático cada 30 segundos
+
+### Endpoints de Notificaciones
+```
+GET /api/notificaciones - Lista notificaciones del usuario
+POST /api/notificaciones - Crear notificación (admin)
+PUT /api/notificaciones/{id}/leer - Marcar como leída
+PUT /api/notificaciones/leer-todas - Marcar todas como leídas
+DELETE /api/notificaciones/{id} - Eliminar notificación
+```
+
 ### Análisis Automático de Desviación Semanal (2025-12-19)
 - Job programado con APScheduler: **Lunes 9:00 AM**
 - Analiza todos los proyectos con cronograma cargado
 - Envía alertas por email solo si hay desviaciones >10%
+- **Crea notificación en el sistema** automáticamente
 - Guarda resultado del análisis en cada proyecto
 
 ### Filtrado de Vistas para Rol "Cliente" (2025-12-19)
