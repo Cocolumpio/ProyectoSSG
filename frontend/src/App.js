@@ -236,6 +236,9 @@ function AppContent() {
 
             {/* User Menu */}
             <div className="flex items-center space-x-3">
+              {/* Botón de Notificaciones */}
+              <NotificacionesBadge onClick={() => setShowNotificaciones(true)} />
+              
               <div className="hidden sm:flex items-center space-x-2 text-sm">
                 <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                   isAdmin ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
@@ -256,6 +259,13 @@ function AppContent() {
           </div>
         </div>
       </header>
+
+      {/* Panel de Notificaciones */}
+      <NotificacionesPanel 
+        isOpen={showNotificaciones} 
+        onClose={() => setShowNotificaciones(false)}
+        onNotificationClick={handleNotificationClick}
+      />
 
       {/* Main Content */}
       <main className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
