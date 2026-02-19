@@ -543,6 +543,149 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         activo=current_user.get("activo", True)
     )
 
+
+# --- Notificaciones ---
+@api_router.get("/notificaciones")
+async def listar_notificaciones(
+    current_user: dict = Depends(get_current_user),
+    solo_no_leidas: bool = False,
+    limite: int = 50
+):
+    """
+    Lista las notificaciones del usuario actual.
+    - Admins: ven notificaciones globales y las dirigidas a ellos
+    - Clientes: ven solo notificaciones dirigidas a ellos
+    """
+    user_id = current_user.get("id")
+    is_admin = current_user.get("rol") == "admin"
+    
+    if is_admin:
+        # Admins ven notificaciones globales (usuario_id=None) y las suyas
+        query = {"$or": [{"usuario_id": None}, {"usuario_id": user_id}]}
+    else:
+        # Clientes solo ven las suyas
+        query = {"usuario_id": user_id}
+    
+    if solo_no_leidas:
+        query["leida"] = False
+    
+    notificaciones = await db.notificaciones.find(
+        query, 
+        {"_id": 0}
+    ).sort("fecha", -1).limit(limite).to_list(limite)
+    
+    # Contar no leídas
+    count_query = {"$or": [{"usuario_id": None}, {"usuario_id": user_id}]} if is_admin else {"usuario_id": user_id}
+    count_query["leida"] = False
+    no_leidas = await db.notificaciones.count_documents(count_query)
+    
+    return {
+        "notificaciones": notificaciones,
+        "total_no_leidas": no_leidas
+    }
+
+
+@api_router.post("/notificaciones")
+async def crear_notificacion(
+    notificacion: dict,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Crear una nueva notificación (solo admins)"""
+    notif_data = {
+        "id": str(uuid.uuid4()),
+        "tipo": notificacion.get("tipo", "info"),
+        "titulo": notificacion.get("titulo", "Notificación"),
+        "mensaje": notificacion.get("mensaje", ""),
+        "proyecto_id": notificacion.get("proyecto_id"),
+        "proyecto_nombre": notificacion.get("proyecto_nombre"),
+        "usuario_id": notificacion.get("usuario_id"),
+        "leida": False,
+        "fecha": datetime.now(timezone.utc).isoformat(),
+        "link": notificacion.get("link"),
+        "metadata": notificacion.get("metadata")
+    }
+    
+    await db.notificaciones.insert_one(notif_data)
+    return {"success": True, "notificacion": notif_data}
+
+
+@api_router.put("/notificaciones/{notificacion_id}/leer")
+async def marcar_como_leida(
+    notificacion_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Marcar una notificación como leída"""
+    result = await db.notificaciones.update_one(
+        {"id": notificacion_id},
+        {"$set": {"leida": True}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Notificación no encontrada")
+    
+    return {"success": True, "mensaje": "Notificación marcada como leída"}
+
+
+@api_router.put("/notificaciones/leer-todas")
+async def marcar_todas_como_leidas(
+    current_user: dict = Depends(get_current_user)
+):
+    """Marcar todas las notificaciones del usuario como leídas"""
+    user_id = current_user.get("id")
+    is_admin = current_user.get("rol") == "admin"
+    
+    if is_admin:
+        query = {"$or": [{"usuario_id": None}, {"usuario_id": user_id}], "leida": False}
+    else:
+        query = {"usuario_id": user_id, "leida": False}
+    
+    result = await db.notificaciones.update_many(query, {"$set": {"leida": True}})
+    
+    return {"success": True, "notificaciones_actualizadas": result.modified_count}
+
+
+@api_router.delete("/notificaciones/{notificacion_id}")
+async def eliminar_notificacion(
+    notificacion_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Eliminar una notificación"""
+    result = await db.notificaciones.delete_one({"id": notificacion_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Notificación no encontrada")
+    
+    return {"success": True, "mensaje": "Notificación eliminada"}
+
+
+async def crear_notificacion_sistema(
+    tipo: str,
+    titulo: str,
+    mensaje: str,
+    proyecto_id: str = None,
+    proyecto_nombre: str = None,
+    usuario_id: str = None,
+    link: str = None,
+    metadata: dict = None
+):
+    """Función helper para crear notificaciones desde cualquier parte del sistema"""
+    notif_data = {
+        "id": str(uuid.uuid4()),
+        "tipo": tipo,
+        "titulo": titulo,
+        "mensaje": mensaje,
+        "proyecto_id": proyecto_id,
+        "proyecto_nombre": proyecto_nombre,
+        "usuario_id": usuario_id,
+        "leida": False,
+        "fecha": datetime.now(timezone.utc).isoformat(),
+        "link": link,
+        "metadata": metadata
+    }
+    
+    await db.notificaciones.insert_one(notif_data)
+    return notif_data
+
 @api_router.get("/auth/users", response_model=List[UserResponse])
 async def list_users(current_user: dict = Depends(get_current_admin)):
     """Listar todos los usuarios (solo admin)"""
