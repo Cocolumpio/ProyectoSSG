@@ -3950,6 +3950,102 @@ async def obtener_comparaciones_dashboard():
     return {"proyectos": resumen}
 
 
+@api_router.post("/analisis/foto-avance")
+async def analizar_foto_para_avance(imagen: UploadFile = File(...), proyecto_info: str = Form("{}")):
+    """
+    Analiza una foto de obra para detectar avances antes de crear el registro.
+    Retorna las cantidades detectadas para pre-rellenar el formulario.
+    """
+    from emergentintegrations.llm.gemini import GeminiChat
+    
+    try:
+        # Parsear info del proyecto
+        info = json.loads(proyecto_info)
+        tiene_excavacion = info.get("tiene_excavacion", True)
+        tiene_cimentacion = info.get("tiene_cimentacion", False)
+        tiene_edificacion = info.get("tiene_edificacion", False)
+        pilas_planeadas = info.get("pilas_planeadas", 0)
+        anclas_planeadas = info.get("anclas_planeadas", 0)
+        muros_planeados = info.get("muros_planeados", 0)
+        
+        # Leer y convertir imagen a base64
+        content = await imagen.read()
+        import base64
+        imagen_base64 = base64.b64encode(content).decode('utf-8')
+        
+        # Crear prompt para análisis
+        prompt = f"""Analiza esta foto de una obra de construcción y detecta los elementos visibles.
+
+El proyecto tiene las siguientes fases activas:
+{f"- EXCAVACIÓN: Detecta si hay trabajo de excavación visible y estima el volumen" if tiene_excavacion else ""}
+{f"- CIMENTACIÓN: Detecta pilas (meta: {pilas_planeadas}) y anclas (meta: {anclas_planeadas})" if tiene_cimentacion else ""}
+{f"- EDIFICACIÓN: Detecta muros completados (meta: {muros_planeados})" if tiene_edificacion else ""}
+
+Responde SOLO en formato JSON con esta estructura exacta:
+{{
+    "volumen_excavacion": <número estimado de m³ excavados, 0 si no aplica o no visible>,
+    "pilas_detectadas": <número de pilas completadas visibles, 0 si no aplica>,
+    "anclas_detectadas": <número de anclas instaladas visibles, 0 si no aplica>,
+    "muros_detectados": <número de muros completados visibles, 0 si no aplica>,
+    "descripcion_ia": "<descripción breve del estado de la obra en 1-2 oraciones>",
+    "confianza": "<ALTA|MEDIA|BAJA - qué tan seguro estás de los números>"
+}}
+
+IMPORTANTE:
+- Si no puedes ver claramente algo, pon 0
+- Sé conservador en las estimaciones
+- La descripción debe ser concisa y profesional
+"""
+
+        chat = GeminiChat(gemini_key=EMERGENT_LLM_KEY)
+        
+        response = await asyncio.to_thread(
+            chat.send_message_with_image,
+            prompt,
+            imagen_base64,
+            image_type="image/jpeg"
+        )
+        
+        # Parsear respuesta JSON
+        response_text = response.strip()
+        if response_text.startswith("```"):
+            response_text = response_text.split("```")[1]
+            if response_text.startswith("json"):
+                response_text = response_text[4:]
+        
+        resultado = json.loads(response_text)
+        
+        return {
+            "success": True,
+            "resultado": {
+                "volumen_excavacion": resultado.get("volumen_excavacion", 0),
+                "pilas_detectadas": resultado.get("pilas_detectadas", 0),
+                "anclas_detectadas": resultado.get("anclas_detectadas", 0),
+                "muros_detectados": resultado.get("muros_detectados", 0),
+                "descripcion_ia": resultado.get("descripcion_ia", ""),
+                "confianza": resultado.get("confianza", "MEDIA")
+            }
+        }
+        
+    except json.JSONDecodeError as e:
+        logging.error(f"Error parseando respuesta IA: {e}")
+        return {
+            "success": False,
+            "error": "La IA no pudo analizar correctamente la imagen",
+            "resultado": {
+                "volumen_excavacion": 0,
+                "pilas_detectadas": 0,
+                "anclas_detectadas": 0,
+                "muros_detectados": 0,
+                "descripcion_ia": "",
+                "confianza": "BAJA"
+            }
+        }
+    except Exception as e:
+        logging.error(f"Error analizando foto: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.post("/avances/{avance_id}/analizar-foto")
 async def analizar_foto_avance(avance_id: str, data: dict):
     """
