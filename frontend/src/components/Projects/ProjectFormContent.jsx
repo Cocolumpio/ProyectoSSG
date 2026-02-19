@@ -276,6 +276,7 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
               ...prev,
               fases: { ...prev.fases, cimentacion: !prev.fases?.cimentacion }
             }))}
+            data-testid="fase-cimentacion-toggle"
           >
             <div className="flex items-center gap-2 mb-2">
               <input
