@@ -47,13 +47,24 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
 
   const handleEditClick = (proyecto) => {
     setEditingProject(proyecto);
-    // Determinar fases basadas en los datos del proyecto
-    const tipos = proyecto.actividades_tipo || [];
-    const fases = {
-      excavacion: tipos.includes('excavacion') || proyecto.volumen_total_planeado > 0,
-      cimentacion: tipos.includes('pilas') || tipos.includes('anclas') || proyecto.pilas_planeadas > 0 || proyecto.anclas_planeadas > 0,
-      edificacion: tipos.includes('muros') || proyecto.muros_planeados > 0
-    };
+    
+    // Usar fases_activas guardadas si existen, sino calcular basado en datos
+    let fases;
+    if (proyecto.fases_activas && Array.isArray(proyecto.fases_activas)) {
+      fases = {
+        excavacion: proyecto.fases_activas.includes('excavacion'),
+        cimentacion: proyecto.fases_activas.includes('cimentacion'),
+        edificacion: proyecto.fases_activas.includes('edificacion')
+      };
+    } else {
+      // Fallback: determinar fases basadas en los datos del proyecto (proyectos antiguos)
+      const tipos = proyecto.actividades_tipo || [];
+      fases = {
+        excavacion: tipos.includes('excavacion') || proyecto.volumen_total_planeado > 0,
+        cimentacion: tipos.includes('pilas') || tipos.includes('anclas') || proyecto.pilas_planeadas > 0 || proyecto.anclas_planeadas > 0,
+        edificacion: tipos.includes('muros') || proyecto.muros_planeados > 0
+      };
+    }
     
     setFormData({
       nombre: proyecto.nombre || '', 
