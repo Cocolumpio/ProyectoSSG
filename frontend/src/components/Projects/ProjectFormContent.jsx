@@ -232,6 +232,7 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
               ...prev,
               fases: { ...prev.fases, excavacion: !prev.fases?.excavacion }
             }))}
+            data-testid="fase-excavacion-toggle"
           >
             <div className="flex items-center gap-2 mb-2">
               <input
