@@ -48,13 +48,9 @@ function AppContent() {
 
   const fetchData = useCallback(async () => {
     try {
-      // Si el usuario es cliente, filtrar proyectos por su ID
-      const proyectosUrl = user?.rol === 'client' 
-        ? `${API}/proyectos?cliente_id=${user.id}`
-        : `${API}/proyectos`;
-      
+      // El backend filtra automáticamente según el rol del usuario (token JWT)
       const [proyectosRes, vuelosRes, estadisticasRes] = await Promise.all([
-        axios.get(proyectosUrl),
+        axios.get(`${API}/proyectos`),
         axios.get(`${API}/vuelos`),
         axios.get(`${API}/estadisticas/resumen`)
       ]);
@@ -79,7 +75,7 @@ function AppContent() {
     } catch (err) {
       console.error('Error fetching data:', err);
     }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
