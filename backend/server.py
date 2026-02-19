@@ -1289,6 +1289,8 @@ async def descargar_imagenes_zip(proyecto_id: str, avance_id: str):
 @api_router.post("/proyectos/{proyecto_id}/avances-semanales/{avance_id}/modelo3d")
 async def subir_modelo_3d(proyecto_id: str, avance_id: str, file: UploadFile = File(...)):
     """Subir un modelo 3D (nube de puntos PLY) a un avance semanal"""
+    from services.storage import get_storage
+    
     # Verificar que el avance existe
     avance = await db.avances_semanales.find_one({"id": avance_id, "proyecto_id": proyecto_id})
     if not avance:
@@ -1303,11 +1305,115 @@ async def subir_modelo_3d(proyecto_id: str, avance_id: str, file: UploadFile = F
             detail=f"Formato no soportado. Use: {', '.join(allowed_extensions)}"
         )
     
-    # Crear directorio para modelos 3D si no existe
-    models_dir = UPLOAD_DIR / "modelos3d" / proyecto_id / avance_id
-    models_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        # Leer contenido del archivo
+        content = await file.read()
+        file_size = len(content)
+        file_size_mb = round(file_size / (1024 * 1024), 2)
+        
+        # Generar nombre único
+        unique_id = str(uuid.uuid4())
+        unique_filename = f"{unique_id}{file_extension}"
+        
+        # Eliminar modelo anterior de GridFS si existe
+        old_file_id = avance.get('modelo_3d_gridfs_id')
+        if old_file_id:
+            try:
+                storage = get_storage(db)
+                await storage.delete_file(old_file_id)
+            except Exception as e:
+                logging.warning(f"Error eliminando modelo anterior: {e}")
+        
+        # Guardar en GridFS
+        storage = get_storage(db)
+        file_id = await storage.save_file(
+            content=content,
+            filename=unique_filename,
+            content_type="application/octet-stream",
+            metadata={
+                "proyecto_id": proyecto_id,
+                "avance_id": avance_id,
+                "original_filename": file.filename,
+                "extension": file_extension,
+                "size_bytes": file_size
+            }
+        )
+        
+        # Generar URL del modelo
+        model_url = f"/api/modelos3d/gridfs/{file_id}"
+        
+        # Actualizar el avance con la referencia al archivo
+        update_data = {
+            "modelo_3d_url": model_url,
+            "modelo_3d_gridfs_id": file_id,
+            "modelo_3d_filename": unique_filename,
+            "modelo_3d_original_name": file.filename,
+            "modelo_3d_tipo": "gridfs",
+            "modelo_3d_size_mb": file_size_mb
+        }
+        
+        await db.avances_semanales.update_one(
+            {"id": avance_id},
+            {"$set": update_data}
+        )
+        
+        logging.info(f"Modelo 3D guardado en GridFS: {file_id} ({file_size_mb} MB)")
+        
+        return {
+            "url": model_url,
+            "filename": unique_filename,
+            "original_name": file.filename,
+            "size_mb": file_size_mb,
+            "tipo": "gridfs",
+            "gridfs_id": file_id
+        }
+        
+    except Exception as e:
+        logging.error(f"Error subiendo modelo 3D: {e}")
+        raise HTTPException(status_code=500, detail=f"Error al subir el modelo: {str(e)}")
+
+
+@api_router.get("/modelos3d/gridfs/{file_id}")
+async def obtener_modelo_3d_gridfs(file_id: str):
+    """Obtener un modelo 3D desde GridFS"""
+    from services.storage import get_storage
     
-    # Eliminar modelo y thumbnail anterior si existe
+    try:
+        storage = get_storage(db)
+        content, metadata = await storage.get_file(file_id)
+        
+        if content is None:
+            raise HTTPException(status_code=404, detail="Modelo no encontrado")
+        
+        # Determinar content-type
+        extension = metadata.get("extension", ".ply") if metadata else ".ply"
+        content_types = {
+            '.ply': 'application/octet-stream',
+            '.xyz': 'text/plain',
+            '.pts': 'text/plain',
+            '.pcd': 'application/octet-stream'
+        }
+        content_type = content_types.get(extension, 'application/octet-stream')
+        
+        filename = metadata.get("original_filename", "model.ply") if metadata else "model.ply"
+        
+        return StreamingResponse(
+            io.BytesIO(content),
+            media_type=content_type,
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Content-Length": str(len(content))
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error obteniendo modelo 3D de GridFS: {e}")
+        raise HTTPException(status_code=500, detail="Error al obtener el modelo")
+
+
+# Mantener endpoint legacy para archivos ya guardados en filesystem
     old_model = avance.get('modelo_3d_url')
     old_thumbnail = avance.get('thumbnail_url')
     if old_model:
