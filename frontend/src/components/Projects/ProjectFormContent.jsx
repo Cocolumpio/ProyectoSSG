@@ -223,23 +223,28 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Excavación */}
-          <div className={`rounded-lg p-4 border-2 transition-all cursor-pointer ${
+          <div className={`rounded-lg p-4 border-2 transition-all ${
             formData.fases?.excavacion 
               ? 'bg-amber-50 border-amber-400 shadow-md' 
               : 'bg-white border-gray-200 hover:border-amber-300'
           }`}
-            onClick={() => setFormData(prev => ({
-              ...prev,
-              fases: { ...prev.fases, excavacion: !prev.fases?.excavacion }
-            }))}
             data-testid="fase-excavacion-toggle"
           >
-            <div className="flex items-center gap-2 mb-2">
+            <div 
+              className="flex items-center gap-2 mb-2 cursor-pointer"
+              onClick={() => setFormData(prev => ({
+                ...prev,
+                fases: { ...prev.fases, excavacion: !prev.fases?.excavacion }
+              }))}
+            >
               <input
                 type="checkbox"
                 checked={formData.fases?.excavacion || false}
-                onChange={() => {}}
-                className="h-4 w-4 text-amber-600 rounded focus:ring-amber-500"
+                onChange={() => setFormData(prev => ({
+                  ...prev,
+                  fases: { ...prev.fases, excavacion: !prev.fases?.excavacion }
+                }))}
+                className="h-4 w-4 text-amber-600 rounded focus:ring-amber-500 cursor-pointer"
               />
               <Shovel className="h-5 w-5 text-amber-600" />
               <span className="font-medium text-gray-800">Excavación</span>
