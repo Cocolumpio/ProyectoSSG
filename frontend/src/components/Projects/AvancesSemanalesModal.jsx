@@ -127,6 +127,68 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
     }
   };
 
+  // Función para analizar foto con IA y rellenar el formulario
+  const handleAnalizarFotoIA = async (file) => {
+    if (!file) return;
+    
+    setAnalizandoFoto(true);
+    setError(null);
+    
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('imagen', file);
+      
+      // Enviar información del proyecto para que la IA sepa qué buscar
+      const proyectoInfo = {
+        tiene_excavacion: tieneExcavacion,
+        tiene_cimentacion: tieneCimentacion,
+        tiene_edificacion: tieneEdificacion,
+        pilas_planeadas: proyecto.pilas_planeadas || 0,
+        anclas_planeadas: proyecto.anclas_planeadas || 0,
+        muros_planeados: proyecto.muros_planeados || 0
+      };
+      formDataUpload.append('proyecto_info', JSON.stringify(proyectoInfo));
+      
+      const response = await axios.post(
+        `${API}/analisis/foto-avance`,
+        formDataUpload,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+      
+      if (response.data.success) {
+        const resultado = response.data.resultado;
+        
+        // Rellenar el formulario con los datos detectados
+        setFormData(prev => ({
+          ...prev,
+          volumen_excavacion: resultado.volumen_excavacion || prev.volumen_excavacion,
+          pilas_completadas: resultado.pilas_detectadas || prev.pilas_completadas,
+          anclas_completadas: resultado.anclas_detectadas || prev.anclas_completadas,
+          muros_completados: resultado.muros_detectados || prev.muros_completados,
+          descripcion: resultado.descripcion_ia 
+            ? `${prev.descripcion ? prev.descripcion + '\n\n' : ''}[IA] ${resultado.descripcion_ia}`
+            : prev.descripcion
+        }));
+        
+        // Guardar la foto para mostrarla
+        setFotoParaAnalizar({
+          file,
+          preview: URL.createObjectURL(file),
+          resultado: resultado
+        });
+        
+        if (onShowSuccess) {
+          onShowSuccess('Foto analizada - Revisa y ajusta los valores antes de guardar');
+        }
+      }
+    } catch (err) {
+      console.error('Error analizando foto:', err);
+      setError(err.response?.data?.detail || 'Error al analizar la foto con IA');
+    } finally {
+      setAnalizandoFoto(false);
+    }
+  };
+
   const handleDeleteAvance = async (avanceId) => {
     if (!window.confirm('¿Eliminar este avance semanal?')) return;
     
