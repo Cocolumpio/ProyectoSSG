@@ -116,6 +116,67 @@ class GridFSStorage:
             logger.error(f"Error verificando archivo en GridFS: {e}")
             return False
 
+    async def assemble_chunks_to_file(
+        self,
+        chunk_ids: list,
+        filename: str,
+        content_type: str = "application/octet-stream",
+        metadata: dict = None
+    ) -> Tuple[str, int]:
+        """
+        Ensambla múltiples chunks en un solo archivo usando streaming.
+        Más eficiente en memoria que cargar todo de una vez.
+        
+        Args:
+            chunk_ids: Lista de IDs de chunks en orden
+            filename: Nombre del archivo final
+            content_type: Tipo MIME
+            metadata: Metadatos adicionales
+        
+        Returns:
+            Tuple de (file_id del archivo ensamblado, tamaño total en bytes)
+        """
+        try:
+            file_metadata = {
+                "contentType": content_type,
+                "uploadDate": datetime.now(timezone.utc).isoformat(),
+                **(metadata or {})
+            }
+            
+            # Abrir stream de escritura a GridFS
+            upload_stream = self.fs.open_upload_stream(
+                filename,
+                metadata=file_metadata
+            )
+            
+            total_size = 0
+            async with upload_stream:
+                for i, chunk_id in enumerate(chunk_ids):
+                    try:
+                        # Leer chunk desde GridFS
+                        grid_out = await self.fs.open_download_stream(ObjectId(chunk_id))
+                        chunk_data = await grid_out.read()
+                        
+                        if chunk_data:
+                            # Escribir directamente al stream de salida
+                            await upload_stream.write(chunk_data)
+                            total_size += len(chunk_data)
+                            
+                            # Log de progreso cada 10 chunks
+                            if (i + 1) % 10 == 0:
+                                logger.info(f"Ensamblado chunk {i + 1}/{len(chunk_ids)}")
+                    except Exception as chunk_error:
+                        logger.error(f"Error leyendo chunk {chunk_id}: {chunk_error}")
+                        raise
+            
+            file_id = str(upload_stream._id)
+            logger.info(f"Archivo ensamblado en GridFS: {filename} ({total_size} bytes, {len(chunk_ids)} chunks)")
+            return file_id, total_size
+            
+        except Exception as e:
+            logger.error(f"Error ensamblando chunks en GridFS: {e}")
+            raise
+
 
 # Instancia global del storage (se inicializa con la DB)
 _storage: Optional[GridFSStorage] = None
