@@ -194,8 +194,9 @@ export function PointCloudViewer({ modelUrl, onError }) {
       (error) => {
         if (timeoutRef.current) clearInterval(timeoutRef.current);
         console.error('Error loading PLY:', error);
+        console.error('Error details:', error.message, error.stack);
         setLoading(false);
-        if (onError) onError('Error cargando el modelo 3D');
+        if (onError) onError(`Error cargando el modelo 3D: ${error.message || 'desconocido'}`);
       }
     );
 
