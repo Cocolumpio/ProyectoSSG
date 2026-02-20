@@ -120,6 +120,41 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
       {/* Upload Area */}
       {!parsedData && (
         <div className="mb-6">
+          {/* Sección de Formato Esperado - Prominente */}
+          <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
+            <div className="flex items-start gap-4">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <FileSpreadsheet className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-gray-900 mb-1">Formato Esperado del Cronograma</h4>
+                <p className="text-sm text-gray-600 mb-3">
+                  Descarga la plantilla de Excel con el formato estándar. El archivo debe incluir columnas para: 
+                  <span className="font-medium"> Frente, Actividad, Cantidad, Fecha Inicio, Fecha Fin</span>.
+                </p>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Pilas</span>
+                  <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded">Excavación (m³)</span>
+                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">Muros</span>
+                  <span className="text-xs bg-teal-100 text-teal-700 px-2 py-1 rounded">Anclas</span>
+                </div>
+                <button 
+                  onClick={handleDownloadTemplate}
+                  disabled={downloadingTemplate}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  data-testid="download-plantilla-btn"
+                >
+                  {downloadingTemplate ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                  Descargar Plantilla Excel
+                </button>
+              </div>
+            </div>
+          </div>
+
           <label className="block">
             <div className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors
               ${file ? 'border-[#994B49] bg-[#994B49]/5' : 'border-gray-300 hover:border-[#994B49]'}`}>
@@ -147,23 +182,6 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
               )}
             </div>
           </label>
-          
-          {/* Link para descargar plantilla */}
-          <div className="mt-4 text-center">
-            <button 
-              onClick={handleDownloadTemplate}
-              disabled={downloadingTemplate}
-              className="inline-flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 underline disabled:opacity-50"
-              data-testid="download-plantilla-btn"
-            >
-              {downloadingTemplate ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4" />
-              )}
-              Descargar plantilla de ejemplo
-            </button>
-          </div>
         </div>
       )}
 
