@@ -1596,18 +1596,29 @@ async def subir_modelo_3d(proyecto_id: str, avance_id: str, file: UploadFile = F
 
 @api_router.get("/modelos3d/gridfs/{file_id}")
 async def obtener_modelo_3d_gridfs(file_id: str):
-    """Obtener un modelo 3D desde GridFS"""
+    """Obtener un modelo 3D desde GridFS usando streaming"""
     from services.storage import get_storage
+    from bson import ObjectId
     
     try:
         storage = get_storage(db)
-        content, metadata = await storage.get_file(file_id)
         
-        if content is None:
+        # Verificar que el archivo existe y obtener metadata
+        try:
+            cursor = storage.fs.find({"_id": ObjectId(file_id)})
+            files = await cursor.to_list(1)
+            if not files:
+                raise HTTPException(status_code=404, detail="Modelo no encontrado")
+            
+            file_info = files[0]
+            metadata = file_info.metadata or {}
+            file_length = file_info.length
+        except Exception as e:
+            logging.error(f"Error buscando archivo en GridFS: {e}")
             raise HTTPException(status_code=404, detail="Modelo no encontrado")
         
         # Determinar content-type
-        extension = metadata.get("extension", ".ply") if metadata else ".ply"
+        extension = metadata.get("extension", ".ply")
         content_types = {
             '.ply': 'application/octet-stream',
             '.xyz': 'text/plain',
@@ -1615,15 +1626,25 @@ async def obtener_modelo_3d_gridfs(file_id: str):
             '.pcd': 'application/octet-stream'
         }
         content_type = content_types.get(extension, 'application/octet-stream')
+        filename = metadata.get("original_filename", "model.ply")
         
-        filename = metadata.get("original_filename", "model.ply") if metadata else "model.ply"
+        # Crear generador de streaming desde GridFS
+        async def stream_from_gridfs():
+            grid_out = await storage.fs.open_download_stream(ObjectId(file_id))
+            chunk_size = 1024 * 1024  # 1MB chunks for streaming
+            while True:
+                chunk = await grid_out.read(chunk_size)
+                if not chunk:
+                    break
+                yield chunk
         
         return StreamingResponse(
-            io.BytesIO(content),
+            stream_from_gridfs(),
             media_type=content_type,
             headers={
-                "Content-Disposition": f"attachment; filename={filename}",
-                "Content-Length": str(len(content))
+                "Content-Disposition": f"inline; filename={filename}",
+                "Content-Length": str(file_length),
+                "Cache-Control": "public, max-age=3600"
             }
         )
         
