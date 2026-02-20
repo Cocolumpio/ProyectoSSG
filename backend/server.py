@@ -1603,16 +1603,14 @@ async def obtener_modelo_3d_gridfs(file_id: str):
     try:
         storage = get_storage(db)
         
-        # Verificar que el archivo existe y obtener metadata
+        # Verificar que el archivo existe consultando fs.files directamente
         try:
-            cursor = storage.fs.find({"_id": ObjectId(file_id)})
-            files = await cursor.to_list(1)
-            if not files:
+            file_doc = await db.fs.files.find_one({"_id": ObjectId(file_id)})
+            if not file_doc:
                 raise HTTPException(status_code=404, detail="Modelo no encontrado")
             
-            file_info = files[0]
-            metadata = file_info.metadata or {}
-            file_length = file_info.length
+            metadata = file_doc.get("metadata", {}) or {}
+            file_length = file_doc.get("length", 0)
         except Exception as e:
             logging.error(f"Error buscando archivo en GridFS: {e}")
             raise HTTPException(status_code=404, detail="Modelo no encontrado")
