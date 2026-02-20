@@ -207,6 +207,13 @@ export function PointCloudViewer({ modelUrl, onError }) {
           if (percentComplete < 100) {
             setLoadingMessage(`Descargando: ${loadedMB}MB / ${totalMB}MB`);
           }
+          
+          // Log progress every 10%
+          if (Math.round(percentComplete) % 10 === 0) {
+            console.log(`PLY Download progress: ${Math.round(percentComplete)}% (${loadedMB}MB / ${totalMB}MB)`);
+          }
+        } else {
+          console.log('PLY Download: length not computable, loaded:', xhr.loaded);
         }
       },
       (error) => {
