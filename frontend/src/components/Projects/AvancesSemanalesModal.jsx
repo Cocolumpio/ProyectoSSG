@@ -674,7 +674,16 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                 avances.map((avance) => (
                   <div
                     key={avance.id}
-                    onClick={() => setSelectedAvance(avance)}
+                    onClick={() => {
+                      console.log('Avance seleccionado:', JSON.stringify({
+                        id: avance.id,
+                        semana: avance.semana,
+                        modelo_3d_url: avance.modelo_3d_url,
+                        modelo_3d_tipo: avance.modelo_3d_tipo,
+                        pix4d_url: avance.pix4d_url
+                      }, null, 2));
+                      setSelectedAvance(avance);
+                    }}
                     className={`p-2 sm:p-3 rounded-lg cursor-pointer transition-all flex-shrink-0 min-w-[120px] sm:min-w-0 ${
                       selectedAvance?.id === avance.id
                         ? 'bg-[#994B49] text-white'
