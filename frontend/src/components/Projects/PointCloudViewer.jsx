@@ -16,11 +16,18 @@ export function PointCloudViewer({ modelUrl, onError }) {
   const timeoutRef = useRef(null);
 
   useEffect(() => {
-    if (!containerRef.current || !modelUrl) return;
+    if (!containerRef.current || !modelUrl) {
+      console.log('PointCloudViewer: Missing container or modelUrl', { containerRef: !!containerRef.current, modelUrl });
+      return;
+    }
 
+    console.log('PointCloudViewer: Initializing with modelUrl:', modelUrl);
+    
     const container = containerRef.current;
     const width = container.clientWidth;
     const height = container.clientHeight;
+    
+    console.log('PointCloudViewer: Container dimensions:', { width, height });
 
     // Scene setup
     const scene = new THREE.Scene();
