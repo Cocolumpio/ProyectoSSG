@@ -64,18 +64,23 @@ export function PointCloudViewer({ modelUrl, onError }) {
     
     let lastProgress = 0;
     let stuckCounter = 0;
-    const STUCK_THRESHOLD = 60; // 60 seconds for large files
+    const STUCK_THRESHOLD = 180; // 3 minutes for very large files
     
     setLoadingMessage('Conectando al servidor...');
+    console.log('Starting PLY load from:', fullUrl);
     
     timeoutRef.current = setInterval(() => {
       if (progressRef.current === lastProgress && progressRef.current < 100) {
         stuckCounter++;
+        // Show progress message every 30 seconds
+        if (stuckCounter % 30 === 0 && stuckCounter < STUCK_THRESHOLD) {
+          console.log(`Still loading... ${stuckCounter}s elapsed, progress: ${progressRef.current}%`);
+        }
         if (stuckCounter >= STUCK_THRESHOLD) {
           if (timeoutRef.current) clearInterval(timeoutRef.current);
-          console.warn('Model loading stalled, triggering error callback');
+          console.warn('Model loading stalled after', stuckCounter, 'seconds');
           setLoading(false);
-          if (onError) onError('Timeout: El modelo es demasiado grande o hay problemas de conexión');
+          if (onError) onError('Timeout: El modelo es demasiado grande o hay problemas de conexión. Intenta recargar la página.');
         }
       } else {
         stuckCounter = 0;
