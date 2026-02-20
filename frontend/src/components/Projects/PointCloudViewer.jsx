@@ -147,15 +147,21 @@ export function PointCloudViewer({ modelUrl, onError }) {
           const hasColors = pointsGeometry.hasAttribute('color');
           console.log('Has colors:', hasColors);
           
-          // Point material
-          const material = new THREE.PointsMaterial({
+          // Point material - NO pasar 'color' cuando usamos vertexColors
+          const materialOptions = {
             size: maxDim * 0.002,
             vertexColors: hasColors,
-            color: hasColors ? undefined : new THREE.Color(0x994B49),
             sizeAttenuation: true,
             transparent: true,
             opacity: 0.9
-          });
+          };
+          
+          // Solo agregar color si NO tiene vertex colors
+          if (!hasColors) {
+            materialOptions.color = new THREE.Color(0x994B49);
+          }
+          
+          const material = new THREE.PointsMaterial(materialOptions);
 
           // Create points mesh
           const points = new THREE.Points(pointsGeometry, material);
