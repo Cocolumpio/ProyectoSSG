@@ -1413,10 +1413,10 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                                 ✓ Vista previa optimizada disponible ({selectedAvance.modelo_3d_preview_points?.toLocaleString() || '~200K'} puntos)
                               </p>
                             )}
-                            {!selectedAvance.modelo_3d_preview_url && selectedAvance.modelo_3d_size_mb > 10 && (
+                            {!selectedAvance.modelo_3d_preview_url && selectedAvance.modelo_3d_url && (
                               <div className="mb-4">
                                 <p className="text-xs text-amber-400 mb-2">
-                                  ⚠ Modelo grande - se recomienda generar vista previa
+                                  ⚠ Modelo grande - se recomienda generar vista previa para evitar problemas de memoria
                                 </p>
                                 <button
                                   onClick={handleGeneratePreview}
