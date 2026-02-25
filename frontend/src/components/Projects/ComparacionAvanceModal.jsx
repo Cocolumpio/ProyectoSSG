@@ -123,7 +123,7 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50" onClick={onClose}>
       <div 
         className="bg-white rounded-xl w-[95vw] max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
