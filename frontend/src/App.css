@@ -50,6 +50,16 @@
     z-index: auto !important;
 }
 
+/* OCULTAR el mapa cuando hay un modal abierto (class añadida al body) */
+body.modal-open [data-testid="map-container"] {
+    visibility: hidden !important;
+}
+
+/* Asegurar que los modales tengan z-index muy alto */
+.modal-overlay {
+    z-index: 9999 !important;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
