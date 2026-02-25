@@ -136,12 +136,12 @@ export function PointCloudViewer({ modelUrl, onError }) {
             const colors = hasColors ? geometry.getAttribute('color').array : null;
             
             // Usar TypedArrays directamente para mejor rendimiento de memoria
-            const finalCount = Math.ceil(originalCount / skipRate);
+            const finalCount = Math.ceil(origCount / skipRate);
             const newPositions = new Float32Array(finalCount * 3);
             const newColors = hasColors ? new Float32Array(finalCount * 3) : null;
             
             let idx = 0;
-            for (let i = 0; i < originalCount && idx < finalCount; i += skipRate) {
+            for (let i = 0; i < origCount && idx < finalCount; i += skipRate) {
               newPositions[idx * 3] = positions[i * 3];
               newPositions[idx * 3 + 1] = positions[i * 3 + 1];
               newPositions[idx * 3 + 2] = positions[i * 3 + 2];
@@ -162,8 +162,7 @@ export function PointCloudViewer({ modelUrl, onError }) {
               pointsGeometry.setAttribute('color', new THREE.BufferAttribute(newColors, 3));
             }
             
-            console.log(`Puntos optimizados: ${originalCount.toLocaleString()} → ${idx.toLocaleString()} (reducción ${skipRate}x)`);
-          }
+            console.log(`Puntos optimizados: ${origCount.toLocaleString()} → ${idx.toLocaleString()} (reducción ${skipRate}x)`);
           }
 
           // Check if geometry has colors
