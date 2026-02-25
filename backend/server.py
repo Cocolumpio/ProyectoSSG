@@ -1715,6 +1715,108 @@ async def obtener_modelo_3d_gridfs(file_id: str):
         raise HTTPException(status_code=500, detail="Error al obtener el modelo")
 
 
+@api_router.post("/proyectos/{proyecto_id}/avances-semanales/{avance_id}/modelo3d/generar-preview")
+async def generar_preview_modelo_3d(proyecto_id: str, avance_id: str):
+    """
+    Genera una versión preview optimizada de un modelo 3D existente.
+    Útil para modelos que se subieron antes de implementar esta funcionalidad.
+    """
+    from services.storage import get_storage
+    from services.model3d_processor import create_preview_ply
+    import asyncio
+    
+    # Verificar que el avance existe y tiene modelo
+    avance = await db.avances_semanales.find_one({"id": avance_id, "proyecto_id": proyecto_id})
+    if not avance:
+        raise HTTPException(status_code=404, detail="Avance no encontrado")
+    
+    if not avance.get("modelo_3d_gridfs_id"):
+        raise HTTPException(status_code=400, detail="Este avance no tiene modelo 3D")
+    
+    if avance.get("modelo_3d_preview_url"):
+        return {
+            "success": True,
+            "message": "El modelo ya tiene una versión preview",
+            "preview_url": avance["modelo_3d_preview_url"],
+            "preview_points": avance.get("modelo_3d_preview_points", 0)
+        }
+    
+    try:
+        storage = get_storage(db)
+        file_id = avance["modelo_3d_gridfs_id"]
+        
+        # Leer el archivo original
+        logging.info(f"Leyendo modelo original {file_id} para generar preview...")
+        original_content, _ = await storage.get_file(file_id)
+        
+        if not original_content:
+            raise HTTPException(status_code=500, detail="No se pudo leer el modelo original")
+        
+        # Crear preview en un thread separado
+        loop = asyncio.get_event_loop()
+        preview_content, model_metadata = await loop.run_in_executor(
+            None,
+            lambda: asyncio.run(create_preview_ply(original_content))
+        )
+        
+        if not preview_content:
+            # No necesita preview o hubo error
+            return {
+                "success": True,
+                "message": "El modelo no requiere simplificación",
+                "original_points": model_metadata.get("original_points", 0),
+                "simplified": False
+            }
+        
+        # Guardar la versión preview
+        original_filename = avance.get("modelo_3d_filename", "model.ply")
+        preview_filename = f"preview_{original_filename}"
+        preview_gridfs_id = await storage.save_file(
+            content=preview_content,
+            filename=preview_filename,
+            content_type="application/octet-stream",
+            metadata={
+                "proyecto_id": proyecto_id,
+                "avance_id": avance_id,
+                "is_preview": True,
+                "original_file_id": file_id,
+                **model_metadata
+            }
+        )
+        preview_url = f"/api/modelos3d/gridfs/{preview_gridfs_id}"
+        
+        # Actualizar el avance con la info del preview
+        await db.avances_semanales.update_one(
+            {"id": avance_id},
+            {"$set": {
+                "modelo_3d_preview_url": preview_url,
+                "modelo_3d_preview_id": preview_gridfs_id,
+                "modelo_3d_preview_points": model_metadata.get("preview_points", 0),
+                "modelo_3d_points": model_metadata.get("original_points", 0)
+            }}
+        )
+        
+        preview_size_mb = round(len(preview_content) / (1024 * 1024), 2)
+        logging.info(f"Preview generado: {preview_gridfs_id} ({preview_size_mb} MB)")
+        
+        return {
+            "success": True,
+            "message": "Preview generado exitosamente",
+            "preview_url": preview_url,
+            "preview_gridfs_id": preview_gridfs_id,
+            "preview_points": model_metadata.get("preview_points", 0),
+            "original_points": model_metadata.get("original_points", 0),
+            "reduction_ratio": model_metadata.get("reduction_ratio", 1),
+            "preview_size_mb": preview_size_mb
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error generando preview: {e}")
+        raise HTTPException(status_code=500, detail=f"Error generando preview: {str(e)}")
+
+
 # Mantener endpoint legacy para archivos ya guardados en filesystem
 @api_router.get("/modelos3d/{proyecto_id}/{avance_id}/{filename}")
 async def obtener_modelo_3d_legacy(proyecto_id: str, avance_id: str, filename: str):
