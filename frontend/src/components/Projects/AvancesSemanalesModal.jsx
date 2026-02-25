@@ -55,6 +55,14 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
+  // Ocultar el mapa de Leaflet cuando el modal está abierto
+  useEffect(() => {
+    document.body.classList.add('modal-open');
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, []);
+
   // Determinar qué fases están activas en el proyecto
   // Usar fases_activas guardadas si existen, sino calcular basado en datos
   const tieneExcavacion = proyecto.fases_activas?.includes('excavacion') || 
