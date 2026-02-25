@@ -1458,18 +1458,69 @@ async def completar_upload_modelo_3d(proyecto_id: str, avance_id: str, upload_id
         
         file_size_mb = round(total_size / (1024 * 1024), 2)
         model_url = f"/api/modelos3d/gridfs/{file_id}"
+        preview_url = None
+        preview_gridfs_id = None
+        model_metadata = {"original_points": 0, "simplified": False}
+        
+        # Crear versión preview si el archivo es grande (>10MB)
+        if total_size > 10 * 1024 * 1024:
+            try:
+                logging.info(f"Creando versión preview del modelo ({file_size_mb} MB)...")
+                
+                # Leer el archivo original desde GridFS
+                original_content, _ = await storage.get_file(file_id)
+                
+                if original_content:
+                    from services.model3d_processor import create_preview_ply
+                    import asyncio
+                    
+                    # Crear preview en un thread separado para no bloquear
+                    loop = asyncio.get_event_loop()
+                    preview_content, model_metadata = await loop.run_in_executor(
+                        None,
+                        lambda: asyncio.run(create_preview_ply(original_content))
+                    )
+                    
+                    if preview_content:
+                        # Guardar la versión preview
+                        preview_filename = f"preview_{unique_filename}"
+                        preview_gridfs_id = await storage.save_file(
+                            content=preview_content,
+                            filename=preview_filename,
+                            content_type="application/octet-stream",
+                            metadata={
+                                "proyecto_id": proyecto_id,
+                                "avance_id": avance_id,
+                                "is_preview": True,
+                                "original_file_id": file_id,
+                                **model_metadata
+                            }
+                        )
+                        preview_url = f"/api/modelos3d/gridfs/{preview_gridfs_id}"
+                        preview_size_mb = round(len(preview_content) / (1024 * 1024), 2)
+                        logging.info(f"Preview creado: {preview_gridfs_id} ({preview_size_mb} MB, {model_metadata.get('preview_points', 0):,} puntos)")
+            except Exception as e:
+                logging.warning(f"Error creando preview (continuando sin preview): {e}")
         
         # Actualizar el avance
+        update_data = {
+            "modelo_3d_url": model_url,
+            "modelo_3d_gridfs_id": file_id,
+            "modelo_3d_filename": unique_filename,
+            "modelo_3d_original_name": filename,
+            "modelo_3d_tipo": "gridfs",
+            "modelo_3d_size_mb": file_size_mb,
+            "modelo_3d_points": model_metadata.get("original_points", 0)
+        }
+        
+        if preview_url:
+            update_data["modelo_3d_preview_url"] = preview_url
+            update_data["modelo_3d_preview_id"] = preview_gridfs_id
+            update_data["modelo_3d_preview_points"] = model_metadata.get("preview_points", 0)
+        
         await db.avances_semanales.update_one(
             {"id": avance_id},
-            {"$set": {
-                "modelo_3d_url": model_url,
-                "modelo_3d_gridfs_id": file_id,
-                "modelo_3d_filename": unique_filename,
-                "modelo_3d_original_name": filename,
-                "modelo_3d_tipo": "gridfs",
-                "modelo_3d_size_mb": file_size_mb
-            }}
+            {"$set": update_data}
         )
         
         # Eliminar chunks temporales de GridFS en background
