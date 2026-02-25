@@ -1347,17 +1347,39 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                     
                     {/* Área del visor 3D */}
                     <div className="h-[250px] sm:h-[320px] md:h-[400px]">
-                      {getActiveViewer() === 'local' ? (
+                      {getActiveViewer() === 'local' && shouldLoadModel ? (
                         <PointCloudViewer 
                           modelUrl={selectedAvance.modelo_3d_url}
                           onError={(msg) => {
                             console.error(msg);
+                            setShouldLoadModel(false);
                             // Si falla el local, intentar con Pix4D
                             if (selectedAvance.pix4d_url) {
                               setViewerMode('pix4d');
                             }
                           }}
                         />
+                      ) : getActiveViewer() === 'local' && !shouldLoadModel ? (
+                        // Mostrar botón para cargar el modelo (no carga automáticamente)
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1a1a2e] to-[#2d2d44]">
+                          <div className="text-center p-6">
+                            <Box className="h-16 w-16 mx-auto mb-4 text-[#994B49]" />
+                            <p className="text-lg font-medium text-white mb-2">Modelo 3D Disponible</p>
+                            <p className="text-sm text-gray-400 mb-4">
+                              {selectedAvance.modelo_3d_size_mb 
+                                ? `Tamaño: ${selectedAvance.modelo_3d_size_mb} MB` 
+                                : 'Haz clic para cargar la nube de puntos'}
+                            </p>
+                            <button
+                              onClick={() => setShouldLoadModel(true)}
+                              className="flex items-center space-x-2 px-6 py-3 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors mx-auto"
+                              data-testid="load-model-btn"
+                            >
+                              <Eye className="h-5 w-5" />
+                              <span>Cargar Modelo 3D</span>
+                            </button>
+                          </div>
+                        </div>
                       ) : getActiveViewer() === 'pix4d' ? (
                         <iframe
                           src={selectedAvance.pix4d_url}
