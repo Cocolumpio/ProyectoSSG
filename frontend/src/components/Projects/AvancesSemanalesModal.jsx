@@ -40,6 +40,7 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
   });
   const [viewerMode, setViewerMode] = useState('auto'); // 'auto', 'local', 'pix4d'
   const [shouldLoadModel, setShouldLoadModel] = useState(false); // Controla si cargar el modelo 3D
+  const [generatingPreview, setGeneratingPreview] = useState(false); // Estado para generación de preview
   const [showAnalisisIA, setShowAnalisisIA] = useState(false);
   const [showComparacion, setShowComparacion] = useState(false);
   const [analizandoFoto, setAnalizandoFoto] = useState(false);
