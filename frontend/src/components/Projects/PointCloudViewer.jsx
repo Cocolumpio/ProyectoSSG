@@ -8,6 +8,7 @@ export function PointCloudViewer({ modelUrl, onError }) {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [pointCount, setPointCount] = useState(0);
+  const [originalCount, setOriginalCount] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState('Iniciando carga...');
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
