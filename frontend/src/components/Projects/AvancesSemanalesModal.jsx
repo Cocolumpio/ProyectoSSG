@@ -523,9 +523,15 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
     
     setGeneratingPreview(true);
     try {
-      const response = await axios.post(
-        `${API}/proyectos/${proyecto.id}/avances-semanales/${selectedAvance.id}/modelo3d/generar-preview`
-      );
+      console.log('Generando preview para avance:', selectedAvance.id);
+      const url = `${API}/proyectos/${proyecto.id}/avances-semanales/${selectedAvance.id}/modelo3d/generar-preview`;
+      console.log('URL:', url);
+      
+      const response = await axios.post(url, null, {
+        timeout: 180000 // 3 minutos para procesar modelos grandes
+      });
+      
+      console.log('Response:', response.data);
       
       if (response.data.success && response.data.preview_url) {
         // Actualizar el avance con la info del preview
@@ -548,7 +554,18 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
       }
     } catch (err) {
       console.error('Error generando preview:', err);
-      alert(err.response?.data?.detail || 'Error al generar preview del modelo');
+      console.error('Error response:', err.response);
+      
+      let errorMsg = 'Error al generar preview del modelo';
+      if (err.code === 'ECONNABORTED') {
+        errorMsg = 'La generación del preview tardó demasiado. Intente nuevamente.';
+      } else if (err.response?.status === 404) {
+        errorMsg = 'No se encontró el modelo 3D. Verifique que el archivo existe.';
+      } else if (err.response?.data?.detail) {
+        errorMsg = err.response.data.detail;
+      }
+      
+      alert(errorMsg);
     } finally {
       setGeneratingPreview(false);
     }
