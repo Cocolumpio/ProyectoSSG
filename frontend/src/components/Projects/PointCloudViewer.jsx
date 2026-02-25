@@ -117,37 +117,51 @@ export function PointCloudViewer({ modelUrl, onError }) {
           
           console.log('Geometry size:', size, 'Max dimension:', maxDim);
 
-          // Reducir puntos si hay demasiados (más de 5 millones)
+          // OPTIMIZACIÓN AGRESIVA: Reducir puntos para evitar crashes de memoria
+          // Límite máximo: 500K puntos para rendimiento óptimo en la mayoría de navegadores
+          const MAX_POINTS = 500000;
           const originalCount = geometry.getAttribute('position').count;
           console.log('Original point count:', originalCount);
           let pointsGeometry = geometry;
           
-          if (originalCount > 5000000) {
-            setLoadingMessage(`Optimizando ${(originalCount/1000000).toFixed(1)}M puntos...`);
+          if (originalCount > MAX_POINTS) {
+            setLoadingMessage(`Optimizando ${(originalCount/1000000).toFixed(1)}M puntos para visualización...`);
             
-            // Diezmar la geometría para mejor rendimiento
-            const skipRate = Math.ceil(originalCount / 2000000); // Reducir a ~2M puntos
+            // Calcular tasa de reducción para llegar a MAX_POINTS
+            const skipRate = Math.ceil(originalCount / MAX_POINTS);
             const positions = geometry.getAttribute('position').array;
             const hasColors = geometry.hasAttribute('color');
             const colors = hasColors ? geometry.getAttribute('color').array : null;
             
-            const newPositions = [];
-            const newColors = [];
+            // Usar TypedArrays directamente para mejor rendimiento de memoria
+            const finalCount = Math.ceil(originalCount / skipRate);
+            const newPositions = new Float32Array(finalCount * 3);
+            const newColors = hasColors ? new Float32Array(finalCount * 3) : null;
             
-            for (let i = 0; i < originalCount; i += skipRate) {
-              newPositions.push(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
+            let idx = 0;
+            for (let i = 0; i < originalCount && idx < finalCount; i += skipRate) {
+              newPositions[idx * 3] = positions[i * 3];
+              newPositions[idx * 3 + 1] = positions[i * 3 + 1];
+              newPositions[idx * 3 + 2] = positions[i * 3 + 2];
               if (hasColors) {
-                newColors.push(colors[i * 3], colors[i * 3 + 1], colors[i * 3 + 2]);
+                newColors[idx * 3] = colors[i * 3];
+                newColors[idx * 3 + 1] = colors[i * 3 + 1];
+                newColors[idx * 3 + 2] = colors[i * 3 + 2];
               }
+              idx++;
             }
+            
+            // Liberar memoria del geometry original
+            geometry.dispose();
             
             pointsGeometry = new THREE.BufferGeometry();
-            pointsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(newPositions, 3));
+            pointsGeometry.setAttribute('position', new THREE.BufferAttribute(newPositions, 3));
             if (hasColors) {
-              pointsGeometry.setAttribute('color', new THREE.Float32BufferAttribute(newColors, 3));
+              pointsGeometry.setAttribute('color', new THREE.BufferAttribute(newColors, 3));
             }
             
-            console.log(`Puntos reducidos de ${originalCount.toLocaleString()} a ${(newPositions.length/3).toLocaleString()}`);
+            console.log(`Puntos optimizados: ${originalCount.toLocaleString()} → ${idx.toLocaleString()} (reducción ${skipRate}x)`);
+          }
           }
 
           // Check if geometry has colors
