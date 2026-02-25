@@ -1349,7 +1349,7 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                     <div className="h-[250px] sm:h-[320px] md:h-[400px]">
                       {getActiveViewer() === 'local' && shouldLoadModel ? (
                         <PointCloudViewer 
-                          modelUrl={selectedAvance.modelo_3d_url}
+                          modelUrl={selectedAvance.modelo_3d_preview_url || selectedAvance.modelo_3d_url}
                           onError={(msg) => {
                             console.error(msg);
                             setShouldLoadModel(false);
@@ -1365,11 +1365,21 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                           <div className="text-center p-6">
                             <Box className="h-16 w-16 mx-auto mb-4 text-[#994B49]" />
                             <p className="text-lg font-medium text-white mb-2">Modelo 3D Disponible</p>
-                            <p className="text-sm text-gray-400 mb-4">
+                            <p className="text-sm text-gray-400 mb-2">
                               {selectedAvance.modelo_3d_size_mb 
-                                ? `Tamaño: ${selectedAvance.modelo_3d_size_mb} MB` 
+                                ? `Tamaño original: ${selectedAvance.modelo_3d_size_mb} MB` 
                                 : 'Haz clic para cargar la nube de puntos'}
                             </p>
+                            {selectedAvance.modelo_3d_preview_url && (
+                              <p className="text-xs text-green-400 mb-4">
+                                ✓ Vista previa optimizada disponible ({selectedAvance.modelo_3d_preview_points?.toLocaleString() || '~200K'} puntos)
+                              </p>
+                            )}
+                            {!selectedAvance.modelo_3d_preview_url && selectedAvance.modelo_3d_points > 500000 && (
+                              <p className="text-xs text-amber-400 mb-4">
+                                ⚠ Modelo grande ({(selectedAvance.modelo_3d_points / 1000000).toFixed(1)}M puntos) - puede tardar en cargar
+                              </p>
+                            )}
                             <button
                               onClick={() => setShouldLoadModel(true)}
                               className="flex items-center space-x-2 px-6 py-3 bg-[#994B49] text-white rounded-lg hover:bg-[#7D3C3A] transition-colors mx-auto"
