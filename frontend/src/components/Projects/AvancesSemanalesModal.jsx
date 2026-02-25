@@ -1413,10 +1413,26 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                                 ✓ Vista previa optimizada disponible ({selectedAvance.modelo_3d_preview_points?.toLocaleString() || '~200K'} puntos)
                               </p>
                             )}
-                            {!selectedAvance.modelo_3d_preview_url && selectedAvance.modelo_3d_points > 500000 && (
-                              <p className="text-xs text-amber-400 mb-4">
-                                ⚠ Modelo grande ({(selectedAvance.modelo_3d_points / 1000000).toFixed(1)}M puntos) - puede tardar en cargar
-                              </p>
+                            {!selectedAvance.modelo_3d_preview_url && selectedAvance.modelo_3d_size_mb > 10 && (
+                              <div className="mb-4">
+                                <p className="text-xs text-amber-400 mb-2">
+                                  ⚠ Modelo grande - se recomienda generar vista previa
+                                </p>
+                                <button
+                                  onClick={handleGeneratePreview}
+                                  disabled={generatingPreview}
+                                  className="text-xs px-3 py-1.5 bg-amber-500 text-black rounded hover:bg-amber-400 transition-colors disabled:opacity-50"
+                                >
+                                  {generatingPreview ? (
+                                    <span className="flex items-center gap-1">
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                      Generando preview...
+                                    </span>
+                                  ) : (
+                                    'Generar Vista Previa Optimizada'
+                                  )}
+                                </button>
+                              </div>
                             )}
                             <button
                               onClick={() => setShouldLoadModel(true)}
@@ -1424,7 +1440,7 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                               data-testid="load-model-btn"
                             >
                               <Eye className="h-5 w-5" />
-                              <span>Cargar Modelo 3D</span>
+                              <span>{selectedAvance.modelo_3d_preview_url ? 'Cargar Vista Previa' : 'Cargar Modelo 3D'}</span>
                             </button>
                           </div>
                         </div>
