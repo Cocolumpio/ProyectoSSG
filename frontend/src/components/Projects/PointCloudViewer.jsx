@@ -121,15 +121,16 @@ export function PointCloudViewer({ modelUrl, onError }) {
           // OPTIMIZACIÓN AGRESIVA: Reducir puntos para evitar crashes de memoria
           // Límite máximo: 500K puntos para rendimiento óptimo en la mayoría de navegadores
           const MAX_POINTS = 500000;
-          const originalCount = geometry.getAttribute('position').count;
-          console.log('Original point count:', originalCount);
+          const origCount = geometry.getAttribute('position').count;
+          setOriginalCount(origCount);
+          console.log('Original point count:', origCount);
           let pointsGeometry = geometry;
           
-          if (originalCount > MAX_POINTS) {
-            setLoadingMessage(`Optimizando ${(originalCount/1000000).toFixed(1)}M puntos para visualización...`);
+          if (origCount > MAX_POINTS) {
+            setLoadingMessage(`Optimizando ${(origCount/1000000).toFixed(1)}M puntos para visualización...`);
             
             // Calcular tasa de reducción para llegar a MAX_POINTS
-            const skipRate = Math.ceil(originalCount / MAX_POINTS);
+            const skipRate = Math.ceil(origCount / MAX_POINTS);
             const positions = geometry.getAttribute('position').array;
             const hasColors = geometry.hasAttribute('color');
             const colors = hasColors ? geometry.getAttribute('color').array : null;
