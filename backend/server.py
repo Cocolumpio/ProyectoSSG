@@ -1536,14 +1536,25 @@ async def completar_upload_modelo_3d(proyecto_id: str, avance_id: str, upload_id
         
         logging.info(f"Modelo 3D guardado en GridFS: {file_id} ({file_size_mb} MB)")
         
-        return {
+        response_data = {
             "success": True,
             "url": model_url,
             "filename": unique_filename,
             "original_name": filename,
             "size_mb": file_size_mb,
-            "gridfs_id": file_id
+            "gridfs_id": file_id,
+            "points": model_metadata.get("original_points", 0)
         }
+        
+        if preview_url:
+            response_data["preview_url"] = preview_url
+            response_data["preview_gridfs_id"] = preview_gridfs_id
+            response_data["preview_points"] = model_metadata.get("preview_points", 0)
+            response_data["has_preview"] = True
+        else:
+            response_data["has_preview"] = False
+        
+        return response_data
         
     except HTTPException:
         raise
