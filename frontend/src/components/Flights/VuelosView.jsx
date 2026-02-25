@@ -108,7 +108,7 @@ export function VuelosView({ vuelos, proyectos, onDelete, onRefresh }) {
 
       {/* Modal: Formulario de Vuelo */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-2 sm:p-4">
           <div className="bg-white rounded-xl shadow-xl w-full sm:max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
               <h3 className="text-lg sm:text-xl font-semibold text-gray-900">{editingVuelo ? 'Editar Vuelo' : 'Registrar Vuelo'}</h3>

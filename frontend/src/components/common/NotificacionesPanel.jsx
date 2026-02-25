@@ -118,7 +118,7 @@ export function NotificacionesPanel({ isOpen, onClose, onNotificationClick }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
+    <div className="fixed inset-0 z-[1000] flex justify-end" onClick={onClose}>
       {/* Overlay */}
       <div className="absolute inset-0 bg-black/20" />
       

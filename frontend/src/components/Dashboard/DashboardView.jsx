@@ -731,7 +731,7 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
 
       {/* Modal del Visor 3D Completo */}
       {showFullViewer && ultimoAvance?.modelo_3d_url && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80" onClick={() => setShowFullViewer(false)}>
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/80" onClick={() => setShowFullViewer(false)}>
           <div 
             className="relative w-[90vw] h-[80vh] bg-[#1a1a2e] rounded-xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
