@@ -130,3 +130,7 @@ backend/uploads/modelos3d/hotel-marriott-001/40f7d195-bb3e-4668-9891-bca42a85842
 frontend/node_modules/.cache/default-development/10.pack
 backend/uploads/modelos3d/d250ab6b-56d5-48e5-b114-f1c7f9c04c59/e5167b8d-1467-42d6-9e72-26ebdc8e6b70/1f25572c-2e07-4b6f-9b81-a9eaa48382e4.ply
 backend/uploads/modelos3d/d250ab6b-56d5-48e5-b114-f1c7f9c04c59/57fa50bc-36cc-4fd2-bd65-87dd8fb3736b/1199de32-5bbb-4239-a840-2b796762150f.ply
+-e 
+# Environment files
+*.env
+*.env.*
