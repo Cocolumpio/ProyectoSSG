@@ -560,7 +560,15 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
       if (err.code === 'ECONNABORTED') {
         errorMsg = 'La generación del preview tardó demasiado. Intente nuevamente.';
       } else if (err.response?.status === 404) {
-        errorMsg = 'No se encontró el modelo 3D. Verifique que el archivo existe.';
+        errorMsg = 'No se encontró el avance. Verifique que existe.';
+      } else if (err.response?.status === 400) {
+        errorMsg = err.response.data.detail || 'Este avance no tiene modelo 3D compatible.';
+      } else if (err.response?.status === 500) {
+        errorMsg = err.response.data.detail || 'Error del servidor al procesar el modelo.';
+        // Si el archivo no existe, mostrar mensaje especial
+        if (errorMsg.includes('no existir') || errorMsg.includes('No se pudo leer')) {
+          errorMsg = 'El archivo del modelo 3D no se encuentra en el servidor. Por favor, suba el modelo nuevamente.';
+        }
       } else if (err.response?.data?.detail) {
         errorMsg = err.response.data.detail;
       }
