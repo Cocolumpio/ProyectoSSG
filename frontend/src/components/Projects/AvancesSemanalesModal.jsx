@@ -692,6 +692,8 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                         pix4d_url: avance.pix4d_url
                       }, null, 2));
                       setSelectedAvance(avance);
+                      setShouldLoadModel(false); // Resetear al cambiar de semana
+                      setViewerMode('auto'); // Resetear modo de visor
                     }}
                     className={`p-2 sm:p-3 rounded-lg cursor-pointer transition-all flex-shrink-0 min-w-[120px] sm:min-w-0 ${
                       selectedAvance?.id === avance.id
