@@ -11,6 +11,14 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
   const [selectedComparacion, setSelectedComparacion] = useState(null);
   const [error, setError] = useState(null);
 
+  // Ocultar el mapa de Leaflet cuando el modal está abierto
+  useEffect(() => {
+    document.body.classList.add('modal-open');
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, []);
+
   useEffect(() => {
     loadComparaciones();
   }, [proyecto.id]);
