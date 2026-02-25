@@ -307,10 +307,15 @@ export function PointCloudViewer({ modelUrl, onError }) {
         </div>
       )}
       
-      {/* Info badge */}
+      {/* Info badge - muestra si está optimizado */}
       {!loading && pointCount > 0 && (
-        <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-          {pointCount.toLocaleString()} puntos
+        <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center gap-2">
+          <span>{pointCount.toLocaleString()} puntos</span>
+          {originalCount > pointCount && (
+            <span className="bg-amber-500/80 text-black px-1.5 py-0.5 rounded text-[10px] font-medium">
+              Vista optimizada ({(originalCount/1000000).toFixed(1)}M original)
+            </span>
+          )}
         </div>
       )}
       
