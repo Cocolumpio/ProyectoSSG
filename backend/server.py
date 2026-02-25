@@ -1719,7 +1719,7 @@ async def obtener_modelo_3d_gridfs(file_id: str):
 async def generar_preview_modelo_3d(proyecto_id: str, avance_id: str):
     """
     Genera una versión preview optimizada de un modelo 3D existente.
-    Útil para modelos que se subieron antes de implementar esta funcionalidad.
+    Soporta tanto modelos en GridFS como modelos legacy en filesystem.
     """
     from services.storage import get_storage
     from services.model3d_processor import create_preview_ply
@@ -1730,7 +1730,11 @@ async def generar_preview_modelo_3d(proyecto_id: str, avance_id: str):
     if not avance:
         raise HTTPException(status_code=404, detail="Avance no encontrado")
     
-    if not avance.get("modelo_3d_gridfs_id"):
+    # Verificar que tiene algún modelo 3D
+    modelo_url = avance.get("modelo_3d_url")
+    gridfs_id = avance.get("modelo_3d_gridfs_id")
+    
+    if not modelo_url and not gridfs_id:
         raise HTTPException(status_code=400, detail="Este avance no tiene modelo 3D")
     
     if avance.get("modelo_3d_preview_url"):
@@ -1743,14 +1747,33 @@ async def generar_preview_modelo_3d(proyecto_id: str, avance_id: str):
     
     try:
         storage = get_storage(db)
-        file_id = avance["modelo_3d_gridfs_id"]
+        original_content = None
         
-        # Leer el archivo original
-        logging.info(f"Leyendo modelo original {file_id} para generar preview...")
-        original_content, _ = await storage.get_file(file_id)
+        # Intentar leer desde GridFS primero
+        if gridfs_id:
+            logging.info(f"Leyendo modelo desde GridFS: {gridfs_id}")
+            original_content, _ = await storage.get_file(gridfs_id)
+        
+        # Si no hay GridFS, intentar leer desde filesystem (modelos legacy)
+        if not original_content and modelo_url:
+            # Extraer la ruta del archivo del URL
+            if modelo_url.startswith("/api/modelos3d/") and "/gridfs/" not in modelo_url:
+                # Es un modelo legacy en filesystem
+                file_path = f"uploads/{modelo_url.replace('/api/modelos3d/', '')}"
+                logging.info(f"Leyendo modelo desde filesystem: {file_path}")
+                
+                if os.path.exists(file_path):
+                    with open(file_path, 'rb') as f:
+                        original_content = f.read()
+                else:
+                    # Intentar ruta alternativa
+                    alt_path = modelo_url.replace('/api/modelos3d/', 'uploads/')
+                    if os.path.exists(alt_path):
+                        with open(alt_path, 'rb') as f:
+                            original_content = f.read()
         
         if not original_content:
-            raise HTTPException(status_code=500, detail="No se pudo leer el modelo original")
+            raise HTTPException(status_code=500, detail="No se pudo leer el modelo original. El archivo puede no existir en el servidor.")
         
         # Crear preview en un thread separado
         loop = asyncio.get_event_loop()
