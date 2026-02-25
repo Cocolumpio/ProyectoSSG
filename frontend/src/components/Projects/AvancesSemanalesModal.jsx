@@ -517,6 +517,43 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
     }
   };
 
+  // Generar preview de modelo 3D existente
+  const handleGeneratePreview = async () => {
+    if (!selectedAvance || selectedAvance.modelo_3d_preview_url) return;
+    
+    setGeneratingPreview(true);
+    try {
+      const response = await axios.post(
+        `${API}/proyectos/${proyecto.id}/avances-semanales/${selectedAvance.id}/modelo3d/generar-preview`
+      );
+      
+      if (response.data.success && response.data.preview_url) {
+        // Actualizar el avance con la info del preview
+        const updatedAvance = {
+          ...selectedAvance,
+          modelo_3d_preview_url: response.data.preview_url,
+          modelo_3d_preview_points: response.data.preview_points,
+          modelo_3d_points: response.data.original_points
+        };
+        setSelectedAvance(updatedAvance);
+        setAvances(avances.map(a => a.id === selectedAvance.id ? updatedAvance : a));
+        
+        if (onShowSuccess) {
+          onShowSuccess(`Preview generado: ${response.data.preview_points.toLocaleString()} puntos (de ${response.data.original_points.toLocaleString()})`);
+        }
+      } else if (response.data.message) {
+        if (onShowSuccess) {
+          onShowSuccess(response.data.message);
+        }
+      }
+    } catch (err) {
+      console.error('Error generando preview:', err);
+      alert(err.response?.data?.detail || 'Error al generar preview del modelo');
+    } finally {
+      setGeneratingPreview(false);
+    }
+  };
+
   const handleDeleteModel3D = async () => {
     if (!selectedAvance || !window.confirm('¿Eliminar el modelo 3D local?')) return;
 
