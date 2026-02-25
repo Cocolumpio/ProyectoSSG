@@ -15,6 +15,14 @@ export function CronogramaProyectoModal({ proyecto, onClose, onSuccess }) {
   const [analizandoDesviacion, setAnalizandoDesviacion] = useState(false);
   const [analisisDesviacion, setAnalisisDesviacion] = useState(null);
 
+  // Ocultar el mapa de Leaflet cuando el modal está abierto
+  useEffect(() => {
+    document.body.classList.add('modal-open');
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, []);
+
   useEffect(() => {
     if (proyecto?.id) {
       fetchCronogramaInfo();
