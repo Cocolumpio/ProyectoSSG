@@ -10,182 +10,450 @@ PRODUCT REQUIREMENTS:
 - A flight scheduling form that sends email notifications.
 - A feature to import project schedules from an Excel file to auto-configure projects.
 - AI (Gemini) integration to analyze progress photos to count construction elements (piles, anchors, etc.).
-- **New Feature:** Implement an AI-powered analysis of an uploaded machinery catalog (Excel). The AI should find machine specifications online and propose an optimal work plan for excavation and piling based on the available machines and user-provided terrain parameters.
-- **New Feature:** The terrain parameters (area, maneuvering space, etc.) entered during project creation must be saved with the project.
-- **New Feature:** Save the AI-generated work plan to the project document.
-- **New Feature:** Create a new section on the main dashboard to visually compare three data series on a graph: **Real Progress** (from weekly reports) vs. **User's Plan** (from uploaded schedule) vs. **AI's Plan** (from machinery analysis).
-- The application must manage three distinct construction phases: **Excavación** (Excavation), **Cimentación** (Foundation), and **Edificación** (Structure).
-- The project creation form must allow users to select active phases and set quantitative goals for each.
-- **New Feature:** Allow users to upload/update the work schedule () for existing projects.
-- **New Feature:** The weekly progress form must adapt dynamically to show input fields only for the project's active phases (e.g., piles, walls, anchors).
-- **New Feature:** Implement an AI-powered feature in the weekly progress form where a user can upload a photo, have the AI analyze it to count elements, and pre-fill the form fields, allowing for manual correction before saving.
-- **New Feature:** Implement automatic email alerts (via Resend) when the actual progress deviates significantly from the uploaded schedule.
-- **New Feature:** Implement an in-app notification panel on the dashboard to show alerts.
-- **Bug Fix:** The template download link for the work schedule was not working.
-- **Bug Fix:** Users could not deselect a construction phase (e.g., Muros) in the project edit form once it was selected.
-- **Deployment Bug:** Uploading large 3D models ( files) fails in the deployed environment but works in the preview environment.
+- Implement an AI-powered analysis of an uploaded machinery catalog (Excel). The AI should find machine specifications online and propose an optimal work plan based on terrain parameters.
+- Save terrain parameters (area, maneuvering space, etc.) entered during project creation.
+- Save the AI-generated work plan to the project document.
+- Dashboard chart to visually compare: Real Progress vs. User's Plan vs. AI's Plan.
+- Manage three distinct construction phases: Excavación, Cimentación, and Edificación. Project creation form must allow users to select active phases and set goals.
+- Allow users to upload/update the work schedule () for existing projects.
+- The weekly progress form must adapt dynamically to show input fields only for active phases.
+- AI-powered feature in the weekly progress form to analyze photos, count elements, and pre-fill fields.
+- Automatic email alerts (via Resend) when actual progress deviates significantly from the uploaded schedule.
+- In-app notification panel on the dashboard to show alerts.
 
-**User's preferred language**: Spanish
+**User's preferred language**: Spanish. (INSTRUCTION: You MUST respond to the user in Spanish).
 
-**what currently exists?**
-A full-stack React/FastAPI application for construction project management. The application now includes a dynamic dashboard, user roles, project and progress management.
+**what currently exists?** 
+A full-stack React/FastAPI construction management dashboard. The most recent focus has been on resolving critical crashes and deployment failures related to uploading and viewing massive 3D models (200MB+  files). The app now implements chunked uploading, server-side assembly via GridFS streaming, and server-side point cloud downsampling (using ***************************************************
+* Open3D: A Modern Library for 3D Data Processing *
+*                                                 *
+* Version 0.18.0                                  *
+* Docs    https://www.open3d.org/docs             *
+* Code    https://github.com/isl-org/Open3D       *
+***************************************************
+usage: open3d [-V] [-h] {example,draw,draw_web} ...
 
-Key features implemented:
--   **AI Plan Comparison:** A dashboard chart compares Real Progress vs. User's Plan vs. AI's Plan.
--   **Dynamic Progress Form:** The weekly progress form now dynamically shows fields based on the project's active construction phases and includes an AI photo analysis feature to pre-fill data.
--   **Schedule Management:** Users can upload and update work schedules for existing projects.
--   **Automated Alerts & Notifications:** A scheduled job analyzes schedule deviations weekly, sending both email alerts and in-app notifications.
--   **Role-Based Access:** Client users have a read-only view, filtered to their assigned projects.
--   **File Storage:** 3D models were migrated from the local filesystem to MongoDB GridFS to support deployment, but this did not solve issues with large file uploads.
+Open3D commad-line tools
 
-The application is stable in the preview environment, but a critical bug prevents the upload of large 3D models in the production/deployed environment.
+options:
+  -V, --version         Show program's version number and exit.
+  -h, --help            Show this help message and exit.
+
+command:
+  {example,draw,draw_web}
+                        Select one of these commands.
+                         
+    example             View or run an Open3D example. Example usage: 
+                          open3d example --list                                  # List examples
+                          open3d example --list geometry                         # List examples in geometry
+                          open3d example geometry/point_cloud_convex_hull        # Run an example
+                          open3d example --show geometry/point_cloud_convex_hull # Show source code of an example
+                        
+    draw                Load and visualize a 3D model. Example usage:
+                          open3d draw                                            # Start a blank Open3D viewer
+                          open3d draw path/to/model_file                         # Visualize a 3D model file
+                        
+    draw_web            Load and visualize a 3D model in a browser with WebRTC. Optionally, you can
+                        customize the serving IP address and port with WEBRTC_IP and WEBRTC_PORT
+                        environment variables. Example usage:
+                          open3d draw_web path/to/model_file            # Visualize at http://localhost:8888
+                          open3d draw_web --bind_all path/to/model_file # Serve to the entire local network
+                                                                        # at http://hostname.domainname:8888) to prevent browser memory exhaustion ( errors).
 
 **Last working item**:
-- **Last item agent was working:** Fixing a deployment issue where uploading large 3D models ( files over ~10MB, with user example being 202MB) fails. The agent identified this as an ingress/proxy body size limit in the production environment and began implementing a chunked (multi-part) file upload system to bypass this limitation.
-- **Status:** IN PROGRESS
-- **Agent Testing Done:** N
-- **Which testing method agent to use?** both. The backend chunking endpoints (, , ) need to be tested for correctly assembling large files. The frontend component () needs to be tested to ensure it correctly splits the file, uploads chunks, and provides progress feedback.
+- **Last item agent was working:** Resolving  browser memory crashes when viewing massive  models. The agent implemented a Python-based backend service ( utilizing ***************************************************
+* Open3D: A Modern Library for 3D Data Processing *
+*                                                 *
+* Version 0.18.0                                  *
+* Docs    https://www.open3d.org/docs             *
+* Code    https://github.com/isl-org/Open3D       *
+***************************************************
+usage: open3d [-V] [-h] {example,draw,draw_web} ...
+
+Open3D commad-line tools
+
+options:
+  -V, --version         Show program's version number and exit.
+  -h, --help            Show this help message and exit.
+
+command:
+  {example,draw,draw_web}
+                        Select one of these commands.
+                         
+    example             View or run an Open3D example. Example usage: 
+                          open3d example --list                                  # List examples
+                          open3d example --list geometry                         # List examples in geometry
+                          open3d example geometry/point_cloud_convex_hull        # Run an example
+                          open3d example --show geometry/point_cloud_convex_hull # Show source code of an example
+                        
+    draw                Load and visualize a 3D model. Example usage:
+                          open3d draw                                            # Start a blank Open3D viewer
+                          open3d draw path/to/model_file                         # Visualize a 3D model file
+                        
+    draw_web            Load and visualize a 3D model in a browser with WebRTC. Optionally, you can
+                        customize the serving IP address and port with WEBRTC_IP and WEBRTC_PORT
+                        environment variables. Example usage:
+                          open3d draw_web path/to/model_file            # Visualize at http://localhost:8888
+                          open3d draw_web --bind_all path/to/model_file # Serve to the entire local network
+                                                                        # at http://hostname.domainname:8888) to downsample 3D models upon upload to ~200k-500k points. The agent also created a Generar Vista Previa Optimizada flow to retrospectively generate lightweight previews for existing/legacy models, and disabled automatic 3D model loading on tab-switch to prevent parallel processing crashes.
+- **Status:** USER VERIFICATION PENDING
+- **Agent Testing Done:** Y
+- **Which testing method agent to use?** Frontend testing agent / Screenshot tool for UI validation.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: Large file uploads fail in the deployed environment (P0)**
-    - **Attempted fixes:** The agent migrated file storage from the local filesystem to MongoDB GridFS. This solved the file persistence problem in Kubernetes but did not resolve the upload size limit imposed by the ingress controller. The agent then started creating backend endpoints for chunked uploads.
-    - **Next debug checklist:**
-        1.  **Frontend ():** The file upload logic needs to be completely replaced.
-            -   Implement a function to slice large files into smaller chunks (e.g., 5MB each).
-            -   Call the new  endpoint to get an .
-            -   Iterate through the chunks, sending each one to the  endpoint along with the  and chunk number.
-            -   Update the UI to show a detailed progress bar based on the number of uploaded chunks.
-            -   After all chunks are sent, call the  endpoint.
-            -   On success, proceed with the rest of the form submission as normal, using the  returned from the complete endpoint.
-    - **Why fix this issue and what will be achieved with the fix?** This is a critical bug blocking a core feature. Fixing it will allow users to upload large, real-world 3D drone models, making the application viable for production use.
-    - **Status:** IN PROGRESS
-    - **Is recurring issue?** N
-    - **Should Test frontend/backend/both after fix?** both
-    - **Blocked on other issue:** No.
+- **Issue 1: Refactor  monolith (P0)**
+    - **Attempted fixes:** None in this session. The agent continued adding complex logic (chunking, preview generation, ***************************************************
+* Open3D: A Modern Library for 3D Data Processing *
+*                                                 *
+* Version 0.18.0                                  *
+* Docs    https://www.open3d.org/docs             *
+* Code    https://github.com/isl-org/Open3D       *
+***************************************************
+usage: open3d [-V] [-h] {example,draw,draw_web} ...
+
+Open3D commad-line tools
+
+options:
+  -V, --version         Show program's version number and exit.
+  -h, --help            Show this help message and exit.
+
+command:
+  {example,draw,draw_web}
+                        Select one of these commands.
+                         
+    example             View or run an Open3D example. Example usage: 
+                          open3d example --list                                  # List examples
+                          open3d example --list geometry                         # List examples in geometry
+                          open3d example geometry/point_cloud_convex_hull        # Run an example
+                          open3d example --show geometry/point_cloud_convex_hull # Show source code of an example
+                        
+    draw                Load and visualize a 3D model. Example usage:
+                          open3d draw                                            # Start a blank Open3D viewer
+                          open3d draw path/to/model_file                         # Visualize a 3D model file
+                        
+    draw_web            Load and visualize a 3D model in a browser with WebRTC. Optionally, you can
+                        customize the serving IP address and port with WEBRTC_IP and WEBRTC_PORT
+                        environment variables. Example usage:
+                          open3d draw_web path/to/model_file            # Visualize at http://localhost:8888
+                          open3d draw_web --bind_all path/to/model_file # Serve to the entire local network
+                                                                        # at http://hostname.domainname:8888 processing) directly into .
+    - **Next debug checklist:** Move routes (auth, stats, projects, files/uploads) into  and complex business logic into .
+    - **Why fix this issue and what will be achieved with the fix?** Technical debt is severe. The application backend is becoming unmaintainable and highly prone to regression bugs.
+    - **Status:** NOT STARTED
+    - **Is recurring issue?** Y
+    - **Should Test frontend/backend/both after fix?** backend
+    - **Blocked on other issue:** No
 
 **In progress Task List**:
-- **Task 1: Complete Chunked File Upload Implementation (P0)**
-    - **Where to resume:** The backend endpoints have been created in . The work must resume on the frontend in  to implement the client-side chunking and upload logic.
-    - **What will be achieved with this?** A robust file upload system that can handle large files in a production environment.
-    - **Status:** IN PROGRESS
-    - **Should Test frontend/backend/both after fix?** Both
-    - **Blocked on something:** No.
+- **Task 1: Implement Flight Scheduling Form (P1)**
+    - **Where to resume:** Build the UI and backend logic for scheduling drone flights, including email notifications.
+    - **What will be achieved with this?** Fulfills a core product requirement listed in the original problem statement.
+    - **Status:** NOT STARTED
+    - **Should Test frontend/backend/both after fix?** both
+    - **Blocked on something:** No
 
 **Upcoming and Future Tasks**
-*   **Upcoming Tasks:**
-    *   **(P1) Refactor New Endpoints:** Move the numerous new endpoints recently added to  (for notifications, schedule analysis, chunked uploads, etc.) into the appropriate route files in  to maintain the modular architecture.
-
-*   **Future Tasks:**
-    *   **(P2) Implement Flight Scheduling Form:** Build the UI and backend logic for scheduling drone flights, including email notifications.
-    *   **(P3) Real-time Notifications:** Upgrade the notification system to use WebSockets for instant updates without needing a page reload.
-    *   **(P3) AI Volume Calculation:** Add a feature for the AI to automatically calculate excavated volumes by comparing new 3D models with the original terrain model.
+- **Upcoming Tasks:**
+  - (P0) Refactor  to route modularity.
+  - (P1) Implement Flight Scheduling Form (UI + Email Notifications).
+- **Future Tasks:**
+  - (P2) Real-time Notifications: Upgrade notification system to use WebSockets.
+  - (P3) AI Volume Calculation: Add a feature to automatically calculate excavated volumes by comparing new 3D models with original terrain models.
 
 **Completed work in this session**
-- **Feature:** Completed the AI vs. User vs. Real Plan comparison chart on the dashboard.
-- **Feature:** Implemented functionality to upload/update work schedules for existing projects.
-- **Feature:** Implemented automated weekly analysis of schedule deviations with email alerts.
-- **Feature:** Implemented a dashboard notification panel for in-app alerts.
-- **Feature:** Made the weekly progress form dynamic to match project phases and added an AI photo analysis option to pre-fill form data.
-- **Feature:** Implemented role-based access, providing a filtered, read-only experience for Client users.
-- **Bugfix:** Fixed an issue preventing the download of the schedule template file by changing the download mechanism from a simple  to a programmatic fetch.
-- **Bugfix:** Corrected a bug in the project edit form that prevented users from deselecting active construction phases by adding  to checkbox handlers.
-- **Refactor:** Migrated 3D model and other file storage from the local filesystem to MongoDB GridFS to ensure file persistence in a Kubernetes environment.
+- Completed Chunked File Upload for large  files in  and .
+- Replaced RAM-heavy chunk assembly with direct GridFS-to-GridFS streaming to fix deployment timeouts.
+- Fixed Leaflet map floating over UI Modals by implementing a global  body class and CSS  overrides.
+- Added explicit Descargar Plantilla Excel buttons to schedule import modals.
+- Fixed  bug in .
+- Resolved browser  memory crashes by adding server-side point cloud downsampling via ***************************************************
+* Open3D: A Modern Library for 3D Data Processing *
+*                                                 *
+* Version 0.18.0                                  *
+* Docs    https://www.open3d.org/docs             *
+* Code    https://github.com/isl-org/Open3D       *
+***************************************************
+usage: open3d [-V] [-h] {example,draw,draw_web} ...
+
+Open3D commad-line tools
+
+options:
+  -V, --version         Show program's version number and exit.
+  -h, --help            Show this help message and exit.
+
+command:
+  {example,draw,draw_web}
+                        Select one of these commands.
+                         
+    example             View or run an Open3D example. Example usage: 
+                          open3d example --list                                  # List examples
+                          open3d example --list geometry                         # List examples in geometry
+                          open3d example geometry/point_cloud_convex_hull        # Run an example
+                          open3d example --show geometry/point_cloud_convex_hull # Show source code of an example
+                        
+    draw                Load and visualize a 3D model. Example usage:
+                          open3d draw                                            # Start a blank Open3D viewer
+                          open3d draw path/to/model_file                         # Visualize a 3D model file
+                        
+    draw_web            Load and visualize a 3D model in a browser with WebRTC. Optionally, you can
+                        customize the serving IP address and port with WEBRTC_IP and WEBRTC_PORT
+                        environment variables. Example usage:
+                          open3d draw_web path/to/model_file            # Visualize at http://localhost:8888
+                          open3d draw_web --bind_all path/to/model_file # Serve to the entire local network
+                                                                        # at http://hostname.domainname:8888 ().
+- Added manual Cargar Modelo 3D button to prevent parallel rendering memory spikes.
+- Added  endpoint and UI button to generate lightweight previews for legacy models.
 
 **Earlier issues found/mentioned but not fixed**
-*   None.
+- None specific that aren't already captured in Pending Tasks.
 
 **Known issue recurrence from previous fork**
-- **Issue recurrence:** Adding new business logic and endpoints directly to  instead of the modular  and  directories.
-- **Recurrence count:** 2+
-- **Status:** NOT STARTED. This is a recurring technical debt issue that should be addressed after the current P0 task.
+- **Issue recurrence:** Adding new endpoints and heavy business logic directly to  instead of the modular  and  directories.
+- **Recurrence count:** 3+
+- **Status:** NOT STARTED (Marked as P0 in Pending Issues).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Frontend:** React, TailwindCSS, Recharts, Axios, Three.js
-- **Backend:** FastAPI, Pydantic, Motor, APScheduler
-- **Database:** MongoDB, **GridFS** for large file storage.
-- **Integrations:** Gemini (via emergentintegrations), Resend
-- **File Handling:** , Chunked file uploads
+- Frontend: React, TailwindCSS, Recharts, Three.js (PointCloudViewer).
+- Backend: FastAPI, Motor (MongoDB Async), GridFS, ***************************************************
+* Open3D: A Modern Library for 3D Data Processing *
+*                                                 *
+* Version 0.18.0                                  *
+* Docs    https://www.open3d.org/docs             *
+* Code    https://github.com/isl-org/Open3D       *
+***************************************************
+usage: open3d [-V] [-h] {example,draw,draw_web} ...
+
+Open3D commad-line tools
+
+options:
+  -V, --version         Show program's version number and exit.
+  -h, --help            Show this help message and exit.
+
+command:
+  {example,draw,draw_web}
+                        Select one of these commands.
+                         
+    example             View or run an Open3D example. Example usage: 
+                          open3d example --list                                  # List examples
+                          open3d example --list geometry                         # List examples in geometry
+                          open3d example geometry/point_cloud_convex_hull        # Run an example
+                          open3d example --show geometry/point_cloud_convex_hull # Show source code of an example
+                        
+    draw                Load and visualize a 3D model. Example usage:
+                          open3d draw                                            # Start a blank Open3D viewer
+                          open3d draw path/to/model_file                         # Visualize a 3D model file
+                        
+    draw_web            Load and visualize a 3D model in a browser with WebRTC. Optionally, you can
+                        customize the serving IP address and port with WEBRTC_IP and WEBRTC_PORT
+                        environment variables. Example usage:
+                          open3d draw_web path/to/model_file            # Visualize at http://localhost:8888
+                          open3d draw_web --bind_all path/to/model_file # Serve to the entire local network
+                                                                        # at http://hostname.domainname:8888 (Python Point Cloud processing).
+- File Handling: Chunked base64 uploads assembled directly inside GridFS.
 
 **key DB schema**
-- ****: Updated with  to correctly manage UI state.
-- ****:  field now stores a dictionary like  instead of a file path.
-- ****: New collection to store user notifications. 
+- : Added fields to track optimized 3D model previews (, ).
 
 **changes in tech stack**
-- No new technologies, but a fundamental change in file storage strategy from local filesystem to MongoDB GridFS.
+- Added ***************************************************
+* Open3D: A Modern Library for 3D Data Processing *
+*                                                 *
+* Version 0.18.0                                  *
+* Docs    https://www.open3d.org/docs             *
+* Code    https://github.com/isl-org/Open3D       *
+***************************************************
+usage: open3d [-V] [-h] {example,draw,draw_web} ...
+
+Open3D commad-line tools
+
+options:
+  -V, --version         Show program's version number and exit.
+  -h, --help            Show this help message and exit.
+
+command:
+  {example,draw,draw_web}
+                        Select one of these commands.
+                         
+    example             View or run an Open3D example. Example usage: 
+                          open3d example --list                                  # List examples
+                          open3d example --list geometry                         # List examples in geometry
+                          open3d example geometry/point_cloud_convex_hull        # Run an example
+                          open3d example --show geometry/point_cloud_convex_hull # Show source code of an example
+                        
+    draw                Load and visualize a 3D model. Example usage:
+                          open3d draw                                            # Start a blank Open3D viewer
+                          open3d draw path/to/model_file                         # Visualize a 3D model file
+                        
+    draw_web            Load and visualize a 3D model in a browser with WebRTC. Optionally, you can
+                        customize the serving IP address and port with WEBRTC_IP and WEBRTC_PORT
+                        environment variables. Example usage:
+                          open3d draw_web path/to/model_file            # Visualize at http://localhost:8888
+                          open3d draw_web --bind_all path/to/model_file # Serve to the entire local network
+                                                                        # at http://hostname.domainname:8888 and  Python packages to the backend for server-side  file decimation (downsampling point clouds).
 
 **All files of reference**
-- : Heavily modified with new endpoints for plan comparison, schedule updates, deviation analysis, notifications, and chunked file uploads. **Needs refactoring.**
-- : New service created to abstract GridFS operations.
-- : Updated with models for  and added  to .
-- : Significantly reworked to support dynamic fields, AI photo analysis, and now requires implementation for chunked uploads.
-- : Bug fixed to allow deselecting project phases.
-- : Updated to handle modals and pass user role information.
-- : New component for uploading/updating project schedules.
-- : New component for displaying in-app notifications.
-- : Modified to integrate the notification panel and role-based view switching.
+- : Contains new endpoints for chunking and preview generation.
+- : Handles GridFS streaming assembly.
+- : Brand new service for ***************************************************
+* Open3D: A Modern Library for 3D Data Processing *
+*                                                 *
+* Version 0.18.0                                  *
+* Docs    https://www.open3d.org/docs             *
+* Code    https://github.com/isl-org/Open3D       *
+***************************************************
+usage: open3d [-V] [-h] {example,draw,draw_web} ...
+
+Open3D commad-line tools
+
+options:
+  -V, --version         Show program's version number and exit.
+  -h, --help            Show this help message and exit.
+
+command:
+  {example,draw,draw_web}
+                        Select one of these commands.
+                         
+    example             View or run an Open3D example. Example usage: 
+                          open3d example --list                                  # List examples
+                          open3d example --list geometry                         # List examples in geometry
+                          open3d example geometry/point_cloud_convex_hull        # Run an example
+                          open3d example --show geometry/point_cloud_convex_hull # Show source code of an example
+                        
+    draw                Load and visualize a 3D model. Example usage:
+                          open3d draw                                            # Start a blank Open3D viewer
+                          open3d draw path/to/model_file                         # Visualize a 3D model file
+                        
+    draw_web            Load and visualize a 3D model in a browser with WebRTC. Optionally, you can
+                        customize the serving IP address and port with WEBRTC_IP and WEBRTC_PORT
+                        environment variables. Example usage:
+                          open3d draw_web path/to/model_file            # Visualize at http://localhost:8888
+                          open3d draw_web --bind_all path/to/model_file # Serve to the entire local network
+                                                                        # at http://hostname.domainname:8888 downsampling.
+- : Chunked upload logic, UI for generating and viewing previews.
+- : Optimized to handle downsampled files and manual click-to-load logic.
+- : Contains CSS fix to hide leaflet container when modals are open.
 
 **Areas that need refactoring**:
-- : This file has become a monolith again. All new endpoints (notifications, schedule analysis, chunked uploads, plan comparison, etc.) must be moved into their respective files under  and their business logic into . This is the most critical refactoring task.
+- : CRITICAL. Must be separated into routers.
 
 **key api endpoints**
-- : Generates plan comparison.
-- : Retrieves saved plan comparison.
-- : Uploads/updates a project's schedule.
-- : Triggers deviation analysis and sends alerts.
-- , : Endpoints for the notification panel.
-- : Analyzes a photo to pre-fill progress form.
-- : (New) Initiates a chunked file upload.
-- : (New) Uploads a single file chunk.
-- : (New) Finalizes a chunked upload.
-- : (New) Serves files from GridFS.
+- , , : Chunked uploads.
+- : Stream file from GridFS.
+- : Generate a lightweight 3D model preview via ***************************************************
+* Open3D: A Modern Library for 3D Data Processing *
+*                                                 *
+* Version 0.18.0                                  *
+* Docs    https://www.open3d.org/docs             *
+* Code    https://github.com/isl-org/Open3D       *
+***************************************************
+usage: open3d [-V] [-h] {example,draw,draw_web} ...
+
+Open3D commad-line tools
+
+options:
+  -V, --version         Show program's version number and exit.
+  -h, --help            Show this help message and exit.
+
+command:
+  {example,draw,draw_web}
+                        Select one of these commands.
+                         
+    example             View or run an Open3D example. Example usage: 
+                          open3d example --list                                  # List examples
+                          open3d example --list geometry                         # List examples in geometry
+                          open3d example geometry/point_cloud_convex_hull        # Run an example
+                          open3d example --show geometry/point_cloud_convex_hull # Show source code of an example
+                        
+    draw                Load and visualize a 3D model. Example usage:
+                          open3d draw                                            # Start a blank Open3D viewer
+                          open3d draw path/to/model_file                         # Visualize a 3D model file
+                        
+    draw_web            Load and visualize a 3D model in a browser with WebRTC. Optionally, you can
+                        customize the serving IP address and port with WEBRTC_IP and WEBRTC_PORT
+                        environment variables. Example usage:
+                          open3d draw_web path/to/model_file            # Visualize at http://localhost:8888
+                          open3d draw_web --bind_all path/to/model_file # Serve to the entire local network
+                                                                        # at http://hostname.domainname:8888.
 
 **Critical Info for New Agent**
-- The absolute top priority (P0) is to fix the large file upload issue in the deployed environment by completing the chunked upload implementation on the frontend.
-- The backend part for chunked uploads is already in  but has not been tested end-to-end. The frontend () needs a complete overhaul of its file submission logic.
-- After fixing the upload issue, the next most important task is to refactor . The file has grown very large and contains logic that belongs in separate route and service files. Adhering to the established modular architecture is crucial for maintainability.
+- Large 3D models caused severe memory issues () on the browser. Do not revert the ***************************************************
+* Open3D: A Modern Library for 3D Data Processing *
+*                                                 *
+* Version 0.18.0                                  *
+* Docs    https://www.open3d.org/docs             *
+* Code    https://github.com/isl-org/Open3D       *
+***************************************************
+usage: open3d [-V] [-h] {example,draw,draw_web} ...
+
+Open3D commad-line tools
+
+options:
+  -V, --version         Show program's version number and exit.
+  -h, --help            Show this help message and exit.
+
+command:
+  {example,draw,draw_web}
+                        Select one of these commands.
+                         
+    example             View or run an Open3D example. Example usage: 
+                          open3d example --list                                  # List examples
+                          open3d example --list geometry                         # List examples in geometry
+                          open3d example geometry/point_cloud_convex_hull        # Run an example
+                          open3d example --show geometry/point_cloud_convex_hull # Show source code of an example
+                        
+    draw                Load and visualize a 3D model. Example usage:
+                          open3d draw                                            # Start a blank Open3D viewer
+                          open3d draw path/to/model_file                         # Visualize a 3D model file
+                        
+    draw_web            Load and visualize a 3D model in a browser with WebRTC. Optionally, you can
+                        customize the serving IP address and port with WEBRTC_IP and WEBRTC_PORT
+                        environment variables. Example usage:
+                          open3d draw_web path/to/model_file            # Visualize at http://localhost:8888
+                          open3d draw_web --bind_all path/to/model_file # Serve to the entire local network
+                                                                        # at http://hostname.domainname:8888 downsampling logic. Models must be downsampled on the server side to ~200k-500k points before being sent to the .
+- Automatic loading of 3D models on tab-switch was removed intentionally to prevent crashes; users must click Cargar Modelo 3D explicitly.
+- Make sure to NOT include any URLs from the previous preview environment in your code or tests, as they change with each fork.
+- You must refactor  before adding any new major features.
 
 **documents and test reports created in this job**
--  (updated)
 - 
 - 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (LATEST):** Reports that uploading  files is still failing in the deployed environment, providing a screenshot of the error and a large (202MB) example file.
-2.  **Agent:** Completed the fix for the project phase selection bug.
-3.  **User:** Reported a bug where they couldn't deselect a construction phase (like Muros) in the project edit form.
-4.  **Agent:** Completed the implementation of the dynamic weekly progress form with AI photo analysis.
-5.  **User:** Requested a major feature: make the weekly progress form dynamic based on project phases and add an AI photo analysis feature to pre-fill the form.
-6.  **Agent:** Completed the implementation of the in-app notification panel.
-7.  **User:** Approved the idea of an in-app notification panel.
-8.  **Agent:** Completed the implementation of scheduled deviation analysis and client-role view filtering.
-9.  **User:** Requested that the deviation analysis run automatically each week and that client-role views be filtered.
-10. **Agent:** Completed the bug fix for the template download and implemented the email alert for schedule deviations.
+1. **User (LATEST):** Me marca este error al momento de generar la vista previa en el deploy *(Agent fixed the Not Found error caused by legacy filesystem models not having a GridFS ID).*
+2. **User:** Cuando esta a punto de terminar el modelo 3D en los avances semanales se interumpe y me pone esta pantalla *(User shared a screenshot of STATUS_BREAKPOINT memory crash).*
+3. **User:** En el deploy, cuando quiero ver el modelo 3D de una semana y luego me cambiko a otra semana, empieza querer cargar todas las semanas a la vez y al final no me muestra nada, corrigelo para iniciar la carga del modelo 3D cuando el usuario le de click...
+4. **User:** Tambien se ve asi, corrigelo *(User shared screenshot of Map z-index issue).*
+5. **User:** El mapa queda flotando en el dashboard cuando entro a ver el modelo 3D, ayudame a corregirlo.
+6. **User:** Cuando cargo un modelo 3D y quiero verlo, la pagina se crashea y me sale este mensaje...
+7. **User:** Ahora, vamos a estandarizar un formato de cronograma, cuando vayan a importar el cronograma de obra, pon la opcion de, descargar formato o formato esperado.
+8. **User:** En los avances semanas se queda igual *(User reported grid still empty).*
+9. **User:** Sigue igual *(User reported grid still empty).*
+10. **User:** En el deploy, ya se suben los modelos pero no los veo, mira lo que me genera *(User showed empty Three.js grid).*
 
 **Project Health Check:**
-- **Broken:** Yes. The core feature of uploading 3D models is broken for large files in the production environment, which blocks users.
-- **Mocked:** None.
+- Broken: No.
+- Mocked: None.
 
 **3rd Party Integrations**
-- **Gemini Vision:** (via ) Used for AI analysis of PDFs, photos, and machinery data. Uses Emergent LLM Key.
-- **Resend:** Used for sending email alerts and reports.
-- **Three.js:** Used for rendering 3D  models.
-- **APScheduler:** Used for scheduling backend jobs (weekly reports, deviation analysis).
-- **ReportLab & Openpyxl:** Used for server-side generation of PDF and Excel files.
+- Gemini Vision (via emergentintegrations) — uses Emergent LLM Key.
+- Resend (Emails) — requires User API Key.
+- Three.js (Frontend 3D Rendering)
+- Open3D (Backend 3D Processing)
 
 **Testing status**
-- **Testing agent used after significant changes:** YES. It was used after completing major features.
-- **Troubleshoot agent used after agent stuck in loop:** NO.
-- **Test files created:** None.
-- **Known regressions:** The large file upload that used to work for smaller files is now completely broken pending the new chunked implementation.
+- Testing agent used after significant changes: YES
+- Troubleshoot agent used after agent stuck in loop: NO
+- Test files created: None
+- Known regressions: None currently.
 
 **Credentials to test flow:**
-- **Admin:**  / 
-- **Client:**  / 
+- Admin:  / 
+- Client:  / 
 
 **What agent forgot to execute**
-- The agent has consistently added new endpoints and business logic directly into , ignoring the previously established modular architecture. This technical debt is accumulating and makes the backend harder to maintain. A dedicated refactoring effort is required.</analysis>
+- Refactoring . Despite being listed as a P0 in the previous handoff, the agent prioritized the critical crash bugs and added even more code to the  file.</analysis>
