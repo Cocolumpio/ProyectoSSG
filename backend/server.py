@@ -704,6 +704,51 @@ async def toggle_user_active(user_id: str, current_user: dict = Depends(get_curr
     
     return {"message": f"Usuario {'activado' if new_status else 'desactivado'}", "activo": new_status}
 
+
+@api_router.delete("/auth/users/{user_id}")
+async def eliminar_usuario(user_id: str, current_user: dict = Depends(get_current_admin)):
+    """Eliminar permanentemente un usuario (solo admin).
+
+    Reglas de seguridad:
+    - El admin NO puede eliminarse a sí mismo.
+    - No se permite eliminar al último administrador activo del sistema.
+    - Si el usuario eliminado era cliente, se desasigna automáticamente de
+      todos los proyectos donde estuviera vinculado.
+    """
+    user = await db.usuarios.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    if user_id == current_user.get("id"):
+        raise HTTPException(status_code=400, detail="No puedes eliminar tu propia cuenta")
+
+    # Proteger contra dejar al sistema sin administradores
+    if user.get("rol") == "admin":
+        admins_activos = await db.usuarios.count_documents({"rol": "admin", "activo": True})
+        if admins_activos <= 1:
+            raise HTTPException(
+                status_code=400,
+                detail="No se puede eliminar al último administrador activo"
+            )
+
+    # Eliminar usuario
+    result = await db.usuarios.delete_one({"id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    # Si era cliente, desasignarlo de todos los proyectos
+    if user.get("rol") == "client":
+        await db.proyectos.update_many(
+            {"clientes_asignados": user_id},
+            {"$pull": {"clientes_asignados": user_id}}
+        )
+
+    return {
+        "message": f"Usuario '{user.get('nombre')}' eliminado correctamente",
+        "user_id": user_id,
+        "email": user.get("email"),
+    }
+
 # --- Proyectos ---
 @api_router.post("/proyectos", response_model=Proyecto)
 async def crear_proyecto(proyecto: ProyectoCreate):

@@ -7,7 +7,7 @@ import {
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-export function UsuariosAdminView({ onShowSuccess }) {
+export function UsuariosAdminView({ onShowSuccess, currentUserId }) {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -21,6 +21,9 @@ export function UsuariosAdminView({ onShowSuccess }) {
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   const fetchUsuarios = async () => {
     try {
@@ -63,6 +66,22 @@ export function UsuariosAdminView({ onShowSuccess }) {
       setError(err.response?.data?.detail || 'Error al crear el usuario');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await axios.delete(`${API}/auth/users/${userToDelete.id}`);
+      onShowSuccess?.(`Usuario "${userToDelete.nombre}" eliminado correctamente`);
+      setUserToDelete(null);
+      fetchUsuarios();
+    } catch (err) {
+      setDeleteError(err.response?.data?.detail || 'Error al eliminar el usuario');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -290,22 +309,34 @@ export function UsuariosAdminView({ onShowSuccess }) {
                     </span>
                   </td>
                   <td className="py-3 px-4 sm:py-4 sm:px-6">
-                    <button
-                      onClick={() => handleToggleActive(usuario.id, usuario.activo)}
-                      className={`p-2 rounded-lg transition-colors ${
-                        usuario.activo 
-                          ? 'text-red-600 hover:bg-red-50' 
-                          : 'text-green-600 hover:bg-green-50'
-                      }`}
-                      title={usuario.activo ? 'Desactivar usuario' : 'Activar usuario'}
-                      data-testid={`toggle-usuario-${usuario.id}`}
-                    >
-                      {usuario.activo ? (
-                        <UserX className="h-5 w-5" />
-                      ) : (
-                        <UserCheck className="h-5 w-5" />
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleToggleActive(usuario.id, usuario.activo)}
+                        className={`p-2 rounded-lg transition-colors ${
+                          usuario.activo 
+                            ? 'text-red-600 hover:bg-red-50' 
+                            : 'text-green-600 hover:bg-green-50'
+                        }`}
+                        title={usuario.activo ? 'Desactivar usuario' : 'Activar usuario'}
+                        data-testid={`toggle-usuario-${usuario.id}`}
+                      >
+                        {usuario.activo ? (
+                          <UserX className="h-5 w-5" />
+                        ) : (
+                          <UserCheck className="h-5 w-5" />
+                        )}
+                      </button>
+                      {usuario.id !== currentUserId && (
+                        <button
+                          onClick={() => { setUserToDelete(usuario); setDeleteError(null); }}
+                          className="p-2 rounded-lg text-gray-500 hover:text-red-700 hover:bg-red-50 transition-colors"
+                          title="Eliminar usuario permanentemente"
+                          data-testid={`delete-usuario-${usuario.id}`}
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </button>
                       )}
-                    </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -318,6 +349,60 @@ export function UsuariosAdminView({ onShowSuccess }) {
         <div className="text-center py-12 text-gray-500">
           <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
           <p>No se encontraron usuarios</p>
+        </div>
+      )}
+
+      {/* Modal de confirmación de eliminación */}
+      {userToDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4" data-testid="delete-usuario-modal">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Eliminar usuario</h3>
+              <button
+                onClick={() => { setUserToDelete(null); setDeleteError(null); }}
+                className="text-gray-400 hover:text-gray-600"
+                disabled={deleting}
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-4">
+                <Trash2 className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-red-800">
+                  <p className="font-medium">Esta acción es permanente e irreversible.</p>
+                  <p className="mt-1">
+                    Vas a eliminar a <span className="font-semibold">{userToDelete.nombre}</span> (<span className="break-all">{userToDelete.email}</span>).
+                    {userToDelete.rol === 'client' && ' El usuario será desasignado de todos sus proyectos.'}
+                  </p>
+                </div>
+              </div>
+              {deleteError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm" data-testid="delete-usuario-error">
+                  {deleteError}
+                </div>
+              )}
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  onClick={() => { setUserToDelete(null); setDeleteError(null); }}
+                  disabled={deleting}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+                  data-testid="cancel-delete-usuario-btn"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDeleteUser}
+                  disabled={deleting}
+                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                  data-testid="confirm-delete-usuario-btn"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {deleting ? 'Eliminando...' : 'Eliminar definitivamente'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

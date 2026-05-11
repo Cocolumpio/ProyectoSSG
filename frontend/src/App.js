@@ -325,7 +325,7 @@ function AppContent() {
         )}
         
         {activeView === 'usuarios' && isAdmin && (
-          <UsuariosAdminView onShowSuccess={showGlobalSuccess} />
+          <UsuariosAdminView onShowSuccess={showGlobalSuccess} currentUserId={user?.id} />
         )}
         
         {activeView === 'mis-solicitudes' && !isAdmin && (
