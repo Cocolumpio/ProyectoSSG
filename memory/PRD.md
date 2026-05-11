@@ -1,8 +1,28 @@
 # DrON Topografía - Product Requirements Document
 
-## Estado Actual (Actualizado: 2025-12-18)
+## Estado Actual (Actualizado: 2026-02-11)
 - **Sistema Funcional**: Dashboard multi-fase completamente operativo
 - **IA 100% Funcional**: Catálogo de Maquinaria + Análisis de Fotos
+- **🆕 Arquitectura Modular**: Refactor P0 completado — server.py reducido de 5089 → 2493 líneas
+
+## Refactor P0 Completado (2026-02-11)
+Se extrajeron 7 bloques cohesivos del monolito `server.py` (5089 líneas) hacia routers modulares en `/app/backend/routes/`:
+
+| Router | Endpoints extraídos | Descripción |
+|---|---|---|
+| `routes/comparaciones.py` | comparar-avance, comparaciones, reportes-residente | Comparación de avances con PDF residente (Gemini) |
+| `routes/exportar.py` | exportar/metricas-excel, exportar/metricas-pdf | Exportación de métricas históricas |
+| `routes/reporte_ejecutivo.py` | proyectos/{id}/reporte-ejecutivo | Reporte ejecutivo PDF |
+| `routes/solicitudes_vuelo.py` | solicitudes-vuelo (CRUD + estado) | Solicitudes de vuelo de clientes + emails |
+| `routes/cronograma.py` | importar/actualizar/obtener cronograma, frentes, analizar-desviacion | Gestión de cronogramas |
+| `routes/maquinaria_ia.py` | analizar-catalogo-maquinaria, comparar-plan-ia, dashboard/comparaciones-resumen | IA de catálogo de maquinaria |
+| `routes/analisis_ia.py` | analisis/foto-avance, generar-reporte-ia | IA de fotos de avance |
+
+**Servicios nuevos**: `services/notifications.py` (helper `crear_notificacion_sistema` reutilizable).
+
+**Resultados de testing (testing_agent v3, iteration 18)**: 52/53 PASS (98%). Cero regresiones. Único skip por dato obsoleto en BD (no relacionado al refactor).
+
+**Lo que quedó en server.py (2493 líneas)**: Auth + usuarios, notificaciones, CRUD proyectos, vuelos + nube de puntos, avances semanales + imágenes ZIP, modelos 3D con chunked upload + GridFS streaming + open3d preview, estadísticas, scheduler (reporte semanal + análisis desviación).
 
 ## Funcionalidades de IA Completadas
 
