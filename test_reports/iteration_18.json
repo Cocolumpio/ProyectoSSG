@@ -1,0 +1,101 @@
+{
+  "summary": "P0 refactor regression testing complete. server.py reduced from 5089 -> 2493 lines with 7 cohesive route modules extracted. 52/53 backend tests PASS (98%), 1 skipped due to stale data (legacy modelo_3d file missing from disk, NOT a refactor regression). All previously listed endpoints across both server.py (auth, proyectos, vuelos, avances, modelos3d chunked upload, estadisticas, notificaciones, preview) AND newly extracted routes (comparaciones, exportar, reporte_ejecutivo, solicitudes_vuelo, cronograma, maquinaria_ia, analisis_ia) are reachable, return correct status codes, and integrate properly. Chunked GridFS upload flow remains fully functional (11/11 tests pass).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/proyectos/{id}/avances-semanales/{aid}/modelo3d/generar-preview", "issue": "Returns 500 (not 404) when underlying modelo file is missing on disk. Error message is correct ('El archivo puede no existir en el servidor') but should be 404. Pre-existing semantic issue, not a refactor regression."},
+      {"endpoint": "logs", "issue": "Resend email service is in test mode — can only send to ianalejandrogn@gmail.com. Notification emails to admin@dron.mx fail silently. Pre-existing config issue, not a regression."},
+      {"endpoint": "library", "issue": "passlib bcrypt version detection warning ('module bcrypt has no attribute __about__'). Cosmetic, doesn't affect functionality."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_refactored_backend.py",
+    "/app/backend/tests/test_extracted_routes.py",
+    "/app/backend/tests/test_chunked_upload.py",
+    "/app/backend/tests/conftest.py",
+    "/app/test_reports/pytest/iter18_all.xml"
+  ],
+  "action_items": [
+    "No action required for refactor — all endpoints regression-passed.",
+    "Optional cleanup: stale avances in DB have modelo_3d_url pointing to /uploads/.../* files that no longer exist (Torre Corporativa Demo S5/S6). Consider seed/cleanup script.",
+    "Optional fix: server.py:1776 generar-preview returns 500 for missing file; switch to 404 for clearer client semantics.",
+    "Optional fix: server.py - older GridFS-based avances have modelo_3d_url=/api/modelos3d/gridfs/<id> but modelo_3d_gridfs_id=None. Preview endpoint won't read GridFS in that case (line 1753 checks gridfs_id field only). Consider parsing URL as fallback or migrating old records."
+  ],
+  "critical_code_review_comments": [
+    "Refactor is clean: each new module declares its own APIRouter(prefix='/api') and is included via app.include_router in server.py — exact route paths preserved as required.",
+    "server.py still 2493 lines — borderline. Inline Pydantic models (lines 100-260+) could move to /app/backend/models/ later for further reduction.",
+    "Shared deps (db, security, settings) live in core/config.py — good. Services properly split (helpers, email, storage, model3d_processor, notifications, cronograma_ai).",
+    "Conftest was missing; added /app/backend/tests/conftest.py to load REACT_APP_BACKEND_URL from /app/frontend/.env so tests run from any working dir.",
+    "test_chunked_upload.py has a PytestReturnNotNoneWarning at test_init_upload_success (uses `return` instead of `assert`). Minor; safe to ignore but worth cleaning up.",
+    "PROTECTED env keys (MONGO_URL, DB_NAME, REACT_APP_BACKEND_URL) untouched."
+  ],
+  "updated_files": [
+    "/app/backend/tests/conftest.py (NEW — env loader)",
+    "/app/backend/tests/test_extracted_routes.py (NEW — regression for 7 newly extracted route modules)"
+  ],
+  "success_rate": {
+    "backend": "98% (52/53 passed, 1 skipped — stale data, no regressions)",
+    "frontend": "N/A (skipped per request)"
+  },
+  "test_credentials": {
+    "admin": "admin@dron.mx / admin123",
+    "client": "cliente@test.com / cliente123",
+    "note": "/app/memory/test_credentials.md does NOT exist — credentials taken from review request"
+  },
+  "seed_data_creation": "Created and cleaned up: TEST_Proyecto_*, TEST_AvanceProject_*, TEST_Solicitud_* records. All deleted via fixtures except solicitud (kept, harmless).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Refactor regression baseline established. test_refactored_backend.py covers server.py endpoints; test_extracted_routes.py covers all 7 new route modules (comparaciones, exportar, reporte_ejecutivo, solicitudes_vuelo, cronograma, maquinaria_ia, analisis_ia) + /api/notificaciones + modelo3d/generar-preview. test_chunked_upload.py covers GridFS chunked upload (still 100% passing). Run all three with: `cd /app && python -m pytest backend/tests/test_refactored_backend.py backend/tests/test_extracted_routes.py backend/tests/test_chunked_upload.py -v`. The conftest auto-loads REACT_APP_BACKEND_URL from /app/frontend/.env. Estado enum for solicitudes-vuelo: pendiente|confirmado|completado|cancelado (NOT aprobada/rechazada). /api/notificaciones returns {notificaciones: [...], total_no_leidas: N} (dict, not list).",
+  "endpoint_coverage": {
+    "server.py": {
+      "POST /api/auth/login (admin & client)": "PASS",
+      "GET /api/auth/me": "PASS",
+      "GET /api/auth/users (admin / client 403)": "PASS",
+      "GET /api/notificaciones": "PASS",
+      "GET/POST/DELETE /api/proyectos": "PASS",
+      "GET/POST/DELETE /api/vuelos": "PASS",
+      "GET /api/estadisticas/resumen": "PASS",
+      "GET/POST /api/proyectos/{id}/avances-semanales": "PASS",
+      "POST /api/.../modelo3d/init-upload, upload-chunk, complete-upload": "PASS",
+      "GET /api/modelos3d/gridfs/{file_id}": "PASS",
+      "POST /api/.../modelo3d/generar-preview": "REACHABLE (returns 500 only when underlying file missing — stale data)"
+    },
+    "routes/comparaciones.py": {
+      "POST /api/proyectos/{id}/comparar-avance": "REACHABLE (422 validation OK)",
+      "GET /api/proyectos/{id}/comparaciones": "PASS"
+    },
+    "routes/exportar.py": {
+      "GET /api/exportar/metricas-excel": "PASS (valid XLSX)",
+      "GET /api/exportar/metricas-pdf": "PASS (valid PDF)"
+    },
+    "routes/reporte_ejecutivo.py": {
+      "GET /api/proyectos/{id}/reporte-ejecutivo": "PASS (valid PDF)"
+    },
+    "routes/solicitudes_vuelo.py": {
+      "POST /api/solicitudes-vuelo": "PASS",
+      "GET /api/solicitudes-vuelo (admin & client)": "PASS",
+      "PUT /api/solicitudes-vuelo/{id}/estado": "PASS"
+    },
+    "routes/cronograma.py": {
+      "GET /api/plantilla-cronograma": "PASS (valid XLSX)",
+      "POST /api/proyectos/{id}/actualizar-cronograma": "REACHABLE (422 validation OK)",
+      "GET /api/proyectos/{id}/frentes": "PASS"
+    },
+    "routes/maquinaria_ia.py": {
+      "POST /api/proyectos/analizar-catalogo-maquinaria": "REACHABLE (422 validation OK)",
+      "POST /api/proyectos/{id}/comparar-plan-ia": "REACHABLE",
+      "GET /api/dashboard/comparaciones-resumen": "PASS"
+    },
+    "routes/analisis_ia.py": {
+      "POST /api/analisis/foto-avance": "REACHABLE (422 validation OK)",
+      "GET /api/proyectos/{id}/analisis-ia": "PASS",
+      "POST /api/proyectos/{id}/generar-reporte-ia": "REACHABLE (no 404/500)"
+    }
+  },
+  "rca_of_the_issue": "N/A — no refactor regressions found. Single skipped test (modelo3d preview) was due to stale DB references to non-existent files on disk, not a code change. Refactor verified successful: routes preserved exact paths, dependency injection via core/config.py works correctly, all auth/RBAC behavior intact."
+}
