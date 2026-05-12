@@ -32,12 +32,12 @@ export function PointCloudViewer({ modelUrl, onError }) {
 
     // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1a2e);
+    scene.background = new THREE.Color(0x0B0B0F);
     sceneRef.current = scene;
 
-    // Camera
-    const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 10000);
-    camera.position.set(0, 0, 100);
+    // Camera — far plane set generously; will be tuned after model loads
+    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100000);
+    camera.position.set(50, 50, 50);
 
     // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -51,8 +51,8 @@ export function PointCloudViewer({ modelUrl, onError }) {
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.screenSpacePanning = true;
-    controls.minDistance = 1;
-    controls.maxDistance = 5000;
+    controls.minDistance = 0.5;
+    controls.maxDistance = 100000;
 
     // Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -104,24 +104,75 @@ export function PointCloudViewer({ modelUrl, onError }) {
         setLoadingMessage('Procesando geometría...');
         
         try {
-          // Center the geometry
-          geometry.computeBoundingBox();
-          const center = new THREE.Vector3();
-          geometry.boundingBox.getCenter(center);
-          geometry.center();
-
-          // Get bounding box for camera positioning
-          const box = geometry.boundingBox;
-          const size = new THREE.Vector3();
-          box.getSize(size);
-          const maxDim = Math.max(size.x, size.y, size.z);
+          // ============================================================
+          // OUTLIER REJECTION: Pix4D/drone PLYs often contain stray points
+          // (sky, reflections, isolated noise) that inflate the bounding box
+          // and place the camera far from the real model.
+          //
+          // Strategy: compute robust bounding box from percentiles (1%-99%)
+          // of point coordinates and center the geometry on the robust center.
+          // ============================================================
+          const positions = geometry.getAttribute('position').array;
+          const numPts = positions.length / 3;
           
-          console.log('Geometry size:', size, 'Max dimension:', maxDim);
+          // Sample up to 50K points for percentile calculation (fast & accurate)
+          const SAMPLE = Math.min(numPts, 50000);
+          const step = Math.max(1, Math.floor(numPts / SAMPLE));
+          const xs = new Float32Array(Math.ceil(numPts / step));
+          const ys = new Float32Array(Math.ceil(numPts / step));
+          const zs = new Float32Array(Math.ceil(numPts / step));
+          let sIdx = 0;
+          for (let i = 0; i < numPts; i += step) {
+            xs[sIdx] = positions[i * 3];
+            ys[sIdx] = positions[i * 3 + 1];
+            zs[sIdx] = positions[i * 3 + 2];
+            sIdx++;
+          }
+          // In-place sort and pick percentiles
+          const sortFn = (a, b) => a - b;
+          const sortedX = Array.from(xs.slice(0, sIdx)).sort(sortFn);
+          const sortedY = Array.from(ys.slice(0, sIdx)).sort(sortFn);
+          const sortedZ = Array.from(zs.slice(0, sIdx)).sort(sortFn);
+          const pct = (arr, p) => arr[Math.floor(arr.length * p)];
+          // Use 1-99 percentile (trims 1% outliers per side per axis)
+          const minX = pct(sortedX, 0.01), maxX = pct(sortedX, 0.99);
+          const minY = pct(sortedY, 0.01), maxY = pct(sortedY, 0.99);
+          const minZ = pct(sortedZ, 0.01), maxZ = pct(sortedZ, 0.99);
+          
+          const robustCenter = new THREE.Vector3(
+            (minX + maxX) / 2,
+            (minY + maxY) / 2,
+            (minZ + maxZ) / 2
+          );
+          const robustSize = new THREE.Vector3(
+            maxX - minX,
+            maxY - minY,
+            maxZ - minZ
+          );
+          const maxDim = Math.max(robustSize.x, robustSize.y, robustSize.z) || 1;
+          
+          console.log('Robust bounding box (1-99 percentile):', {
+            min: { x: minX, y: minY, z: minZ },
+            max: { x: maxX, y: maxY, z: maxZ },
+            center: robustCenter,
+            size: robustSize,
+            maxDim,
+            totalPoints: numPts
+          });
+          
+          // Shift ALL points so robust center is at world origin
+          for (let i = 0; i < numPts; i++) {
+            positions[i * 3]     -= robustCenter.x;
+            positions[i * 3 + 1] -= robustCenter.y;
+            positions[i * 3 + 2] -= robustCenter.z;
+          }
+          geometry.attributes.position.needsUpdate = true;
+          geometry.computeBoundingBox();
+          geometry.computeBoundingSphere();
 
           // OPTIMIZACIÓN AGRESIVA: Reducir puntos para evitar crashes de memoria
-          // Límite máximo: 500K puntos para rendimiento óptimo en la mayoría de navegadores
           const MAX_POINTS = 500000;
-          const origCount = geometry.getAttribute('position').count;
+          const origCount = numPts;
           setOriginalCount(origCount);
           console.log('Original point count:', origCount);
           let pointsGeometry = geometry;
@@ -129,13 +180,10 @@ export function PointCloudViewer({ modelUrl, onError }) {
           if (origCount > MAX_POINTS) {
             setLoadingMessage(`Optimizando ${(origCount/1000000).toFixed(1)}M puntos para visualización...`);
             
-            // Calcular tasa de reducción para llegar a MAX_POINTS
             const skipRate = Math.ceil(origCount / MAX_POINTS);
-            const positions = geometry.getAttribute('position').array;
             const hasColors = geometry.hasAttribute('color');
             const colors = hasColors ? geometry.getAttribute('color').array : null;
             
-            // Usar TypedArrays directamente para mejor rendimiento de memoria
             const finalCount = Math.ceil(origCount / skipRate);
             const newPositions = new Float32Array(finalCount * 3);
             const newColors = hasColors ? new Float32Array(finalCount * 3) : null;
@@ -153,7 +201,6 @@ export function PointCloudViewer({ modelUrl, onError }) {
               idx++;
             }
             
-            // Liberar memoria del geometry original
             geometry.dispose();
             
             pointsGeometry = new THREE.BufferGeometry();
@@ -161,6 +208,8 @@ export function PointCloudViewer({ modelUrl, onError }) {
             if (hasColors) {
               pointsGeometry.setAttribute('color', new THREE.BufferAttribute(newColors, 3));
             }
+            pointsGeometry.computeBoundingBox();
+            pointsGeometry.computeBoundingSphere();
             
             console.log(`Puntos optimizados: ${origCount.toLocaleString()} → ${idx.toLocaleString()} (reducción ${skipRate}x)`);
           }
@@ -169,35 +218,46 @@ export function PointCloudViewer({ modelUrl, onError }) {
           const hasColors = pointsGeometry.hasAttribute('color');
           console.log('Has colors:', hasColors);
           
-          // Point material - NO pasar 'color' cuando usamos vertexColors
+          // Point material — adaptive size based on robust dimension
+          // Drone point clouds typically range 20-500m. We size points so
+          // they cover ~0.15-0.4% of the model's max dimension.
+          const pointSize = Math.max(maxDim * 0.0025, 0.05);
           const materialOptions = {
-            size: maxDim * 0.002,
+            size: pointSize,
             vertexColors: hasColors,
             sizeAttenuation: true,
-            transparent: true,
-            opacity: 0.9
+            transparent: false,
           };
           
-          // Solo agregar color si NO tiene vertex colors
           if (!hasColors) {
-            materialOptions.color = new THREE.Color(0x994B49);
+            materialOptions.color = new THREE.Color(0xCCCCCC);
           }
           
           const material = new THREE.PointsMaterial(materialOptions);
 
-          // Create points mesh
           const points = new THREE.Points(pointsGeometry, material);
           scene.add(points);
 
-          // Remove grid helper once model is loaded
           scene.remove(gridHelper);
 
-          // Position camera to see the whole model
-          const distance = maxDim * 1.5;
-          camera.position.set(distance * 0.5, distance * 0.5, distance);
+          // ============================================================
+          // CAMERA POSITIONING: Frame the robust bounding box
+          // Use 35° FOV math: distance = (maxDim/2) / tan(fov/2) * margin
+          // ============================================================
+          const fovRad = (camera.fov * Math.PI) / 180;
+          const distance = (maxDim / 2) / Math.tan(fovRad / 2) * 1.4;
+          // Place camera at isometric-ish angle for nice 3D view
+          camera.position.set(distance * 0.6, distance * 0.6, distance * 0.7);
+          camera.near = Math.max(0.1, maxDim * 0.001);
+          camera.far = distance * 10;
+          camera.updateProjectionMatrix();
           camera.lookAt(0, 0, 0);
           controls.target.set(0, 0, 0);
+          controls.minDistance = maxDim * 0.05;
+          controls.maxDistance = distance * 8;
           controls.update();
+          
+          console.log('Camera positioned at distance:', distance, 'maxDim:', maxDim, 'point size:', pointSize);
 
           // Update state
           const count = pointsGeometry.getAttribute('position').count;
@@ -285,12 +345,12 @@ export function PointCloudViewer({ modelUrl, onError }) {
   }, [modelUrl, onError]);
 
   return (
-    <div className="relative w-full h-full bg-[#1a1a2e] rounded-lg overflow-hidden">
+    <div className="relative w-full h-full bg-[#0B0B0F] rounded-lg overflow-hidden">
       <div ref={containerRef} className="w-full h-full" />
       
       {/* Loading overlay */}
       {loading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1a1a2e]/90">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0B0B0F]/95">
           <div className="w-64 h-3 bg-[#2A2A33] rounded-full overflow-hidden">
             <div 
               className="h-full bg-gradient-to-r from-[#994B49] to-[#B85C5A] transition-all duration-300"
