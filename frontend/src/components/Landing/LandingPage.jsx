@@ -130,8 +130,8 @@ export function LandingPage() {
       <nav
         className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${
           scrolled
-            ? 'bg-[#0B0B0F]/80 backdrop-blur-xl border-b border-white/5 py-3'
-            : 'bg-transparent py-5'
+            ? 'bg-[#0B0B0F]/80 backdrop-blur-xl border-b border-white/5 py-2'
+            : 'bg-transparent py-3'
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-10 flex items-center justify-between">
@@ -139,7 +139,7 @@ export function LandingPage() {
             <img
               src="/logo-dron-dark.png"
               alt="DrON Topografía"
-              className="h-14 sm:h-16 w-auto"
+              className="h-20 sm:h-24 w-auto"
               style={{ filter: 'brightness(0) invert(1)' }}
             />
           </a>
