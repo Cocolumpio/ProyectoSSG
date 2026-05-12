@@ -139,7 +139,7 @@ export function LandingPage() {
             <img
               src="/logo-dron-dark.png"
               alt="DrON Topografía"
-              className="h-20 sm:h-24 w-auto"
+              className="h-24 sm:h-32 w-auto"
               style={{ filter: 'brightness(0) invert(1)' }}
             />
           </a>
