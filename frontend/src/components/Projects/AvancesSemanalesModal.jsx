@@ -1010,7 +1010,7 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                               <input
                                 type="number"
                                 min="0"
-                                step="0.1"
+                                step="0.01"
                                 value={editVolumenValue}
                                 onChange={(e) => setEditVolumenValue(parseFloat(e.target.value) || 0)}
                                 className="w-32 px-2 py-1 text-sm border border-white/15 rounded focus:outline-none focus:ring-2 focus:ring-[#994B49]"
@@ -1041,7 +1041,7 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                           ) : (
                             <div className="flex items-center space-x-2">
                               <span className="text-lg font-bold text-[#994B49]" data-testid="volumen-value">
-                                {(selectedAvance.volumen_excavacion || 0).toLocaleString()} m³
+                                {(selectedAvance.volumen_excavacion || 0).toLocaleString('es-MX', { maximumFractionDigits: 2 })} m³
                               </span>
                               {!readOnly && (
                                 <button

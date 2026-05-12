@@ -260,14 +260,14 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
                   <input
                     type="number"
                     min="0"
-                    step="100"
+                    step="0.01"
                     value={formData.volumen_total_planeado || ''}
                     onChange={(e) => setFormData(prev => ({ 
                       ...prev, 
                       volumen_total_planeado: parseFloat(e.target.value) || 0 
                     }))}
                     className="w-full mt-1 px-3 py-1.5 text-sm border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500"
-                    placeholder="50000"
+                    placeholder="15051.07"
                     data-testid="project-volumen-planeado-input"
                   />
                 </div>
@@ -465,7 +465,7 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
             <div className="relative">
               <input
                 type="number"
-                step="1"
+                step="0.01"
                 min="1"
                 value={formData.capacidad_camion}
                 onChange={(e) => setFormData(prev => ({ ...prev, capacidad_camion: parseFloat(e.target.value) || 25 }))}
@@ -481,7 +481,7 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 text-sm">$</span>
               <input
                 type="number"
-                step="10"
+                step="0.01"
                 min="0"
                 value={formData.costo_m3}
                 onChange={(e) => setFormData(prev => ({ ...prev, costo_m3: parseFloat(e.target.value) || 150 }))}
