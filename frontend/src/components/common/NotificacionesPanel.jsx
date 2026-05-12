@@ -81,18 +81,18 @@ export function NotificacionesPanel({ isOpen, onClose, onNotificationClick }) {
   };
 
   const getBgByType = (tipo, leida) => {
-    if (leida) return 'bg-gray-50';
+    if (leida) return 'bg-[#0F0F14]';
     switch (tipo) {
       case 'error':
-        return 'bg-red-50';
+        return 'bg-red-500/10';
       case 'warning':
-        return 'bg-amber-50';
+        return 'bg-amber-500/10';
       case 'success':
-        return 'bg-green-50';
+        return 'bg-green-500/10';
       case 'alert':
-        return 'bg-orange-50';
+        return 'bg-orange-500/10';
       default:
-        return 'bg-blue-50';
+        return 'bg-blue-500/10';
     }
   };
 
@@ -124,15 +124,15 @@ export function NotificacionesPanel({ isOpen, onClose, onNotificationClick }) {
       
       {/* Panel */}
       <div 
-        className="relative w-full max-w-md bg-white shadow-xl h-full flex flex-col animate-slide-in-right"
+        className="relative w-full max-w-md bg-[#15151B] shadow-xl h-full flex flex-col animate-slide-in-right"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 z-10">
+        <div className="sticky top-0 bg-[#15151B] border-b border-white/10 px-4 py-3 z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Bell className="h-5 w-5 text-[#994B49]" />
-              <h2 className="text-lg font-semibold text-gray-900">Notificaciones</h2>
+              <h2 className="text-lg font-semibold text-white">Notificaciones</h2>
               {totalNoLeidas > 0 && (
                 <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                   {totalNoLeidas}
@@ -141,7 +141,7 @@ export function NotificacionesPanel({ isOpen, onClose, onNotificationClick }) {
             </div>
             <button 
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-white/40 hover:text-white/60 hover:bg-[#15151B] rounded-lg transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
@@ -149,12 +149,12 @@ export function NotificacionesPanel({ isOpen, onClose, onNotificationClick }) {
           
           {/* Filtros y acciones */}
           <div className="flex items-center justify-between mt-3">
-            <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+            <label className="flex items-center gap-2 text-sm text-white/60 cursor-pointer">
               <input
                 type="checkbox"
                 checked={soloNoLeidas}
                 onChange={(e) => setSoloNoLeidas(e.target.checked)}
-                className="w-4 h-4 text-[#994B49] rounded border-gray-300 focus:ring-[#994B49]"
+                className="w-4 h-4 text-[#994B49] rounded border-white/15 focus:ring-[#994B49]"
               />
               Solo no leídas
             </label>
@@ -178,17 +178,17 @@ export function NotificacionesPanel({ isOpen, onClose, onNotificationClick }) {
               <div className="w-8 h-8 border-4 border-[#994B49] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : notificaciones.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-              <Bell className="h-16 w-16 text-gray-300 mb-4" />
+            <div className="flex flex-col items-center justify-center py-12 text-white/50">
+              <Bell className="h-16 w-16 text-white/30 mb-4" />
               <p className="font-medium">No hay notificaciones</p>
               <p className="text-sm">Te avisaremos cuando haya novedades</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-white/5">
               {notificaciones.map((notif) => (
                 <div
                   key={notif.id}
-                  className={`p-4 transition-colors hover:bg-gray-50 ${getBgByType(notif.tipo, notif.leida)}`}
+                  className={`p-4 transition-colors hover:bg-[#0F0F14] ${getBgByType(notif.tipo, notif.leida)}`}
                 >
                   <div className="flex gap-3">
                     {/* Icono */}
@@ -199,16 +199,16 @@ export function NotificacionesPanel({ isOpen, onClose, onNotificationClick }) {
                     {/* Contenido */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <h3 className={`text-sm font-medium ${notif.leida ? 'text-gray-600' : 'text-gray-900'}`}>
+                        <h3 className={`text-sm font-medium ${notif.leida ? 'text-white/60' : 'text-white'}`}>
                           {notif.titulo}
                         </h3>
-                        <span className="flex-shrink-0 text-xs text-gray-400 flex items-center gap-1">
+                        <span className="flex-shrink-0 text-xs text-white/40 flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {formatFecha(notif.fecha)}
                         </span>
                       </div>
                       
-                      <p className={`text-sm mt-1 ${notif.leida ? 'text-gray-400' : 'text-gray-600'}`}>
+                      <p className={`text-sm mt-1 ${notif.leida ? 'text-white/40' : 'text-white/60'}`}>
                         {notif.mensaje}
                       </p>
                       
@@ -223,7 +223,7 @@ export function NotificacionesPanel({ isOpen, onClose, onNotificationClick }) {
                         {!notif.leida && (
                           <button
                             onClick={() => handleMarcarLeida(notif.id)}
-                            className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#994B49] transition-colors"
+                            className="flex items-center gap-1 text-xs text-white/50 hover:text-[#994B49] transition-colors"
                           >
                             <Check className="h-3.5 w-3.5" />
                             Marcar como leída
@@ -246,7 +246,7 @@ export function NotificacionesPanel({ isOpen, onClose, onNotificationClick }) {
                         
                         <button
                           onClick={() => handleEliminar(notif.id)}
-                          className="flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 transition-colors ml-auto"
+                          className="flex items-center gap-1 text-xs text-white/40 hover:text-red-500 transition-colors ml-auto"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -312,7 +312,7 @@ export function NotificacionesBadge({ onClick }) {
   return (
     <button
       onClick={onClick}
-      className="relative p-2 text-gray-600 hover:text-[#994B49] hover:bg-gray-100 rounded-lg transition-colors"
+      className="relative p-2 text-white/60 hover:text-[#994B49] hover:bg-[#15151B] rounded-lg transition-colors"
       data-testid="notificaciones-btn"
     >
       <Bell className="h-5 w-5" />

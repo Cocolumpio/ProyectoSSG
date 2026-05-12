@@ -212,7 +212,7 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Proyectos</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-white">Proyectos</h2>
         <div className="flex gap-2">
           <button
             onClick={() => setShowImportModal(true)}
@@ -236,10 +236,10 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
       {/* Modal de Importar Cronograma */}
       {showImportModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-2 sm:p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[95vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between z-10">
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Importar Cronograma desde Excel</h3>
-              <button onClick={() => setShowImportModal(false)} className="text-gray-400 hover:text-gray-600">
+          <div className="bg-[#15151B] rounded-xl shadow-xl w-full max-w-4xl max-h-[95vh] overflow-y-auto">
+            <div className="sticky top-0 bg-[#15151B] border-b border-white/10 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between z-10">
+              <h3 className="text-lg sm:text-xl font-semibold text-white">Importar Cronograma desde Excel</h3>
+              <button onClick={() => setShowImportModal(false)} className="text-white/40 hover:text-white/60">
                 <X className="h-6 w-6" />
               </button>
             </div>
@@ -260,10 +260,10 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
       {/* Modal de Crear Proyecto */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-2 sm:p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Nuevo Proyecto</h3>
-              <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600">
+          <div className="bg-[#15151B] rounded-xl shadow-xl w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
+            <div className="sticky top-0 bg-[#15151B] border-b border-white/10 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+              <h3 className="text-lg sm:text-xl font-semibold text-white">Nuevo Proyecto</h3>
+              <button onClick={() => setShowForm(false)} className="text-white/40 hover:text-white/60">
                 <X className="h-6 w-6" />
               </button>
             </div>
@@ -280,10 +280,10 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
       {/* Modal de Editar Proyecto */}
       {showEditForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-2 sm:p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Editar Proyecto</h3>
-              <button onClick={() => { setShowEditForm(false); setEditingProject(null); }} className="text-gray-400 hover:text-gray-600">
+          <div className="bg-[#15151B] rounded-xl shadow-xl w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
+            <div className="sticky top-0 bg-[#15151B] border-b border-white/10 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+              <h3 className="text-lg sm:text-xl font-semibold text-white">Editar Proyecto</h3>
+              <button onClick={() => { setShowEditForm(false); setEditingProject(null); }} className="text-white/40 hover:text-white/60">
                 <X className="h-6 w-6" />
               </button>
             </div>
@@ -309,15 +309,15 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
       {/* Modal de Asignar Clientes */}
       {showAssignModal && selectedProjectForAssign && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[80vh] overflow-hidden">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+          <div className="bg-[#15151B] rounded-xl shadow-xl w-full max-w-md max-h-[80vh] overflow-hidden">
+            <div className="sticky top-0 bg-[#15151B] border-b border-white/10 px-6 py-4 flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Asignar Clientes</h3>
-                <p className="text-sm text-gray-500">{selectedProjectForAssign.nombre}</p>
+                <h3 className="text-lg font-semibold text-white">Asignar Clientes</h3>
+                <p className="text-sm text-white/50">{selectedProjectForAssign.nombre}</p>
               </div>
               <button 
                 onClick={() => { setShowAssignModal(false); setSelectedProjectForAssign(null); }} 
-                className="text-gray-400 hover:text-gray-600"
+                className="text-white/40 hover:text-white/60"
               >
                 <X className="h-6 w-6" />
               </button>
@@ -329,8 +329,8 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
                   <div className="w-8 h-8 border-4 border-[#994B49] border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : availableClients.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <div className="text-center py-8 text-white/50">
+                  <Users className="h-12 w-12 mx-auto mb-3 text-white/30" />
                   <p>No hay clientes disponibles</p>
                   <p className="text-sm mt-1">Crea clientes desde el panel de usuarios</p>
                 </div>
@@ -342,18 +342,18 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
                       className={`flex items-center p-3 rounded-lg border cursor-pointer transition-colors ${
                         selectedClients.includes(client.id)
                           ? 'border-[#994B49] bg-[#994B49]/5'
-                          : 'border-gray-200 hover:border-gray-300'
+                          : 'border-white/10 hover:border-white/15'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={selectedClients.includes(client.id)}
                         onChange={() => handleToggleClient(client.id)}
-                        className="w-4 h-4 text-[#994B49] border-gray-300 rounded focus:ring-[#994B49]"
+                        className="w-4 h-4 text-[#994B49] border-white/15 rounded focus:ring-[#994B49]"
                       />
                       <div className="ml-3 flex-1">
-                        <p className="font-medium text-gray-900">{client.email}</p>
-                        <p className="text-xs text-gray-500">ID: {client.id.slice(0, 8)}...</p>
+                        <p className="font-medium text-white">{client.email}</p>
+                        <p className="text-xs text-white/50">ID: {client.id.slice(0, 8)}...</p>
                       </div>
                       {selectedClients.includes(client.id) && (
                         <span className="text-xs bg-[#994B49] text-white px-2 py-0.5 rounded-full">
@@ -366,14 +366,14 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
               )}
             </div>
             
-            <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-between">
-              <span className="text-sm text-gray-500">
+            <div className="sticky bottom-0 bg-[#15151B] border-t border-white/10 px-6 py-4 flex items-center justify-between">
+              <span className="text-sm text-white/50">
                 {selectedClients.length} cliente(s) seleccionado(s)
               </span>
               <div className="flex space-x-3">
                 <button
                   onClick={() => { setShowAssignModal(false); setSelectedProjectForAssign(null); }}
-                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="px-4 py-2 text-white/80 hover:bg-[#15151B] rounded-lg transition-colors"
                 >
                   Cancelar
                 </button>
@@ -413,34 +413,34 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
       {/* Grid de Proyectos */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" data-testid="proyectos-grid">
         {proyectos.map((proyecto) => (
-          <div key={proyecto.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow" data-testid={`proyecto-card-${proyecto.id}`}>
+          <div key={proyecto.id} className="bg-[#15151B] rounded-xl border border-white/10 shadow-sm overflow-hidden hover:shadow-md transition-shadow" data-testid={`proyecto-card-${proyecto.id}`}>
             <div className="p-4 sm:p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 text-base sm:text-lg truncate">{proyecto.nombre}</h3>
-                  <p className="text-xs sm:text-sm text-gray-500 truncate">{proyecto.ubicacion}</p>
+                  <h3 className="font-semibold text-white text-base sm:text-lg truncate">{proyecto.nombre}</h3>
+                  <p className="text-xs sm:text-sm text-white/50 truncate">{proyecto.ubicacion}</p>
                 </div>
                 <div className="flex items-center space-x-1 ml-2">
-                  <button onClick={() => onSelect(proyecto)} className="p-1.5 sm:p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors" title="Ver en Dashboard">
+                  <button onClick={() => onSelect(proyecto)} className="p-1.5 sm:p-2 text-white/60 hover:bg-[#0F0F14] rounded-lg transition-colors" title="Ver en Dashboard">
                     <Eye className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => { setSelectedProjectForAvances(proyecto); setShowAvancesModal(true); }}
-                    className="p-1.5 sm:p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="Ver Avances Semanales"
+                    className="p-1.5 sm:p-2 text-purple-600 hover:bg-purple-500/10 rounded-lg transition-colors" title="Ver Avances Semanales"
                     data-testid={`avances-proyecto-${proyecto.id}`}
                   >
                     <Layers className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => window.open(`${process.env.REACT_APP_BACKEND_URL}/api/proyectos/${proyecto.id}/reporte-ejecutivo`, '_blank')}
-                    className="p-1.5 sm:p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Descargar Reporte Ejecutivo PDF"
+                    className="p-1.5 sm:p-2 text-green-600 hover:bg-green-500/10 rounded-lg transition-colors" title="Descargar Reporte Ejecutivo PDF"
                     data-testid={`reporte-proyecto-${proyecto.id}`}
                   >
                     <FileText className="h-4 w-4" />
                   </button>
                   <button 
                     onClick={() => handleOpenAssignModal(proyecto)} 
-                    className="p-1.5 sm:p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors" 
+                    className="p-1.5 sm:p-2 text-orange-600 hover:bg-orange-500/10 rounded-lg transition-colors" 
                     title="Asignar Clientes"
                     data-testid={`assign-proyecto-${proyecto.id}`}
                   >
@@ -451,30 +451,30 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
                       setSelectedProjectForCronograma(proyecto);
                       setShowCronogramaModal(true);
                     }} 
-                    className="p-1.5 sm:p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" 
+                    className="p-1.5 sm:p-2 text-purple-600 hover:bg-purple-500/10 rounded-lg transition-colors" 
                     title="Programa de Obra"
                     data-testid={`cronograma-proyecto-${proyecto.id}`}
                   >
                     <CalendarClock className="h-4 w-4" />
                   </button>
-                  <button onClick={() => handleEditClick(proyecto)} className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Editar Proyecto" data-testid={`edit-proyecto-${proyecto.id}`}>
+                  <button onClick={() => handleEditClick(proyecto)} className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-500/10 rounded-lg transition-colors" title="Editar Proyecto" data-testid={`edit-proyecto-${proyecto.id}`}>
                     <Pencil className="h-4 w-4" />
                   </button>
-                  <button onClick={() => onDelete(proyecto.id)} className="p-1.5 sm:p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Eliminar Proyecto" data-testid={`delete-proyecto-${proyecto.id}`}>
+                  <button onClick={() => onDelete(proyecto.id)} className="p-1.5 sm:p-2 text-red-600 hover:bg-red-500/10 rounded-lg transition-colors" title="Eliminar Proyecto" data-testid={`delete-proyecto-${proyecto.id}`}>
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Avance</span>
+                <span className="text-white/60">Avance</span>
                 <span className="font-medium text-[#994B49]">{proyecto.avance_actual}%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-[#1F1F26] rounded-full h-2">
                 <div className="bg-[#994B49] h-2 rounded-full transition-all" style={{ width: `${proyecto.avance_actual}%` }} />
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2 text-xs sm:text-sm">
-                <div><span className="text-gray-500">Inicio:</span> <span className="text-gray-700">{proyecto.fecha_inicio}</span></div>
-                <div><span className="text-gray-500">Fin:</span> <span className="text-gray-700">{proyecto.fecha_fin_planeada}</span></div>
+                <div><span className="text-white/50">Inicio:</span> <span className="text-white/80">{proyecto.fecha_inicio}</span></div>
+                <div><span className="text-white/50">Fin:</span> <span className="text-white/80">{proyecto.fecha_fin_planeada}</span></div>
               </div>
               {proyecto.clientes_asignados && proyecto.clientes_asignados.length > 0 && (
                 <div className="mt-3 flex items-center space-x-1 text-xs text-orange-600">
@@ -494,8 +494,8 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
       </div>
 
       {proyectos.length === 0 && (
-        <div className="text-center py-12 text-gray-600">
-          <Building2 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+        <div className="text-center py-12 text-white/60">
+          <Building2 className="h-12 w-12 mx-auto mb-4 text-white/30" />
           <p>No hay proyectos registrados.</p>
           <button onClick={() => { resetForm(); setShowForm(true); }} className="mt-4 text-[#994B49] hover:underline">Agregar primer proyecto</button>
         </div>

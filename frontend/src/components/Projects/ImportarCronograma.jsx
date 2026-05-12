@@ -106,14 +106,14 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 max-w-4xl mx-auto">
+    <div className="bg-[#15151B] rounded-xl shadow-lg p-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-3 bg-[#994B49]/10 rounded-lg">
           <FileSpreadsheet className="h-6 w-6 text-[#994B49]" />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Importar Cronograma</h2>
-          <p className="text-sm text-gray-500">Crea un proyecto completo desde un archivo Excel</p>
+          <h2 className="text-xl font-bold text-white">Importar Cronograma</h2>
+          <p className="text-sm text-white/50">Crea un proyecto completo desde un archivo Excel</p>
         </div>
       </div>
 
@@ -121,22 +121,22 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
       {!parsedData && (
         <div className="mb-6">
           {/* Sección de Formato Esperado - Prominente */}
-          <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
+          <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-500/30 rounded-xl">
             <div className="flex items-start gap-4">
-              <div className="p-2 bg-blue-100 rounded-lg">
+              <div className="p-2 bg-blue-500/15 rounded-lg">
                 <FileSpreadsheet className="h-6 w-6 text-blue-600" />
               </div>
               <div className="flex-1">
-                <h4 className="font-semibold text-gray-900 mb-1">Formato Esperado del Cronograma</h4>
-                <p className="text-sm text-gray-600 mb-3">
+                <h4 className="font-semibold text-white mb-1">Formato Esperado del Cronograma</h4>
+                <p className="text-sm text-white/60 mb-3">
                   Descarga la plantilla de Excel con el formato estándar. El archivo debe incluir columnas para: 
                   <span className="font-medium"> Frente, Actividad, Cantidad, Fecha Inicio, Fecha Fin</span>.
                 </p>
                 <div className="flex flex-wrap gap-2 mb-3">
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Pilas</span>
-                  <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded">Excavación (m³)</span>
-                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">Muros</span>
-                  <span className="text-xs bg-teal-100 text-teal-700 px-2 py-1 rounded">Anclas</span>
+                  <span className="text-xs bg-blue-500/15 text-blue-300 px-2 py-1 rounded">Pilas</span>
+                  <span className="text-xs bg-amber-500/15 text-amber-300 px-2 py-1 rounded">Excavación (m³)</span>
+                  <span className="text-xs bg-purple-500/15 text-purple-300 px-2 py-1 rounded">Muros</span>
+                  <span className="text-xs bg-teal-500/15 text-teal-300 px-2 py-1 rounded">Anclas</span>
                 </div>
                 <button 
                   onClick={handleDownloadTemplate}
@@ -157,7 +157,7 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
 
           <label className="block">
             <div className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors
-              ${file ? 'border-[#994B49] bg-[#994B49]/5' : 'border-gray-300 hover:border-[#994B49]'}`}>
+              ${file ? 'border-[#994B49] bg-[#994B49]/5' : 'border-white/15 hover:border-[#994B49]'}`}>
               <input
                 type="file"
                 accept=".xlsx,.xls"
@@ -168,16 +168,16 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
               {parsing ? (
                 <div className="flex flex-col items-center">
                   <Loader2 className="h-12 w-12 text-[#994B49] animate-spin mb-3" />
-                  <p className="text-gray-600">Analizando cronograma...</p>
+                  <p className="text-white/60">Analizando cronograma...</p>
                 </div>
               ) : (
                 <>
-                  <Upload className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-600 mb-1">
+                  <Upload className="h-12 w-12 text-white/40 mx-auto mb-3" />
+                  <p className="text-white/60 mb-1">
                     {file ? file.name : 'Arrastra tu archivo Excel aquí'}
                   </p>
-                  <p className="text-sm text-gray-400">o haz clic para seleccionar</p>
-                  <p className="text-xs text-gray-400 mt-2">Formatos: .xlsx, .xls</p>
+                  <p className="text-sm text-white/40">o haz clic para seleccionar</p>
+                  <p className="text-xs text-white/40 mt-2">Formatos: .xlsx, .xls</p>
                 </>
               )}
             </div>
@@ -187,10 +187,10 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
 
       {/* Error */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
           <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-red-700 font-medium">Error</p>
+            <p className="text-red-300 font-medium">Error</p>
             <p className="text-red-600 text-sm">{error}</p>
           </div>
         </div>
@@ -201,7 +201,7 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
         <div className="space-y-6">
           {/* Resumen */}
           <div className="bg-gradient-to-r from-[#994B49]/10 to-[#994B49]/5 rounded-xl p-6">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
               <Check className="h-5 w-5 text-green-500" />
               Cronograma Analizado Correctamente
             </h3>
@@ -209,17 +209,17 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
             {/* Tipos de Actividades Detectadas */}
             {parsedData.resumen.tipos_actividades && parsedData.resumen.tipos_actividades.length > 0 && (
               <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-2">Tipos de actividades detectadas:</p>
+                <p className="text-sm text-white/60 mb-2">Tipos de actividades detectadas:</p>
                 <div className="flex flex-wrap gap-2">
                   {parsedData.resumen.tipos_actividades.map((tipo, idx) => (
                     <span 
                       key={idx}
                       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${
-                        tipo === 'pilas' ? 'bg-blue-100 text-blue-700' :
-                        tipo === 'excavacion' ? 'bg-amber-100 text-amber-700' :
-                        tipo === 'muros' ? 'bg-purple-100 text-purple-700' :
-                        tipo === 'anclas' ? 'bg-teal-100 text-teal-700' :
-                        'bg-gray-100 text-gray-700'
+                        tipo === 'pilas' ? 'bg-blue-500/15 text-blue-300' :
+                        tipo === 'excavacion' ? 'bg-amber-500/15 text-amber-300' :
+                        tipo === 'muros' ? 'bg-purple-500/15 text-purple-300' :
+                        tipo === 'anclas' ? 'bg-teal-500/15 text-teal-300' :
+                        'bg-[#15151B] text-white/80'
                       }`}
                     >
                       {tipo === 'pilas' && <Columns3 className="h-4 w-4" />}
@@ -235,45 +235,45 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
             )}
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="bg-[#15151B] rounded-lg p-4 shadow-sm">
                 <p className="text-2xl font-bold text-[#994B49]">{parsedData.resumen.total_frentes}</p>
-                <p className="text-sm text-gray-500">Frentes</p>
+                <p className="text-sm text-white/50">Frentes</p>
               </div>
               {/* Métricas dinámicas según tipos detectados */}
               {parsedData.resumen.tipos_actividades?.includes('pilas') && (
-                <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="bg-[#15151B] rounded-lg p-4 shadow-sm">
                   <p className="text-2xl font-bold text-blue-600">{parsedData.resumen.total_pilas}</p>
-                  <p className="text-sm text-gray-500">Pilas Totales</p>
+                  <p className="text-sm text-white/50">Pilas Totales</p>
                 </div>
               )}
               {parsedData.resumen.tipos_actividades?.includes('muros') && (
-                <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="bg-[#15151B] rounded-lg p-4 shadow-sm">
                   <p className="text-2xl font-bold text-purple-600">{parsedData.resumen.total_muros}</p>
-                  <p className="text-sm text-gray-500">Muros Totales</p>
+                  <p className="text-sm text-white/50">Muros Totales</p>
                 </div>
               )}
               {parsedData.resumen.tipos_actividades?.includes('anclas') && (
-                <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="bg-[#15151B] rounded-lg p-4 shadow-sm">
                   <p className="text-2xl font-bold text-teal-600">{parsedData.resumen.total_anclas}</p>
-                  <p className="text-sm text-gray-500">Anclas Totales</p>
+                  <p className="text-sm text-white/50">Anclas Totales</p>
                 </div>
               )}
               {parsedData.resumen.tipos_actividades?.includes('excavacion') && (
-                <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="bg-[#15151B] rounded-lg p-4 shadow-sm">
                   <p className="text-2xl font-bold text-amber-600">{parsedData.resumen.total_excavacion}</p>
-                  <p className="text-sm text-gray-500">Excavación (m³)</p>
+                  <p className="text-sm text-white/50">Excavación (m³)</p>
                 </div>
               )}
-              <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="bg-[#15151B] rounded-lg p-4 shadow-sm">
                 <p className="text-2xl font-bold text-amber-600">{parsedData.resumen.total_dias}</p>
-                <p className="text-sm text-gray-500">Días de Trabajo</p>
+                <p className="text-sm text-white/50">Días de Trabajo</p>
               </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="bg-[#15151B] rounded-lg p-4 shadow-sm">
                 <p className="text-2xl font-bold text-green-600">{parsedData.resumen.semanas_estimadas}</p>
-                <p className="text-sm text-gray-500">Semanas Estimadas</p>
+                <p className="text-sm text-white/50">Semanas Estimadas</p>
               </div>
             </div>
-            <div className="mt-4 flex gap-4 text-sm text-gray-600">
+            <div className="mt-4 flex gap-4 text-sm text-white/60">
               <span className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
                 Inicio: {parsedData.resumen.fecha_inicio}
@@ -287,30 +287,30 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
 
           {/* Frentes Preview */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="font-semibold text-white mb-3 flex items-center gap-2">
               <Layers className="h-5 w-5 text-[#994B49]" />
               Frentes Detectados
             </h3>
             <div className="space-y-3 max-h-60 overflow-y-auto">
               {parsedData.frentes.map((frente, idx) => (
-                <div key={idx} className="border border-gray-200 rounded-lg p-4">
+                <div key={idx} className="border border-white/10 rounded-lg p-4">
                   <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-medium text-gray-900">{frente.nombre}</h4>
-                    <span className="text-sm bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                    <h4 className="font-medium text-white">{frente.nombre}</h4>
+                    <span className="text-sm bg-blue-500/15 text-blue-300 px-2 py-0.5 rounded">
                       {frente.actividades.length} actividades
                     </span>
                   </div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-white/50">
                     {frente.actividades.slice(0, 3).map((act, i) => (
-                      <div key={i} className="flex justify-between py-1 border-b border-gray-100 last:border-0">
+                      <div key={i} className="flex justify-between py-1 border-b border-white/5 last:border-0">
                         <span className="truncate flex-1">{act.descripcion}</span>
                         <div className="ml-4 flex items-center gap-2">
                           <span className={`text-xs px-1.5 py-0.5 rounded ${
-                            act.tipo === 'pilas' ? 'bg-blue-100 text-blue-700' :
-                            act.tipo === 'excavacion' ? 'bg-amber-100 text-amber-700' :
-                            act.tipo === 'muros' ? 'bg-purple-100 text-purple-700' :
-                            act.tipo === 'anclas' ? 'bg-teal-100 text-teal-700' :
-                            'bg-gray-100 text-gray-600'
+                            act.tipo === 'pilas' ? 'bg-blue-500/15 text-blue-300' :
+                            act.tipo === 'excavacion' ? 'bg-amber-500/15 text-amber-300' :
+                            act.tipo === 'muros' ? 'bg-purple-500/15 text-purple-300' :
+                            act.tipo === 'anclas' ? 'bg-teal-500/15 text-teal-300' :
+                            'bg-[#15151B] text-white/60'
                           }`}>
                             {act.tipo || 'otro'}
                           </span>
@@ -319,7 +319,7 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
                       </div>
                     ))}
                     {frente.actividades.length > 3 && (
-                      <p className="text-gray-400 text-xs mt-1">
+                      <p className="text-white/40 text-xs mt-1">
                         +{frente.actividades.length - 3} actividades más...
                       </p>
                     )}
@@ -331,44 +331,44 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
 
           {/* Datos del Proyecto */}
           <div className="border-t pt-6">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
               <Building2 className="h-5 w-5 text-[#994B49]" />
               Datos del Proyecto
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Nombre del Proyecto *
                 </label>
                 <input
                   type="text"
                   value={nombreProyecto}
                   onChange={(e) => setNombreProyecto(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+                  className="w-full px-4 py-2 border border-white/15 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
                   placeholder="Ej: Terminal 2 Aeropuerto GDL"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Ubicación
                 </label>
                 <input
                   type="text"
                   value={ubicacion}
                   onChange={(e) => setUbicacion(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+                  className="w-full px-4 py-2 border border-white/15 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
                   placeholder="Ej: Guadalajara, Jalisco"
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Dirección
                 </label>
                 <input
                   type="text"
                   value={direccion}
                   onChange={(e) => setDireccion(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+                  className="w-full px-4 py-2 border border-white/15 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49]"
                   placeholder="Ej: Carretera Guadalajara-Chapala Km 17.5"
                 />
               </div>
@@ -383,7 +383,7 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
                 setParsedData(null);
                 setNombreProyecto('');
               }}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              className="px-4 py-2 text-white/60 hover:text-white"
             >
               Cancelar
             </button>

@@ -144,10 +144,10 @@ function AppContent() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0B0B0F] flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-[#994B49] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500">Cargando...</p>
+          <p className="text-white/50">Cargando...</p>
         </div>
       </div>
     );
@@ -159,7 +159,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA]">
+    <div className="min-h-screen bg-[#0B0B0F]">
       {/* Notificación global de éxito */}
       {globalSuccessMessage && (
         <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 animate-fade-in">
@@ -171,7 +171,7 @@ function AppContent() {
       )}
 
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+      <header className="bg-[#15151B] border-b border-white/10 sticky top-0 z-40">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
             <div className="flex items-center space-x-2 sm:space-x-3">
@@ -179,6 +179,7 @@ function AppContent() {
                 src="/logo-dron.png" 
                 alt="DrON Topografía" 
                 className="h-14 sm:h-16 w-auto"
+                style={{ filter: 'brightness(0) invert(1)' }}
               />
             </div>
             
@@ -250,15 +251,15 @@ function AppContent() {
               
               <div className="hidden sm:flex items-center space-x-2 text-sm">
                 <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  isAdmin ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                  isAdmin ? 'bg-purple-500/15 text-purple-300' : 'bg-blue-500/15 text-blue-300'
                 }`}>
                   {isAdmin ? 'Admin' : 'Cliente'}
                 </div>
-                <span className="text-gray-600">{user?.nombre}</span>
+                <span className="text-white/60">{user?.nombre}</span>
               </div>
               <button
                 onClick={handleLogout}
-                className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-2 text-white/50 hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-colors"
                 title="Cerrar sesión"
                 data-testid="logout-btn"
               >
@@ -367,8 +368,8 @@ function NavButton({ children, active, onClick, testId, highlight }) {
         active
           ? 'bg-[#994B49] text-white'
           : highlight
-            ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 border border-amber-300'
-            : 'text-gray-600 hover:bg-gray-100'
+            ? 'bg-amber-500/15 text-amber-300 hover:bg-amber-200 border border-amber-300'
+            : 'text-white/60 hover:bg-[#15151B]'
       }`}
       data-testid={testId}
     >
@@ -387,8 +388,8 @@ function ProyectosViewReadOnly({ proyectos, onSelect, onShowSuccess }) {
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Proyectos</h2>
-        <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+        <h2 className="text-xl sm:text-2xl font-bold text-white">Proyectos</h2>
+        <span className="text-sm text-white/50 bg-[#15151B] px-3 py-1 rounded-full">
           Vista de solo lectura
         </span>
       </div>
@@ -404,41 +405,41 @@ function ProyectosViewReadOnly({ proyectos, onSelect, onShowSuccess }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" data-testid="proyectos-grid">
         {proyectos.map((proyecto) => (
-          <div key={proyecto.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+          <div key={proyecto.id} className="bg-[#15151B] rounded-xl border border-white/10 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div className="p-4 sm:p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 text-base sm:text-lg truncate">{proyecto.nombre}</h3>
-                  <p className="text-xs sm:text-sm text-gray-500 truncate">{proyecto.ubicacion}</p>
+                  <h3 className="font-semibold text-white text-base sm:text-lg truncate">{proyecto.nombre}</h3>
+                  <p className="text-xs sm:text-sm text-white/50 truncate">{proyecto.ubicacion}</p>
                 </div>
                 <div className="flex items-center space-x-1 ml-2">
-                  <button onClick={() => onSelect(proyecto)} className="p-1.5 sm:p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors" title="Ver en Dashboard">
+                  <button onClick={() => onSelect(proyecto)} className="p-1.5 sm:p-2 text-white/60 hover:bg-[#0F0F14] rounded-lg transition-colors" title="Ver en Dashboard">
                     <Eye className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => { setSelectedProjectForAvances(proyecto); setShowAvancesModal(true); }}
-                    className="p-1.5 sm:p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="Ver Avances Semanales"
+                    className="p-1.5 sm:p-2 text-purple-600 hover:bg-purple-500/10 rounded-lg transition-colors" title="Ver Avances Semanales"
                   >
                     <Layers className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => window.open(`${process.env.REACT_APP_BACKEND_URL}/api/proyectos/${proyecto.id}/reporte-ejecutivo`, '_blank')}
-                    className="p-1.5 sm:p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Descargar Reporte PDF"
+                    className="p-1.5 sm:p-2 text-green-600 hover:bg-green-500/10 rounded-lg transition-colors" title="Descargar Reporte PDF"
                   >
                     <FileText className="h-4 w-4" />
                   </button>
                 </div>
               </div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Avance</span>
+                <span className="text-white/60">Avance</span>
                 <span className="font-medium text-[#994B49]">{proyecto.avance_actual}%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-[#1F1F26] rounded-full h-2">
                 <div className="bg-[#994B49] h-2 rounded-full transition-all" style={{ width: `${proyecto.avance_actual}%` }} />
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2 text-xs sm:text-sm">
-                <div><span className="text-gray-500">Inicio:</span> <span className="text-gray-700">{proyecto.fecha_inicio}</span></div>
-                <div><span className="text-gray-500">Fin:</span> <span className="text-gray-700">{proyecto.fecha_fin_planeada}</span></div>
+                <div><span className="text-white/50">Inicio:</span> <span className="text-white/80">{proyecto.fecha_inicio}</span></div>
+                <div><span className="text-white/50">Fin:</span> <span className="text-white/80">{proyecto.fecha_fin_planeada}</span></div>
               </div>
             </div>
           </div>
@@ -446,8 +447,8 @@ function ProyectosViewReadOnly({ proyectos, onSelect, onShowSuccess }) {
       </div>
 
       {proyectos.length === 0 && (
-        <div className="text-center py-12 text-gray-600">
-          <Building2 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+        <div className="text-center py-12 text-white/60">
+          <Building2 className="h-12 w-12 mx-auto mb-4 text-white/30" />
           <p>No hay proyectos registrados.</p>
         </div>
       )}
@@ -465,14 +466,14 @@ function VuelosViewReadOnly({ vuelos, proyectos }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Vuelos de Drones</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-white">Vuelos de Drones</h2>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+          <span className="text-sm text-white/50 bg-[#15151B] px-3 py-1 rounded-full">
             Vista de solo lectura
           </span>
           <select
             value={filtroProyecto} onChange={(e) => setFiltroProyecto(e.target.value)}
-            className="px-4 py-2 bg-white text-gray-900 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+            className="px-4 py-2 bg-[#15151B] text-white rounded-lg border border-white/15 focus:outline-none focus:ring-2 focus:ring-[#994B49]"
           >
             <option value="todos">Todos los proyectos</option>
             {proyectos.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
@@ -480,11 +481,11 @@ function VuelosViewReadOnly({ vuelos, proyectos }) {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-[#15151B] rounded-xl border border-white/10 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr className="text-gray-700 text-sm">
+            <thead className="bg-[#0F0F14] border-b border-white/10">
+              <tr className="text-white/80 text-sm">
                 <th className="text-left py-3 px-4 sm:py-4 sm:px-6">Proyecto</th>
                 <th className="text-left py-3 px-4 sm:py-4 sm:px-6">Fecha</th>
                 <th className="text-left py-3 px-4 sm:py-4 sm:px-6 hidden sm:table-cell">Duración</th>
@@ -493,16 +494,16 @@ function VuelosViewReadOnly({ vuelos, proyectos }) {
                 <th className="text-left py-3 px-4 sm:py-4 sm:px-6">Estado</th>
               </tr>
             </thead>
-            <tbody className="text-gray-900 text-sm">
+            <tbody className="text-white text-sm">
               {vuelosFiltrados.map((vuelo) => (
-                <tr key={vuelo.id} className="border-b border-gray-100 hover:bg-gray-50">
+                <tr key={vuelo.id} className="border-b border-white/5 hover:bg-[#0F0F14]">
                   <td className="py-3 px-4 sm:py-4 sm:px-6"><div className="font-medium truncate max-w-[120px] sm:max-w-none">{getProyectoNombre(vuelo.proyecto_id)}</div></td>
                   <td className="py-3 px-4 sm:py-4 sm:px-6">{vuelo.fecha_vuelo}</td>
                   <td className="py-3 px-4 sm:py-4 sm:px-6 hidden sm:table-cell">{vuelo.duracion_minutos} min</td>
                   <td className="py-3 px-4 sm:py-4 sm:px-6 hidden md:table-cell">{vuelo.area_cubierta?.toLocaleString() || 0} m²</td>
                   <td className="py-3 px-4 sm:py-4 sm:px-6 hidden md:table-cell">{vuelo.num_imagenes || 0}</td>
                   <td className="py-3 px-4 sm:py-4 sm:px-6">
-                    <span className={`px-2 py-1 rounded text-xs ${vuelo.estado === 'completado' ? 'bg-green-100 text-green-700' : vuelo.estado === 'procesando' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
+                    <span className={`px-2 py-1 rounded text-xs ${vuelo.estado === 'completado' ? 'bg-green-500/15 text-green-300' : vuelo.estado === 'procesando' ? 'bg-yellow-500/15 text-yellow-300' : 'bg-red-500/15 text-red-300'}`}>
                       {vuelo.estado}
                     </span>
                   </td>
@@ -514,8 +515,8 @@ function VuelosViewReadOnly({ vuelos, proyectos }) {
       </div>
 
       {vuelosFiltrados.length === 0 && (
-        <div className="text-center py-12 text-gray-600">
-          <Plane className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+        <div className="text-center py-12 text-white/60">
+          <Plane className="h-12 w-12 mx-auto mb-4 text-white/30" />
           <p>No hay vuelos registrados para este proyecto.</p>
         </div>
       )}

@@ -1,6 +1,35 @@
 .App {
     min-height: 100vh;
-    background-color: #F8F9FA;
+    background-color: #0B0B0F;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+body {
+    background-color: #0B0B0F;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Dark mode: invert form inputs, selects, textareas that lack explicit dark classes */
+.App input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="submit"]):not([type="button"]),
+.App textarea,
+.App select {
+    color-scheme: dark;
+}
+
+/* Make sure scrollbars match the dark theme */
+.App ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+.App ::-webkit-scrollbar-track {
+    background: #0B0B0F;
+}
+.App ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+}
+.App ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 /* Leaflet map fixes - AGRESIVO para evitar superposición con modales */
@@ -93,4 +122,66 @@ body.modal-open [data-testid="map-container"] {
 
 .bg-custom-light {
     animation: fadeIn 0.3s ease-out;
+}
+/* ---- Dark theme global form input styling ---- */
+/* Applied globally for app routes; landing uses its own explicit classes via Tailwind */
+body input[type="text"]:not(.bg-white\/5),
+body input[type="email"]:not(.bg-white\/5),
+body input[type="password"]:not(.bg-white\/5),
+body input[type="number"]:not(.bg-white\/5),
+body input[type="date"]:not(.bg-white\/5),
+body input[type="datetime-local"]:not(.bg-white\/5),
+body input[type="search"]:not(.bg-white\/5),
+body input[type="tel"]:not(.bg-white\/5),
+body input[type="url"]:not(.bg-white\/5),
+body input[type="time"]:not(.bg-white\/5),
+body textarea:not(.bg-white\/5),
+body select:not(.bg-white\/5) {
+    background-color: #0F0F14;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.95);
+}
+body input::placeholder,
+body textarea::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+body input:focus,
+body textarea:focus,
+body select:focus {
+    border-color: #994B49;
+    outline: none;
+}
+
+/* Calendar date picker icon: invert for visibility */
+body input[type="date"]::-webkit-calendar-picker-indicator,
+body input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+body input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) opacity(0.6);
+}
+
+/* Select dropdown options */
+body select option {
+    background-color: #15151B;
+    color: white;
+}
+
+/* Disable native autofill yellow */
+body input:-webkit-autofill,
+body input:-webkit-autofill:hover,
+body input:-webkit-autofill:focus {
+    -webkit-text-fill-color: rgba(255, 255, 255, 0.95);
+    -webkit-box-shadow: 0 0 0px 1000px #0F0F14 inset;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Leaflet popups: dark style */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+    background-color: #15151B;
+    color: white;
+}
+.leaflet-control-zoom a {
+    background-color: #15151B !important;
+    color: white !important;
+    border-color: rgba(255,255,255,0.1) !important;
 }

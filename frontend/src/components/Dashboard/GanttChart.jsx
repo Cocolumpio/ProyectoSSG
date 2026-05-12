@@ -172,8 +172,8 @@ export function GanttChart({ proyecto, avances = [] }) {
 
   if (chartData.length === 0) {
     return (
-      <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-400">
-        <Calendar className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+      <div className="bg-[#0F0F14] rounded-lg p-8 text-center text-white/40">
+        <Calendar className="h-12 w-12 mx-auto mb-2 text-white/30" />
         <p>Sin datos de avance para mostrar</p>
       </div>
     );
@@ -185,17 +185,17 @@ export function GanttChart({ proyecto, avances = [] }) {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-          <p className="font-semibold text-gray-900">{label}</p>
-          <p className="text-sm text-gray-500">{data.fecha}</p>
+        <div className="bg-[#15151B] p-3 rounded-lg shadow-lg border border-white/10">
+          <p className="font-semibold text-white">{label}</p>
+          <p className="text-sm text-white/50">{data.fecha}</p>
           <div className="mt-2 space-y-1">
             <p className="text-sm">
               <span className={`inline-block w-3 h-3 rounded mr-2`} style={{ backgroundColor: tipoInfo.colorHex }}></span>
               Ejecutado: <span className="font-medium">{data.porcentajeReal.toFixed(1)}%</span>
-              <span className="text-gray-400 ml-1">({data.acumuladoReal.toLocaleString()} {metricas?.unidad})</span>
+              <span className="text-white/40 ml-1">({data.acumuladoReal.toLocaleString()} {metricas?.unidad})</span>
             </p>
             <p className="text-sm">
-              <span className="inline-block w-3 h-3 rounded mr-2 bg-gray-300"></span>
+              <span className="inline-block w-3 h-3 rounded mr-2 bg-[#2A2A33]"></span>
               Planeado: <span className="font-medium">{data.porcentajePlaneado.toFixed(1)}%</span>
             </p>
             <p className={`text-sm font-medium ${data.diferencia >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -222,12 +222,12 @@ export function GanttChart({ proyecto, avances = [] }) {
       {/* Métricas del proyecto */}
       {metricas && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+          <div className="bg-blue-500/10 rounded-lg p-3 border border-blue-500/30">
             <div className="flex items-center gap-2 mb-1">
               <Clock className="h-4 w-4 text-blue-600" />
-              <span className="text-xs font-medium text-blue-800">Semanas</span>
+              <span className="text-xs font-medium text-blue-300">Semanas</span>
             </div>
-            <p className="text-xl font-bold text-blue-700">
+            <p className="text-xl font-bold text-blue-300">
               {metricas.semanasCompletadas} / {metricas.semanasPlaneadas}
             </p>
           </div>
@@ -240,7 +240,7 @@ export function GanttChart({ proyecto, avances = [] }) {
             <p className="text-xl font-bold" style={{ color: tipoInfo.colorHex }}>
               {metricas.totalEjecutado.toLocaleString()} / {metricas.totalPlaneado.toLocaleString()}
             </p>
-            <p className="text-xs text-gray-500">{metricas.unidad}</p>
+            <p className="text-xs text-white/50">{metricas.unidad}</p>
           </div>
           
           <div className="bg-[#994B49]/10 rounded-lg p-3 border border-[#994B49]/20">
@@ -254,18 +254,18 @@ export function GanttChart({ proyecto, avances = [] }) {
           </div>
           
           <div className={`rounded-lg p-3 border ${
-            metricas.estado === 'adelantado' ? 'bg-green-50 border-green-200' :
-            metricas.estado === 'en_tiempo' ? 'bg-blue-50 border-blue-200' :
-            'bg-red-50 border-red-200'
+            metricas.estado === 'adelantado' ? 'bg-green-500/10 border-green-500/30' :
+            metricas.estado === 'en_tiempo' ? 'bg-blue-500/10 border-blue-500/30' :
+            'bg-red-500/10 border-red-500/30'
           }`}>
             <div className="flex items-center gap-2 mb-1">
               <Calendar className="h-4 w-4" />
               <span className="text-xs font-medium">Estado</span>
             </div>
             <p className={`text-xl font-bold ${
-              metricas.estado === 'adelantado' ? 'text-green-700' :
-              metricas.estado === 'en_tiempo' ? 'text-blue-700' :
-              'text-red-700'
+              metricas.estado === 'adelantado' ? 'text-green-300' :
+              metricas.estado === 'en_tiempo' ? 'text-blue-300' :
+              'text-red-300'
             }`}>
               {metricas.estado === 'adelantado' ? 'Adelantado' :
                metricas.estado === 'en_tiempo' ? 'En Tiempo' : 'Retrasado'}
@@ -278,15 +278,15 @@ export function GanttChart({ proyecto, avances = [] }) {
       )}
 
       {/* Gráfico de área - Progresión Acumulada */}
-      <div className="bg-white rounded-lg p-4 border border-gray-200">
-        <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+      <div className="bg-[#15151B] rounded-lg p-4 border border-white/10">
+        <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
           <IconoTipo className="h-5 w-5" style={{ color: tipoInfo.colorHex }} />
           Progresión de {tipoInfo.nombre}: Planeado vs Ejecutado
         </h4>
         
         <ResponsiveContainer width="100%" height={220}>
           <AreaChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
             <XAxis 
               dataKey="semana" 
               tick={{ fontSize: 11, fill: '#6B7280' }}
@@ -301,14 +301,14 @@ export function GanttChart({ proyecto, avances = [] }) {
             <Tooltip content={<CustomTooltip />} />
             <Legend 
               wrapperStyle={{ paddingTop: '10px' }}
-              formatter={(value) => <span className="text-sm text-gray-600">{value}</span>}
+              formatter={(value) => <span className="text-sm text-white/60">{value}</span>}
             />
             <Area 
               type="monotone"
               dataKey="planeado" 
               name="Planeado" 
               fill="#D1D5DB" 
-              stroke="#9CA3AF"
+              stroke="rgba(255,255,255,0.5)"
               fillOpacity={0.3}
             />
             <Area 
@@ -324,27 +324,27 @@ export function GanttChart({ proyecto, avances = [] }) {
       </div>
 
       {/* Timeline visual estilo Gantt */}
-      <div className="bg-white rounded-lg p-4 border border-gray-200">
-        <h4 className="font-semibold text-gray-900 mb-4">Timeline del Proyecto</h4>
+      <div className="bg-[#15151B] rounded-lg p-4 border border-white/10">
+        <h4 className="font-semibold text-white mb-4">Timeline del Proyecto</h4>
         <div className="space-y-2">
           {/* Barra de progreso planeado */}
           <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-500 w-16">Planeado</span>
-            <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
+            <span className="text-xs text-white/50 w-16">Planeado</span>
+            <div className="flex-1 h-6 bg-[#15151B] rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gray-300 rounded-full transition-all duration-500"
+                className="h-full bg-[#2A2A33] rounded-full transition-all duration-500"
                 style={{ width: `${(metricas?.semanasCompletadas / metricas?.semanasPlaneadas * 100) || 0}%` }}
               />
             </div>
-            <span className="text-xs text-gray-600 w-12 text-right">
+            <span className="text-xs text-white/60 w-12 text-right">
               {metricas?.semanasCompletadas || 0}/{metricas?.semanasPlaneadas || 0}
             </span>
           </div>
           
           {/* Barra de progreso real */}
           <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-500 w-16">Ejecutado</span>
-            <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
+            <span className="text-xs text-white/50 w-16">Ejecutado</span>
+            <div className="flex-1 h-6 bg-[#15151B] rounded-full overflow-hidden">
               <div 
                 className="h-full rounded-full transition-all duration-500"
                 style={{ 
@@ -354,7 +354,7 @@ export function GanttChart({ proyecto, avances = [] }) {
                 }}
               />
             </div>
-            <span className="text-xs text-gray-600 w-12 text-right">
+            <span className="text-xs text-white/60 w-12 text-right">
               {metricas?.porcentajeActual?.toFixed(0) || 0}%
             </span>
           </div>

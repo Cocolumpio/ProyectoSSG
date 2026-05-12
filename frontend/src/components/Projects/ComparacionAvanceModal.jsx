@@ -102,27 +102,27 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
       case 'discrepancia_mayor':
         return <XCircle className="h-5 w-5 text-red-500" />;
       default:
-        return <Minus className="h-5 w-5 text-gray-400" />;
+        return <Minus className="h-5 w-5 text-white/40" />;
     }
   };
 
   const getEstadoColor = (estado) => {
     switch (estado) {
       case 'coincide':
-        return 'bg-green-50 border-green-200';
+        return 'bg-green-500/10 border-green-500/30';
       case 'discrepancia_menor':
-        return 'bg-yellow-50 border-yellow-200';
+        return 'bg-yellow-500/10 border-yellow-500/30';
       case 'discrepancia_mayor':
-        return 'bg-red-50 border-red-200';
+        return 'bg-red-500/10 border-red-500/30';
       default:
-        return 'bg-gray-50 border-gray-200';
+        return 'bg-[#0F0F14] border-white/10';
     }
   };
 
   const getDiferenciaIcon = (diferencia) => {
     if (diferencia > 0) return <TrendingUp className="h-4 w-4 text-green-600" />;
     if (diferencia < 0) return <TrendingDown className="h-4 w-4 text-red-600" />;
-    return <Minus className="h-4 w-4 text-gray-400" />;
+    return <Minus className="h-4 w-4 text-white/40" />;
   };
 
   const formatNumber = (num) => {
@@ -133,7 +133,7 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50" onClick={onClose}>
       <div 
-        className="bg-white rounded-xl w-[95vw] max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-[#15151B] rounded-xl w-[95vw] max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -145,19 +145,19 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
             </h2>
             <p className="text-white/80 text-sm">{proyecto.nombre}</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-lg transition-colors">
+          <button onClick={onClose} className="p-2 hover:bg-[#15151B]/20 rounded-lg transition-colors">
             <X className="h-6 w-6" />
           </button>
         </div>
 
         <div className="flex-1 overflow-hidden flex">
           {/* Sidebar - Lista de comparaciones */}
-          <div className="w-72 border-r border-gray-200 flex flex-col">
+          <div className="w-72 border-r border-white/10 flex flex-col">
             {/* Upload Button */}
-            <div className="p-4 border-b border-gray-200">
+            <div className="p-4 border-b border-white/10">
               <label className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-pointer transition-all ${
                 uploading 
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                  ? 'bg-[#15151B] text-white/40 cursor-not-allowed' 
                   : 'bg-[#994B49] hover:bg-[#B85C5A] text-white'
               }`}>
                 {uploading ? (
@@ -194,8 +194,8 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
                   <Loader2 className="h-6 w-6 animate-spin text-[#994B49]" />
                 </div>
               ) : comparaciones.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <FileText className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                <div className="text-center py-8 text-white/50">
+                  <FileText className="h-12 w-12 mx-auto mb-2 text-white/30" />
                   <p className="text-sm">Sin comparaciones</p>
                   <p className="text-xs">Sube un PDF para comenzar</p>
                 </div>
@@ -207,15 +207,15 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
                     className={`p-3 rounded-lg cursor-pointer transition-all ${
                       selectedComparacion?.id === comp.id
                         ? 'bg-[#994B49]/10 border-2 border-[#994B49]'
-                        : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'
+                        : 'bg-[#0F0F14] border border-white/10 hover:bg-[#15151B]'
                     }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-gray-900 truncate">
+                        <p className="font-medium text-sm text-white truncate">
                           {comp.pdf_nombre}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-white/50">
                           {new Date(comp.fecha_comparacion).toLocaleDateString('es-MX')}
                         </p>
                       </div>
@@ -224,24 +224,24 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
                           e.stopPropagation();
                           handleDeleteComparacion(comp.id);
                         }}
-                        className="p-1 hover:bg-red-100 rounded text-gray-400 hover:text-red-500"
+                        className="p-1 hover:bg-red-500/15 rounded text-white/40 hover:text-red-500"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                     <div className="mt-2 flex items-center gap-2 flex-wrap">
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                        comp.confianza === 'ALTA' ? 'bg-green-100 text-green-700' :
-                        comp.confianza === 'MEDIA' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-red-100 text-red-700'
+                        comp.confianza === 'ALTA' ? 'bg-green-500/15 text-green-300' :
+                        comp.confianza === 'MEDIA' ? 'bg-yellow-500/15 text-yellow-300' :
+                        'bg-red-500/15 text-red-300'
                       }`}>
                         {comp.confianza || 'MEDIA'}
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-white/50">
                         {comp.comparaciones?.length || 0} métricas
                       </span>
                       {comp.alerta_enviada && (
-                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700">
+                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-orange-500/15 text-orange-300">
                           📧 Alerta
                         </span>
                       )}
@@ -258,24 +258,24 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
               <div className="space-y-6">
                 {/* Resumen de avance general */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                  <div className="bg-blue-500/10 rounded-xl p-4 border border-blue-500/30">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm font-medium text-blue-800">Avance Dron (Sistema)</span>
+                      <span className="text-sm font-medium text-blue-300">Avance Dron (Sistema)</span>
                     </div>
-                    <div className="text-3xl font-bold text-blue-700">
+                    <div className="text-3xl font-bold text-blue-300">
                       {formatNumber(selectedComparacion.avance_general_dron)}%
                     </div>
                     <p className="text-xs text-blue-600 mt-1">
                       Basado en {selectedComparacion.metricas_dron?.semanas_registradas || 0} semanas registradas
                     </p>
                   </div>
-                  <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                  <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/30">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
-                      <span className="text-sm font-medium text-amber-800">Avance Residente (PDF)</span>
+                      <span className="text-sm font-medium text-amber-300">Avance Residente (PDF)</span>
                     </div>
-                    <div className="text-3xl font-bold text-amber-700">
+                    <div className="text-3xl font-bold text-amber-300">
                       {formatNumber(selectedComparacion.avance_general_residente)}%
                     </div>
                     <p className="text-xs text-amber-600 mt-1">
@@ -286,12 +286,12 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
 
                 {/* Banner de alerta enviada */}
                 {selectedComparacion.alerta_enviada && (
-                  <div className="bg-orange-50 rounded-xl p-4 border border-orange-200 flex items-center gap-3">
-                    <div className="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                  <div className="bg-orange-500/10 rounded-xl p-4 border border-orange-500/30 flex items-center gap-3">
+                    <div className="flex-shrink-0 w-10 h-10 bg-orange-500/15 rounded-full flex items-center justify-center">
                       <span className="text-xl">📧</span>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-orange-800">Alerta Enviada al Administrador</h4>
+                      <h4 className="font-semibold text-orange-300">Alerta Enviada al Administrador</h4>
                       <p className="text-sm text-orange-600">
                         Se detectaron discrepancias críticas (&gt;15%) y se envió una notificación por email.
                       </p>
@@ -300,32 +300,32 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
                 )}
 
                 {/* Tabla de comparación */}
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                  <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-                    <h3 className="font-semibold text-gray-900">Comparación por Métrica</h3>
+                <div className="bg-[#15151B] rounded-xl border border-white/10 overflow-hidden">
+                  <div className="px-4 py-3 bg-[#0F0F14] border-b border-white/10">
+                    <h3 className="font-semibold text-white">Comparación por Métrica</h3>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full">
-                      <thead className="bg-gray-50 border-b border-gray-200">
+                      <thead className="bg-[#0F0F14] border-b border-white/10">
                         <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Métrica</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-white/50 uppercase">Métrica</th>
                           <th className="px-4 py-3 text-right text-xs font-medium text-blue-500 uppercase">Dron</th>
                           <th className="px-4 py-3 text-right text-xs font-medium text-amber-500 uppercase">Residente</th>
-                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Diferencia</th>
-                          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Estado</th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-white/50 uppercase">Diferencia</th>
+                          <th className="px-4 py-3 text-center text-xs font-medium text-white/50 uppercase">Estado</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100">
+                      <tbody className="divide-y divide-white/5">
                         {selectedComparacion.comparaciones?.map((comp, idx) => (
                           <tr key={idx} className={getEstadoColor(comp.estado)}>
                             <td className="px-4 py-3">
-                              <span className="font-medium text-gray-900">{comp.nombre}</span>
-                              <span className="text-xs text-gray-500 ml-1">({comp.unidad})</span>
+                              <span className="font-medium text-white">{comp.nombre}</span>
+                              <span className="text-xs text-white/50 ml-1">({comp.unidad})</span>
                             </td>
-                            <td className="px-4 py-3 text-right font-mono text-blue-700">
+                            <td className="px-4 py-3 text-right font-mono text-blue-300">
                               {formatNumber(comp.valor_dron)}
                             </td>
-                            <td className="px-4 py-3 text-right font-mono text-amber-700">
+                            <td className="px-4 py-3 text-right font-mono text-amber-300">
                               {formatNumber(comp.valor_residente)}
                             </td>
                             <td className="px-4 py-3 text-right">
@@ -333,7 +333,7 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
                                 {getDiferenciaIcon(comp.diferencia)}
                                 <span className={`font-mono ${
                                   comp.diferencia > 0 ? 'text-green-600' : 
-                                  comp.diferencia < 0 ? 'text-red-600' : 'text-gray-500'
+                                  comp.diferencia < 0 ? 'text-red-600' : 'text-white/50'
                                 }`}>
                                   {comp.diferencia > 0 ? '+' : ''}{formatNumber(comp.diferencia)}
                                   <span className="text-xs ml-1">
@@ -349,7 +349,7 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
                         ))}
                         {(!selectedComparacion.comparaciones || selectedComparacion.comparaciones.length === 0) && (
                           <tr>
-                            <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                            <td colSpan={5} className="px-4 py-8 text-center text-white/50">
                               No se pudieron extraer métricas comparables del PDF
                             </td>
                           </tr>
@@ -361,14 +361,14 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
 
                 {/* Discrepancias detectadas */}
                 {selectedComparacion.discrepancias_detectadas?.length > 0 && (
-                  <div className="bg-red-50 rounded-xl p-4 border border-red-200">
-                    <h3 className="font-semibold text-red-800 flex items-center gap-2 mb-3">
+                  <div className="bg-red-500/10 rounded-xl p-4 border border-red-500/30">
+                    <h3 className="font-semibold text-red-300 flex items-center gap-2 mb-3">
                       <AlertTriangle className="h-5 w-5" />
                       Discrepancias Detectadas
                     </h3>
                     <ul className="space-y-2">
                       {selectedComparacion.discrepancias_detectadas.map((disc, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-sm text-red-700">
+                        <li key={idx} className="flex items-start gap-2 text-sm text-red-300">
                           <span className="text-red-400 mt-0.5">•</span>
                           {disc}
                         </li>
@@ -379,9 +379,9 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
 
                 {/* Análisis de IA */}
                 {selectedComparacion.resumen_ia && (
-                  <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
-                    <h3 className="font-semibold text-purple-800 mb-3">Análisis de IA</h3>
-                    <p className="text-sm text-purple-700 whitespace-pre-wrap">
+                  <div className="bg-purple-500/10 rounded-xl p-4 border border-purple-500/30">
+                    <h3 className="font-semibold text-purple-300 mb-3">Análisis de IA</h3>
+                    <p className="text-sm text-purple-300 whitespace-pre-wrap">
                       {selectedComparacion.resumen_ia}
                     </p>
                   </div>
@@ -389,14 +389,14 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
 
                 {/* Recomendaciones */}
                 {selectedComparacion.recomendaciones?.length > 0 && (
-                  <div className="bg-green-50 rounded-xl p-4 border border-green-200">
-                    <h3 className="font-semibold text-green-800 flex items-center gap-2 mb-3">
+                  <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/30">
+                    <h3 className="font-semibold text-green-300 flex items-center gap-2 mb-3">
                       <CheckCircle className="h-5 w-5" />
                       Recomendaciones
                     </h3>
                     <ul className="space-y-2">
                       {selectedComparacion.recomendaciones.map((rec, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-sm text-green-700">
+                        <li key={idx} className="flex items-start gap-2 text-sm text-green-300">
                           <span className="text-green-400 mt-0.5">✓</span>
                           {rec}
                         </li>
@@ -411,7 +411,7 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
                     href={`${process.env.REACT_APP_BACKEND_URL}${selectedComparacion.pdf_url}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#15151B] hover:bg-[#1F1F26] text-white/80 rounded-lg transition-colors"
                   >
                     <Download className="h-4 w-4" />
                     Ver PDF Original
@@ -419,9 +419,9 @@ export function ComparacionAvanceModal({ proyecto, onClose, onShowSuccess }) {
                 </div>
               </div>
             ) : (
-              <div className="h-full flex items-center justify-center text-gray-500">
+              <div className="h-full flex items-center justify-center text-white/50">
                 <div className="text-center">
-                  <FileText className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                  <FileText className="h-16 w-16 mx-auto mb-4 text-white/30" />
                   <p className="text-lg font-medium">Sin comparación seleccionada</p>
                   <p className="text-sm">Sube un PDF del reporte del residente para analizar</p>
                 </div>

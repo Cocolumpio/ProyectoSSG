@@ -189,7 +189,7 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
     <div className="space-y-4 sm:space-y-6">
       {/* Header con botón de reporte */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-white">Dashboard</h1>
         <button
           onClick={handleEnviarReporte}
           disabled={sendingReport}
@@ -240,12 +240,12 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Mapa */}
-        <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-sm">
+        <div className="bg-[#15151B] rounded-xl p-4 sm:p-6 border border-white/10 shadow-sm">
           <div className="flex items-center space-x-2 mb-3 sm:mb-4">
             <MapIcon className="h-4 sm:h-5 w-4 sm:w-5 text-[#994B49]" />
-            <h2 className="text-base sm:text-xl font-semibold text-gray-900">Ubicación de Proyectos</h2>
+            <h2 className="text-base sm:text-xl font-semibold text-white">Ubicación de Proyectos</h2>
           </div>
-          <div className="h-[250px] sm:h-[400px] rounded-lg overflow-hidden border border-gray-200" data-testid="map-container">
+          <div className="h-[250px] sm:h-[400px] rounded-lg overflow-hidden border border-white/10" data-testid="map-container">
             <MapContainer
               center={[mapCenter.lat, mapCenter.lng]}
               zoom={11}
@@ -278,8 +278,8 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
         </div>
 
         {/* Lista de Proyectos */}
-        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Proyectos Activos</h2>
+        <div className="bg-[#15151B] rounded-xl p-6 border border-white/10 shadow-sm">
+          <h2 className="text-xl font-semibold text-white mb-4">Proyectos Activos</h2>
           <div className="space-y-3 max-h-[400px] overflow-y-auto" data-testid="proyectos-list">
             {proyectos.map((proyecto) => (
               <div
@@ -288,24 +288,24 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                 className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all ${
                   selectedProyecto?.id === proyecto.id
                     ? 'bg-[#994B49]/10 border-2 border-[#994B49]'
-                    : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'
+                    : 'bg-[#0F0F14] border border-white/10 hover:bg-[#15151B]'
                 }`}
                 data-testid={`proyecto-item-${proyecto.id}`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{proyecto.nombre}</h3>
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">{proyecto.ubicacion}</p>
+                    <h3 className="font-semibold text-white text-sm sm:text-base truncate">{proyecto.nombre}</h3>
+                    <p className="text-xs sm:text-sm text-white/60 truncate">{proyecto.ubicacion}</p>
                   </div>
                   <div className="text-right ml-2">
                     <div className="text-lg sm:text-2xl font-bold text-[#994B49]">
                       {proyecto.avance_actual}%
                     </div>
-                    <div className="text-xs text-gray-600">Avance</div>
+                    <div className="text-xs text-white/60">Avance</div>
                   </div>
                 </div>
                 <div className="mt-2">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-[#1F1F26] rounded-full h-2">
                     <div
                       className="bg-[#994B49] h-2 rounded-full transition-all"
                       style={{ width: `${proyecto.avance_actual}%` }}
@@ -320,7 +320,7 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
 
       {/* Detalles del Proyecto Seleccionado */}
       {selectedProyecto && (
-        <div className="bg-gradient-to-r from-[#994B49]/5 to-white rounded-xl border-2 border-[#994B49]/20 overflow-hidden">
+        <div className="bg-gradient-to-r from-[#994B49]/30 to-[#15151B] rounded-xl border-2 border-[#994B49]/40 overflow-hidden">
           {/* Header del proyecto */}
           <div className="bg-[#994B49] text-white px-6 py-4">
             <div className="flex items-center justify-between">
@@ -339,9 +339,9 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
               </div>
             </div>
             {/* Barra de progreso total */}
-            <div className="mt-3 w-full bg-white/20 rounded-full h-2">
+            <div className="mt-3 w-full bg-[#15151B]/20 rounded-full h-2">
               <div 
-                className="bg-white h-2 rounded-full transition-all duration-500" 
+                className="bg-[#15151B] h-2 rounded-full transition-all duration-500" 
                 style={{ width: `${stats?.avanceTotal || 0}%` }}
               />
             </div>
@@ -353,11 +353,11 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
               <div>
                 <div className="flex items-center space-x-2 mb-3">
                   <Box className="h-5 w-5 text-[#994B49]" />
-                  <h3 className="font-semibold text-gray-900">
+                  <h3 className="font-semibold text-white">
                     Modelo 3D - {ultimoAvance ? `Semana ${ultimoAvance.semana}` : 'Sin datos'}
                   </h3>
                 </div>
-                <div className="h-[300px] rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                <div className="h-[300px] rounded-lg overflow-hidden border border-white/10 bg-[#15151B]">
                   {loadingAvances ? (
                     <div className="w-full h-full flex items-center justify-center bg-[#1a1a2e]">
                       <div className="w-8 h-8 border-4 border-[#994B49] border-t-transparent rounded-full animate-spin" />
@@ -392,7 +392,7 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                           <div className="text-center p-6">
                             <Box className="h-16 w-16 mx-auto mb-4 text-[#994B49]" />
                             <h4 className="text-white font-semibold mb-2">Modelo 3D Local</h4>
-                            <p className="text-gray-400 text-sm mb-4">
+                            <p className="text-white/40 text-sm mb-4">
                               Semana {ultimoAvance.semana} - {ultimoAvance.fecha}
                             </p>
                             <button
@@ -412,7 +412,7 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                       <div className="text-center p-6">
                         <Box className="h-16 w-16 mx-auto mb-4 text-[#994B49]" />
                         <h4 className="text-white font-semibold mb-2">Modelo 3D en Pix4D</h4>
-                        <p className="text-gray-400 text-sm mb-4">
+                        <p className="text-white/40 text-sm mb-4">
                           Semana {ultimoAvance.semana} - {ultimoAvance.fecha}
                         </p>
                         <a
@@ -427,17 +427,17 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                       </div>
                     </div>
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
+                    <div className="w-full h-full flex items-center justify-center text-white/40 bg-[#15151B]">
                       <div className="text-center">
-                        <Layers className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                        <Layers className="h-12 w-12 mx-auto mb-2 text-white/30" />
                         <p className="text-sm">Sin modelo 3D disponible</p>
-                        <p className="text-xs text-gray-400">Sube un modelo en Avances Semanales</p>
+                        <p className="text-xs text-white/40">Sube un modelo en Avances Semanales</p>
                       </div>
                     </div>
                   )}
                 </div>
                 {ultimoAvance && (
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-white/50 mt-2">
                     Última actualización: {ultimoAvance.fecha}
                     {selectedProyecto?.actividades_tipo?.includes('pilas') || selectedProyecto?.pilas_planeadas > 0 
                       ? ` • Pilas: ${(ultimoAvance.pilas_completadas || 0).toLocaleString()}`
@@ -452,7 +452,7 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
               <div>
                 <div className="flex items-center space-x-2 mb-3">
                   <BarChart3 className="h-5 w-5 text-[#994B49]" />
-                  <h3 className="font-semibold text-gray-900">Resumen del Proyecto</h3>
+                  <h3 className="font-semibold text-white">Resumen del Proyecto</h3>
                 </div>
                 
                 {stats ? (
@@ -460,21 +460,21 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                     {/* Avance Total del Proyecto - Siempre visible */}
                     <div className="bg-gradient-to-r from-[#994B49]/10 to-[#994B49]/5 rounded-xl p-4 border border-[#994B49]/30">
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-semibold text-gray-800">Avance Total del Proyecto</span>
+                        <span className="text-sm font-semibold text-white">Avance Total del Proyecto</span>
                         <span className="text-2xl font-bold text-[#994B49]">{stats.avanceTotal.toFixed(1)}%</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-4 mb-3">
+                      <div className="w-full bg-[#1F1F26] rounded-full h-4 mb-3">
                         <div
                           className="bg-gradient-to-r from-[#994B49] to-[#B85C5A] h-4 rounded-full transition-all duration-500"
                           style={{ width: `${stats.avanceTotal}%` }}
                         />
                       </div>
-                      <div className="flex items-center justify-between text-xs text-gray-600">
-                        <span>Semanas trabajadas: <span className="font-medium text-gray-800">{stats.semanasTrabajas}</span></span>
+                      <div className="flex items-center justify-between text-xs text-white/60">
+                        <span>Semanas trabajadas: <span className="font-medium text-white">{stats.semanasTrabajas}</span></span>
                         {stats.semanasPlaneadas > 0 ? (
-                          <span>Planeadas: <span className="font-medium text-gray-800">{stats.semanasPlaneadas}</span></span>
+                          <span>Planeadas: <span className="font-medium text-white">{stats.semanasPlaneadas}</span></span>
                         ) : stats.semanasProyectadas ? (
-                          <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded">
+                          <span className="bg-orange-500/15 text-orange-300 px-2 py-0.5 rounded">
                             📈 ~{stats.semanasProyectadas} sem restantes
                           </span>
                         ) : null}
@@ -483,23 +483,23 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
 
                     {/* Avance por Fase */}
                     {(stats.fasesActivas.length > 0 || stats.volumenPlaneado > 0 || stats.pilasPlaneadas > 0 || stats.murosPlaneados > 0) && (
-                      <div className="bg-white rounded-lg p-4 border border-gray-200">
-                        <h4 className="text-sm font-semibold text-gray-700 mb-3">Avance por Fase</h4>
+                      <div className="bg-[#15151B] rounded-lg p-4 border border-white/10">
+                        <h4 className="text-sm font-semibold text-white/80 mb-3">Avance por Fase</h4>
                         <div className="space-y-3">
                           {/* Excavación */}
                           {stats.volumenPlaneado > 0 && (
                             <div className="flex items-center gap-3">
                               <div className="flex items-center gap-2 w-24">
                                 <Shovel className="h-4 w-4 text-amber-600" />
-                                <span className="text-xs font-medium text-amber-800">Excavación</span>
+                                <span className="text-xs font-medium text-amber-300">Excavación</span>
                               </div>
-                              <div className="flex-1 bg-amber-100 rounded-full h-3">
+                              <div className="flex-1 bg-amber-500/15 rounded-full h-3">
                                 <div
                                   className="bg-amber-500 h-3 rounded-full transition-all"
                                   style={{ width: `${stats.porcentajeExcavacion}%` }}
                                 />
                               </div>
-                              <span className="text-xs font-bold text-amber-700 w-12 text-right">{stats.porcentajeExcavacion.toFixed(0)}%</span>
+                              <span className="text-xs font-bold text-amber-300 w-12 text-right">{stats.porcentajeExcavacion.toFixed(0)}%</span>
                             </div>
                           )}
                           
@@ -508,15 +508,15 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                             <div className="flex items-center gap-3">
                               <div className="flex items-center gap-2 w-24">
                                 <Columns3 className="h-4 w-4 text-blue-600" />
-                                <span className="text-xs font-medium text-blue-800">Cimentación</span>
+                                <span className="text-xs font-medium text-blue-300">Cimentación</span>
                               </div>
-                              <div className="flex-1 bg-blue-100 rounded-full h-3">
+                              <div className="flex-1 bg-blue-500/15 rounded-full h-3">
                                 <div
                                   className="bg-blue-500 h-3 rounded-full transition-all"
                                   style={{ width: `${stats.porcentajePilas}%` }}
                                 />
                               </div>
-                              <span className="text-xs font-bold text-blue-700 w-12 text-right">{stats.porcentajePilas.toFixed(0)}%</span>
+                              <span className="text-xs font-bold text-blue-300 w-12 text-right">{stats.porcentajePilas.toFixed(0)}%</span>
                             </div>
                           )}
                           
@@ -525,15 +525,15 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                             <div className="flex items-center gap-3">
                               <div className="flex items-center gap-2 w-24">
                                 <Building2 className="h-4 w-4 text-purple-600" />
-                                <span className="text-xs font-medium text-purple-800">Edificación</span>
+                                <span className="text-xs font-medium text-purple-300">Edificación</span>
                               </div>
-                              <div className="flex-1 bg-purple-100 rounded-full h-3">
+                              <div className="flex-1 bg-purple-500/15 rounded-full h-3">
                                 <div
                                   className="bg-purple-500 h-3 rounded-full transition-all"
                                   style={{ width: `${stats.porcentajeMuros}%` }}
                                 />
                               </div>
-                              <span className="text-xs font-bold text-purple-700 w-12 text-right">{stats.porcentajeMuros.toFixed(0)}%</span>
+                              <span className="text-xs font-bold text-purple-300 w-12 text-right">{stats.porcentajeMuros.toFixed(0)}%</span>
                             </div>
                           )}
                         </div>
@@ -544,48 +544,48 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {/* Excavación */}
                       {stats.volumenPlaneado > 0 && (
-                        <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
+                        <div className="bg-amber-500/10 rounded-lg p-3 border border-amber-500/30">
                           <div className="flex items-center gap-2 mb-1">
                             <Shovel className="h-4 w-4 text-amber-600" />
-                            <span className="text-xs font-medium text-amber-800">Excavación</span>
+                            <span className="text-xs font-medium text-amber-300">Excavación</span>
                           </div>
-                          <div className="text-lg font-bold text-amber-700">{stats.volumenExcavado.toLocaleString()}</div>
+                          <div className="text-lg font-bold text-amber-300">{stats.volumenExcavado.toLocaleString()}</div>
                           <div className="text-xs text-amber-600">/ {stats.volumenPlaneado.toLocaleString()} m³</div>
                         </div>
                       )}
                       
                       {/* Pilas */}
                       {stats.pilasPlaneadas > 0 && (
-                        <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                        <div className="bg-blue-500/10 rounded-lg p-3 border border-blue-500/30">
                           <div className="flex items-center gap-2 mb-1">
                             <Columns3 className="h-4 w-4 text-blue-600" />
-                            <span className="text-xs font-medium text-blue-800">Pilas</span>
+                            <span className="text-xs font-medium text-blue-300">Pilas</span>
                           </div>
-                          <div className="text-lg font-bold text-blue-700">{stats.pilasEjecutadas.toLocaleString()}</div>
+                          <div className="text-lg font-bold text-blue-300">{stats.pilasEjecutadas.toLocaleString()}</div>
                           <div className="text-xs text-blue-600">/ {stats.pilasPlaneadas.toLocaleString()}</div>
                         </div>
                       )}
                       
                       {/* Anclas */}
                       {stats.anclasPlaneadas > 0 && (
-                        <div className="bg-teal-50 rounded-lg p-3 border border-teal-200">
+                        <div className="bg-teal-500/10 rounded-lg p-3 border border-teal-500/30">
                           <div className="flex items-center gap-2 mb-1">
                             <Anchor className="h-4 w-4 text-teal-600" />
-                            <span className="text-xs font-medium text-teal-800">Anclas</span>
+                            <span className="text-xs font-medium text-teal-300">Anclas</span>
                           </div>
-                          <div className="text-lg font-bold text-teal-700">{stats.anclasEjecutadas.toLocaleString()}</div>
+                          <div className="text-lg font-bold text-teal-300">{stats.anclasEjecutadas.toLocaleString()}</div>
                           <div className="text-xs text-teal-600">/ {stats.anclasPlaneadas.toLocaleString()}</div>
                         </div>
                       )}
                       
                       {/* Muros */}
                       {stats.murosPlaneados > 0 && (
-                        <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
+                        <div className="bg-purple-500/10 rounded-lg p-3 border border-purple-500/30">
                           <div className="flex items-center gap-2 mb-1">
                             <Building2 className="h-4 w-4 text-purple-600" />
-                            <span className="text-xs font-medium text-purple-800">Muros</span>
+                            <span className="text-xs font-medium text-purple-300">Muros</span>
                           </div>
-                          <div className="text-lg font-bold text-purple-700">{stats.murosEjecutados.toLocaleString()}</div>
+                          <div className="text-lg font-bold text-purple-300">{stats.murosEjecutados.toLocaleString()}</div>
                           <div className="text-xs text-purple-600">/ {stats.murosPlaneados.toLocaleString()}</div>
                         </div>
                       )}
@@ -593,12 +593,12 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
 
                     {/* Semanas y Viajes */}
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                      <div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/30">
                         <div className="flex items-center space-x-2 mb-2">
                           <Calendar className="h-4 w-4 text-blue-600" />
-                          <span className="text-xs font-medium text-blue-800">Semanas Trabajadas</span>
+                          <span className="text-xs font-medium text-blue-300">Semanas Trabajadas</span>
                         </div>
-                        <div className="text-2xl font-bold text-blue-700">
+                        <div className="text-2xl font-bold text-blue-300">
                           {stats.semanasTrabajas}
                           <span className="text-sm font-normal text-blue-500"> / {stats.semanasPlaneadas}</span>
                         </div>
@@ -606,12 +606,12 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                           {stats.totalSemanas} avances registrados
                         </p>
                       </div>
-                      <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                      <div className="bg-amber-500/10 rounded-lg p-4 border border-amber-500/30">
                         <div className="flex items-center space-x-2 mb-2">
                           <Truck className="h-4 w-4 text-amber-600" />
-                          <span className="text-xs font-medium text-amber-800">Viajes de Camión</span>
+                          <span className="text-xs font-medium text-amber-300">Viajes de Camión</span>
                         </div>
-                        <div className="text-2xl font-bold text-amber-700">
+                        <div className="text-2xl font-bold text-amber-300">
                           {stats.viajesCamion.toLocaleString()}
                           <span className="text-xs font-normal text-amber-500 block">({stats.capacidadCamion} m³/viaje)</span>
                         </div>
@@ -619,15 +619,15 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                     </div>
 
                     {/* Costo de Flotilla */}
-                    <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                    <div className="bg-green-500/10 rounded-lg p-4 border border-green-500/30">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
                           <DollarSign className="h-4 w-4 text-green-600" />
-                          <span className="text-sm font-medium text-green-800">Costo Total de Flotilla</span>
+                          <span className="text-sm font-medium text-green-300">Costo Total de Flotilla</span>
                         </div>
                         <span className="text-xs text-green-600">${stats.costoM3}/m³</span>
                       </div>
-                      <div className="text-3xl font-bold text-green-700">
+                      <div className="text-3xl font-bold text-green-300">
                         ${stats.costoFlotilla.toLocaleString()}
                         <span className="text-sm font-normal text-green-500 ml-1">MXN</span>
                       </div>
@@ -637,18 +637,18 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                     </div>
 
                     {/* Fechas */}
-                    <div className="flex items-center justify-between text-sm text-gray-600 px-1">
+                    <div className="flex items-center justify-between text-sm text-white/60 px-1">
                       <div>
-                        <span className="text-gray-400">Inicio:</span> {selectedProyecto.fecha_inicio}
+                        <span className="text-white/40">Inicio:</span> {selectedProyecto.fecha_inicio}
                       </div>
                       <div>
-                        <span className="text-gray-400">Fin planeado:</span> {selectedProyecto.fecha_fin_planeada}
+                        <span className="text-white/40">Fin planeado:</span> {selectedProyecto.fecha_fin_planeada}
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-400">
-                    <BarChart3 className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                  <div className="bg-[#0F0F14] rounded-lg p-8 text-center text-white/40">
+                    <BarChart3 className="h-12 w-12 mx-auto mb-2 text-white/30" />
                     <p>Sin datos de avance registrados</p>
                   </div>
                 )}
@@ -694,14 +694,14 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
 
       {/* Vuelos Recientes */}
       {selectedProyecto && vuelosDelProyecto.length > 0 && (
-        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+        <div className="bg-[#15151B] rounded-xl p-6 border border-white/10 shadow-sm">
+          <h2 className="text-xl font-semibold text-white mb-4">
             Bitácora de Vuelos - {selectedProyecto.nombre}
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-left" data-testid="vuelos-table">
-              <thead className="border-b border-gray-200">
-                <tr className="text-gray-600">
+              <thead className="border-b border-white/10">
+                <tr className="text-white/60">
                   <th className="pb-3 pr-4">Fecha</th>
                   <th className="pb-3 pr-4">Duración</th>
                   <th className="pb-3 pr-4">Área</th>
@@ -709,15 +709,15 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                   <th className="pb-3">Estado</th>
                 </tr>
               </thead>
-              <tbody className="text-gray-900">
+              <tbody className="text-white">
                 {vuelosDelProyecto.map((vuelo) => (
-                  <tr key={vuelo.id} className="border-b border-gray-100">
+                  <tr key={vuelo.id} className="border-b border-white/5">
                     <td className="py-3 pr-4">{vuelo.fecha_vuelo}</td>
                     <td className="py-3 pr-4">{vuelo.duracion_minutos} min</td>
                     <td className="py-3 pr-4">{vuelo.area_cubierta?.toLocaleString() || 0} m²</td>
                     <td className="py-3 pr-4">{vuelo.num_imagenes || 0}</td>
                     <td className="py-3">
-                      <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm">
+                      <span className="px-2 py-1 bg-green-500/15 text-green-300 rounded text-sm">
                         {vuelo.estado}
                       </span>
                     </td>
@@ -738,7 +738,7 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
           >
             <div className="absolute top-4 left-4 z-10 bg-black/60 text-white px-3 py-2 rounded-lg">
               <h3 className="font-semibold">{selectedProyecto?.nombre}</h3>
-              <p className="text-sm text-gray-300">Semana {ultimoAvance.semana} - {ultimoAvance.fecha}</p>
+              <p className="text-sm text-white/30">Semana {ultimoAvance.semana} - {ultimoAvance.fecha}</p>
             </div>
             <button
               onClick={() => setShowFullViewer(false)}

@@ -125,21 +125,21 @@ export function ComparacionPlanesView({ proyectoId, proyectoNombre, onClose }) {
     
     if (veredicto === 'PLAN_IA_MEJOR') {
       return (
-        <span className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+        <span className="flex items-center gap-1 px-3 py-1 bg-green-500/15 text-green-300 rounded-full text-sm font-medium">
           <TrendingUp className="h-4 w-4" />
           Plan IA es Mejor
         </span>
       );
     } else if (veredicto === 'PLAN_USUARIO_MEJOR') {
       return (
-        <span className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+        <span className="flex items-center gap-1 px-3 py-1 bg-blue-500/15 text-blue-300 rounded-full text-sm font-medium">
           <CheckCircle2 className="h-4 w-4" />
           Tu Plan es Mejor
         </span>
       );
     } else {
       return (
-        <span className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
+        <span className="flex items-center gap-1 px-3 py-1 bg-[#15151B] text-white/80 rounded-full text-sm font-medium">
           <Minus className="h-4 w-4" />
           Planes Similares
         </span>
@@ -156,11 +156,11 @@ export function ComparacionPlanesView({ proyectoId, proyectoNombre, onClose }) {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
+    <div className="bg-[#15151B] rounded-xl shadow-lg p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-xl font-bold text-gray-900">Comparación de Planes</h3>
-          <p className="text-sm text-gray-500">{proyectoNombre}</p>
+          <h3 className="text-xl font-bold text-white">Comparación de Planes</h3>
+          <p className="text-sm text-white/50">{proyectoNombre}</p>
         </div>
         <div className="flex items-center gap-3">
           {getVeredictoBadge()}
@@ -185,17 +185,17 @@ export function ComparacionPlanesView({ proyectoId, proyectoNombre, onClose }) {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start gap-2">
+        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6 flex items-start gap-2">
           <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-          <p className="text-red-700 text-sm">{error}</p>
+          <p className="text-red-300 text-sm">{error}</p>
         </div>
       )}
 
       {!comparacion ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 mb-2">No hay comparación disponible</p>
-          <p className="text-sm text-gray-500">
+        <div className="text-center py-12 bg-[#0F0F14] rounded-lg">
+          <TrendingUp className="h-12 w-12 text-white/40 mx-auto mb-4" />
+          <p className="text-white/60 mb-2">No hay comparación disponible</p>
+          <p className="text-sm text-white/50">
             Primero sube el catálogo de maquinaria y luego genera la comparación con tu cronograma.
           </p>
         </div>
@@ -203,15 +203,15 @@ export function ComparacionPlanesView({ proyectoId, proyectoNombre, onClose }) {
         <div className="space-y-6">
           {/* Resumen */}
           {comparacion.analisis_ia?.resumen && (
-            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 border border-purple-200">
-              <h4 className="font-medium text-purple-800 mb-2">📊 Resumen del Análisis IA</h4>
-              <p className="text-gray-700">{comparacion.analisis_ia.resumen}</p>
+            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 border border-purple-500/30">
+              <h4 className="font-medium text-purple-300 mb-2">📊 Resumen del Análisis IA</h4>
+              <p className="text-white/80">{comparacion.analisis_ia.resumen}</p>
             </div>
           )}
 
           {/* Gráfica de Barras Comparativa */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="font-medium text-gray-800 mb-4">Comparación por Fase (Semanas)</h4>
+          <div className="bg-[#0F0F14] rounded-lg p-4">
+            <h4 className="font-medium text-white mb-4">Comparación por Fase (Semanas)</h4>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={prepareBarData()} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -231,24 +231,24 @@ export function ComparacionPlanesView({ proyectoId, proyectoNombre, onClose }) {
             {/* Excavación */}
             <div className={`rounded-lg p-4 border ${
               comparacion.analisis_ia?.evaluacion_excavacion?.mejor_plan === 'ia' 
-                ? 'bg-green-50 border-green-200' 
+                ? 'bg-green-500/10 border-green-500/30' 
                 : comparacion.analisis_ia?.evaluacion_excavacion?.mejor_plan === 'usuario'
-                ? 'bg-blue-50 border-blue-200'
-                : 'bg-gray-50 border-gray-200'
+                ? 'bg-blue-500/10 border-blue-500/30'
+                : 'bg-[#0F0F14] border-white/10'
             }`}>
-              <h5 className="font-medium text-gray-800 mb-2">🚜 Excavación</h5>
+              <h5 className="font-medium text-white mb-2">🚜 Excavación</h5>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Tu Plan:</span>
+                  <span className="text-white/60">Tu Plan:</span>
                   <span className="font-medium">{comparacion.datos_usuario?.semanas_excavacion || 0} sem</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Plan IA:</span>
+                  <span className="text-white/60">Plan IA:</span>
                   <span className="font-medium text-green-600">{comparacion.datos_ia?.semanas_excavacion || 0} sem</span>
                 </div>
               </div>
               {comparacion.analisis_ia?.evaluacion_excavacion?.razon && (
-                <p className="text-xs text-gray-500 mt-2 italic">
+                <p className="text-xs text-white/50 mt-2 italic">
                   {comparacion.analisis_ia.evaluacion_excavacion.razon}
                 </p>
               )}
@@ -257,24 +257,24 @@ export function ComparacionPlanesView({ proyectoId, proyectoNombre, onClose }) {
             {/* Pilas */}
             <div className={`rounded-lg p-4 border ${
               comparacion.analisis_ia?.evaluacion_pilas?.mejor_plan === 'ia' 
-                ? 'bg-green-50 border-green-200' 
+                ? 'bg-green-500/10 border-green-500/30' 
                 : comparacion.analisis_ia?.evaluacion_pilas?.mejor_plan === 'usuario'
-                ? 'bg-blue-50 border-blue-200'
-                : 'bg-gray-50 border-gray-200'
+                ? 'bg-blue-500/10 border-blue-500/30'
+                : 'bg-[#0F0F14] border-white/10'
             }`}>
-              <h5 className="font-medium text-gray-800 mb-2">🔩 Pilas</h5>
+              <h5 className="font-medium text-white mb-2">🔩 Pilas</h5>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Tu Plan:</span>
+                  <span className="text-white/60">Tu Plan:</span>
                   <span className="font-medium">{comparacion.datos_usuario?.semanas_pilas || 0} sem</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Plan IA:</span>
+                  <span className="text-white/60">Plan IA:</span>
                   <span className="font-medium text-green-600">{comparacion.datos_ia?.semanas_pilas || 0} sem</span>
                 </div>
               </div>
               {comparacion.analisis_ia?.evaluacion_pilas?.razon && (
-                <p className="text-xs text-gray-500 mt-2 italic">
+                <p className="text-xs text-white/50 mt-2 italic">
                   {comparacion.analisis_ia.evaluacion_pilas.razon}
                 </p>
               )}
@@ -283,24 +283,24 @@ export function ComparacionPlanesView({ proyectoId, proyectoNombre, onClose }) {
             {/* Anclas */}
             <div className={`rounded-lg p-4 border ${
               comparacion.analisis_ia?.evaluacion_anclas?.mejor_plan === 'ia' 
-                ? 'bg-green-50 border-green-200' 
+                ? 'bg-green-500/10 border-green-500/30' 
                 : comparacion.analisis_ia?.evaluacion_anclas?.mejor_plan === 'usuario'
-                ? 'bg-blue-50 border-blue-200'
-                : 'bg-gray-50 border-gray-200'
+                ? 'bg-blue-500/10 border-blue-500/30'
+                : 'bg-[#0F0F14] border-white/10'
             }`}>
-              <h5 className="font-medium text-gray-800 mb-2">⚓ Anclas</h5>
+              <h5 className="font-medium text-white mb-2">⚓ Anclas</h5>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Tu Plan:</span>
+                  <span className="text-white/60">Tu Plan:</span>
                   <span className="font-medium">{comparacion.datos_usuario?.semanas_anclas || 0} sem</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Plan IA:</span>
+                  <span className="text-white/60">Plan IA:</span>
                   <span className="font-medium text-green-600">{comparacion.datos_ia?.semanas_anclas || 0} sem</span>
                 </div>
               </div>
               {comparacion.analisis_ia?.evaluacion_anclas?.razon && (
-                <p className="text-xs text-gray-500 mt-2 italic">
+                <p className="text-xs text-white/50 mt-2 italic">
                   {comparacion.analisis_ia.evaluacion_anclas.razon}
                 </p>
               )}
@@ -312,15 +312,15 @@ export function ComparacionPlanesView({ proyectoId, proyectoNombre, onClose }) {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               <div>
                 <div className="text-2xl font-bold text-blue-600">{comparacion.datos_usuario?.semanas_total || 0}</div>
-                <div className="text-xs text-gray-600">Tu Plan Total (sem)</div>
+                <div className="text-xs text-white/60">Tu Plan Total (sem)</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-green-600">{comparacion.datos_ia?.semanas_total?.toFixed(1) || 0}</div>
-                <div className="text-xs text-gray-600">Plan IA Total (sem)</div>
+                <div className="text-xs text-white/60">Plan IA Total (sem)</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-amber-600">{comparacion.datos_reales?.semanas_transcurridas || 0}</div>
-                <div className="text-xs text-gray-600">Semanas Reales</div>
+                <div className="text-xs text-white/60">Semanas Reales</div>
               </div>
               <div>
                 <div className={`text-2xl font-bold ${
@@ -333,25 +333,25 @@ export function ComparacionPlanesView({ proyectoId, proyectoNombre, onClose }) {
                     : 'N/A'
                   }
                 </div>
-                <div className="text-xs text-gray-600">Mejora IA vs Tu Plan</div>
+                <div className="text-xs text-white/60">Mejora IA vs Tu Plan</div>
               </div>
             </div>
           </div>
 
           {/* Recomendaciones */}
           {comparacion.analisis_ia?.recomendaciones?.length > 0 && (
-            <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+            <div className="bg-amber-500/10 rounded-lg p-4 border border-amber-500/30">
               <button
                 onClick={() => setShowDetails(!showDetails)}
                 className="w-full flex items-center justify-between"
               >
-                <h4 className="font-medium text-amber-800">💡 Recomendaciones</h4>
+                <h4 className="font-medium text-amber-300">💡 Recomendaciones</h4>
                 {showDetails ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
               </button>
               {showDetails && (
                 <ul className="mt-3 space-y-2">
                   {comparacion.analisis_ia.recomendaciones.map((rec, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
+                    <li key={idx} className="flex items-start gap-2 text-sm text-white/80">
                       <span className="text-amber-500">•</span>
                       {rec}
                     </li>
@@ -363,7 +363,7 @@ export function ComparacionPlanesView({ proyectoId, proyectoNombre, onClose }) {
 
           {/* Fecha de última comparación */}
           {comparacion.fecha_comparacion && (
-            <p className="text-xs text-gray-400 text-right">
+            <p className="text-xs text-white/40 text-right">
               Última comparación: {new Date(comparacion.fecha_comparacion).toLocaleString('es-MX')}
             </p>
           )}

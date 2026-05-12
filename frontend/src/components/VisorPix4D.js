@@ -29,11 +29,11 @@ const VisorPix4D = ({ vuelo, proyectoPix4dUrl, onUpdateUrl }) => {
   };
   
   return (
-    <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+    <div className="bg-[#15151B] rounded-xl p-6 border border-white/10 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
           <Box className="h-5 w-5 text-[#994B49]" />
-          <h2 className="text-xl font-semibold text-gray-900">Visor 3D - Modelo Pix4D</h2>
+          <h2 className="text-xl font-semibold text-white">Visor 3D - Modelo Pix4D</h2>
         </div>
         
         <div className="flex items-center space-x-2">
@@ -43,7 +43,7 @@ const VisorPix4D = ({ vuelo, proyectoPix4dUrl, onUpdateUrl }) => {
                 href={currentUrl.replace('/embed/', '/')}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 bg-[#15151B] text-white/80 rounded-lg hover:bg-[#1F1F26] transition-colors"
                 title="Abrir en Pix4D"
               >
                 <ExternalLink className="h-4 w-4" />
@@ -79,7 +79,7 @@ const VisorPix4D = ({ vuelo, proyectoPix4dUrl, onUpdateUrl }) => {
       
       {isEditing && (
         <div className="mb-4">
-          <label className="block text-sm text-gray-600 mb-2">
+          <label className="block text-sm text-white/60 mb-2">
             URL del iframe de Pix4D
           </label>
           <input
@@ -87,16 +87,16 @@ const VisorPix4D = ({ vuelo, proyectoPix4dUrl, onUpdateUrl }) => {
             value={tempUrl}
             onChange={(e) => setTempUrl(e.target.value)}
             placeholder="https://cloud.pix4d.com/embed/bim/mesh/..."
-            className="w-full px-4 py-2 bg-gray-50 text-gray-900 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#994B49]"
+            className="w-full px-4 py-2 bg-[#0F0F14] text-white rounded-lg border border-white/15 focus:outline-none focus:ring-2 focus:ring-[#994B49]"
           />
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-white/50 mt-1">
             Pega aquí el src del iframe que te proporciona Pix4D
           </p>
         </div>
       )}
       
       <div 
-        className="relative bg-gray-50 rounded-lg overflow-hidden border border-gray-200"
+        className="relative bg-[#0F0F14] rounded-lg overflow-hidden border border-white/10"
         style={{ height: '600px' }}
         data-testid="pix4d-viewer-container"
       >
@@ -113,21 +113,21 @@ const VisorPix4D = ({ vuelo, proyectoPix4dUrl, onUpdateUrl }) => {
       
       {vuelo && vuelo.volumetria && (
         <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
-          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-            <div className="text-gray-600 mb-1">Excavación</div>
-            <div className="text-gray-900 font-semibold text-lg">
+          <div className="bg-[#0F0F14] rounded-lg p-3 border border-white/10">
+            <div className="text-white/60 mb-1">Excavación</div>
+            <div className="text-white font-semibold text-lg">
               {vuelo.volumetria.excavacion.toLocaleString()} m³
             </div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-            <div className="text-gray-600 mb-1">Relleno</div>
-            <div className="text-gray-900 font-semibold text-lg">
+          <div className="bg-[#0F0F14] rounded-lg p-3 border border-white/10">
+            <div className="text-white/60 mb-1">Relleno</div>
+            <div className="text-white font-semibold text-lg">
               {vuelo.volumetria.relleno.toLocaleString()} m³
             </div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-            <div className="text-gray-600 mb-1">Materiales</div>
-            <div className="text-gray-900 font-semibold text-lg">
+          <div className="bg-[#0F0F14] rounded-lg p-3 border border-white/10">
+            <div className="text-white/60 mb-1">Materiales</div>
+            <div className="text-white font-semibold text-lg">
               {vuelo.volumetria.materiales.toLocaleString()} m³
             </div>
           </div>
@@ -143,8 +143,8 @@ const VisorPix4D = ({ vuelo, proyectoPix4dUrl, onUpdateUrl }) => {
       </div>
       
       {vuelo && (
-        <div className="mt-3 bg-green-50 border border-green-200 rounded-lg p-3">
-          <p className="text-green-700 text-sm">
+        <div className="mt-3 bg-green-500/10 border border-green-500/30 rounded-lg p-3">
+          <p className="text-green-300 text-sm">
             <strong>📊 Datos del Vuelo:</strong> Fecha: {vuelo.fecha_vuelo}, 
             Duración: {vuelo.duracion_minutos} min, 
             Área: {vuelo.area_cubierta?.toLocaleString()} m², 

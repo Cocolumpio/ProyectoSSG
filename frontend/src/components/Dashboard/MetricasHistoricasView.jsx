@@ -228,8 +228,8 @@ export function MetricasHistoricasView({ proyectos }) {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Métricas Históricas</h1>
-          <p className="text-gray-500">Evolución del avance de todos los proyectos</p>
+          <h1 className="text-2xl font-bold text-white">Métricas Históricas</h1>
+          <p className="text-white/50">Evolución del avance de todos los proyectos</p>
         </div>
         <div className="flex items-center gap-2">
           {/* Botón Exportar Excel */}
@@ -268,45 +268,45 @@ export function MetricasHistoricasView({ proyectos }) {
 
       {/* KPIs Totales */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border border-orange-200">
+        <div className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 rounded-xl p-4 border border-orange-500/30">
           <div className="flex items-center gap-2 text-orange-600 mb-2">
             <Shovel className="h-5 w-5" />
             <span className="text-sm font-medium">Excavación Total</span>
           </div>
-          <div className="text-2xl font-bold text-orange-700">{totales.volumen.toLocaleString()} m³</div>
+          <div className="text-2xl font-bold text-orange-300">{totales.volumen.toLocaleString()} m³</div>
         </div>
         
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+        <div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 rounded-xl p-4 border border-blue-500/30">
           <div className="flex items-center gap-2 text-blue-600 mb-2">
             <Box className="h-5 w-5" />
             <span className="text-sm font-medium">Pilas Totales</span>
           </div>
-          <div className="text-2xl font-bold text-blue-700">{totales.pilas.toLocaleString()}</div>
+          <div className="text-2xl font-bold text-blue-300">{totales.pilas.toLocaleString()}</div>
         </div>
         
-        <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-4 border border-teal-200">
+        <div className="bg-gradient-to-br from-teal-500/10 to-teal-500/5 rounded-xl p-4 border border-teal-500/30">
           <div className="flex items-center gap-2 text-teal-600 mb-2">
             <Anchor className="h-5 w-5" />
             <span className="text-sm font-medium">Anclas Totales</span>
           </div>
-          <div className="text-2xl font-bold text-teal-700">{totales.anclas.toLocaleString()}</div>
+          <div className="text-2xl font-bold text-teal-300">{totales.anclas.toLocaleString()}</div>
         </div>
         
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+        <div className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 rounded-xl p-4 border border-purple-500/30">
           <div className="flex items-center gap-2 text-purple-600 mb-2">
             <Columns3 className="h-5 w-5" />
             <span className="text-sm font-medium">Muros Totales</span>
           </div>
-          <div className="text-2xl font-bold text-purple-700">{totales.muros.toLocaleString()}</div>
+          <div className="text-2xl font-bold text-purple-300">{totales.muros.toLocaleString()}</div>
         </div>
       </div>
 
       {/* Filtros y Selector de Vista */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+      <div className="bg-[#15151B] rounded-xl shadow-sm border border-white/10 p-4">
         <div className="flex flex-col md:flex-row gap-4 justify-between">
           {/* Selector de proyectos */}
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Proyectos a mostrar:</label>
+            <label className="block text-sm font-medium text-white/80 mb-2">Proyectos a mostrar:</label>
             <div className="flex flex-wrap gap-2">
               {proyectos.map((p, idx) => (
                 <button
@@ -315,7 +315,7 @@ export function MetricasHistoricasView({ proyectos }) {
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                     selectedProyectos.includes(p.id)
                       ? 'text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-[#15151B] text-white/60 hover:bg-[#1F1F26]'
                   }`}
                   style={{
                     backgroundColor: selectedProyectos.includes(p.id) ? COLORS[idx % COLORS.length] : undefined
@@ -329,14 +329,14 @@ export function MetricasHistoricasView({ proyectos }) {
           
           {/* Selector de vista */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Métrica:</label>
+            <label className="block text-sm font-medium text-white/80 mb-2">Métrica:</label>
             <div className="flex gap-2">
               <button
                 onClick={() => setViewMode('avance')}
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   viewMode === 'avance' 
                     ? 'bg-[#994B49] text-white' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-[#15151B] text-white/60 hover:bg-[#1F1F26]'
                 }`}
               >
                 Avance Total
@@ -346,7 +346,7 @@ export function MetricasHistoricasView({ proyectos }) {
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   viewMode === 'excavacion' 
                     ? 'bg-orange-500 text-white' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-[#15151B] text-white/60 hover:bg-[#1F1F26]'
                 }`}
               >
                 Excavación
@@ -356,7 +356,7 @@ export function MetricasHistoricasView({ proyectos }) {
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   viewMode === 'cimentacion' 
                     ? 'bg-blue-500 text-white' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-[#15151B] text-white/60 hover:bg-[#1F1F26]'
                 }`}
               >
                 Cimentación
@@ -366,7 +366,7 @@ export function MetricasHistoricasView({ proyectos }) {
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   viewMode === 'edificacion' 
                     ? 'bg-purple-500 text-white' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-[#15151B] text-white/60 hover:bg-[#1F1F26]'
                 }`}
               >
                 Edificación
@@ -377,11 +377,11 @@ export function MetricasHistoricasView({ proyectos }) {
       </div>
 
       {/* Gráfica Principal - Evolución */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+      <div className="bg-[#15151B] rounded-xl shadow-sm border border-white/10 p-6">
+        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-[#994B49]" />
           Evolución del Avance por Semana
-          <span className="text-sm font-normal text-gray-500 ml-2">
+          <span className="text-sm font-normal text-white/50 ml-2">
             ({viewMode === 'avance' ? 'Avance Total %' : 
               viewMode === 'excavacion' ? 'Volumen %' :
               viewMode === 'cimentacion' ? 'Pilas/Anclas %' : 'Muros %'})
@@ -403,22 +403,22 @@ export function MetricasHistoricasView({ proyectos }) {
                   </linearGradient>
                 ))}
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
               <XAxis 
                 dataKey="semana" 
                 tick={{ fontSize: 12 }}
-                stroke="#9ca3af"
+                stroke="rgba(255,255,255,0.5)"
               />
               <YAxis 
                 tick={{ fontSize: 12 }}
-                stroke="#9ca3af"
+                stroke="rgba(255,255,255,0.5)"
                 domain={[0, 100]}
                 tickFormatter={(value) => `${value}%`}
               />
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: '1px solid #e5e5e5',
+                  backgroundColor: '#15151B', color: 'white', 
+                  border: '1px solid rgba(255,255,255,0.1)',
                   borderRadius: '8px',
                   boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
                 }}
@@ -438,15 +438,15 @@ export function MetricasHistoricasView({ proyectos }) {
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-80 flex items-center justify-center text-gray-500">
+          <div className="h-80 flex items-center justify-center text-white/50">
             Selecciona al menos un proyecto para ver las métricas
           </div>
         )}
       </div>
 
       {/* Gráfica de Barras - Comparativa por Proyecto */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+      <div className="bg-[#15151B] rounded-xl shadow-sm border border-white/10 p-6">
+        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <Building2 className="h-5 w-5 text-[#994B49]" />
           Comparativa de Avance Actual por Proyecto
         </h3>
@@ -460,7 +460,7 @@ export function MetricasHistoricasView({ proyectos }) {
             }))}
             layout="vertical"
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
             <XAxis type="number" domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
             <YAxis type="category" dataKey="nombre" width={120} tick={{ fontSize: 12 }} />
             <Tooltip formatter={(value) => [`${value.toFixed(1)}%`, 'Avance']} />
@@ -474,42 +474,42 @@ export function MetricasHistoricasView({ proyectos }) {
       </div>
 
       {/* Tabla de Detalle */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-          <h3 className="text-lg font-semibold text-gray-900">Detalle por Proyecto</h3>
+      <div className="bg-[#15151B] rounded-xl shadow-sm border border-white/10 overflow-hidden">
+        <div className="px-6 py-4 border-b border-white/10 bg-[#0F0F14]">
+          <h3 className="text-lg font-semibold text-white">Detalle por Proyecto</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-[#0F0F14] border-b border-white/10">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Proyecto</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Avance</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white/50 uppercase">Proyecto</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-white/50 uppercase">Avance</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-orange-500 uppercase">Excavación</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-blue-500 uppercase">Pilas</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-teal-500 uppercase">Anclas</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-purple-500 uppercase">Muros</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Semanas</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-white/50 uppercase">Semanas</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-white/5">
               {proyectos.filter(p => selectedProyectos.includes(p.id)).map((proyecto, idx) => {
                 const lastData = historicalData.filter(d => d.proyectoId === proyecto.id).slice(-1)[0] || {};
                 return (
-                  <tr key={proyecto.id} className="hover:bg-gray-50">
+                  <tr key={proyecto.id} className="hover:bg-[#0F0F14]">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <div 
                           className="w-3 h-3 rounded-full" 
                           style={{ backgroundColor: COLORS[idx % COLORS.length] }}
                         />
-                        <span className="font-medium text-gray-900">{proyecto.nombre}</span>
+                        <span className="font-medium text-white">{proyecto.nombre}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        (proyecto.avance_actual || 0) >= 75 ? 'bg-green-100 text-green-700' :
-                        (proyecto.avance_actual || 0) >= 50 ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-red-100 text-red-700'
+                        (proyecto.avance_actual || 0) >= 75 ? 'bg-green-500/15 text-green-300' :
+                        (proyecto.avance_actual || 0) >= 50 ? 'bg-yellow-500/15 text-yellow-300' :
+                        'bg-red-500/15 text-red-300'
                       }`}>
                         {(proyecto.avance_actual || 0).toFixed(1)}%
                       </span>
@@ -526,7 +526,7 @@ export function MetricasHistoricasView({ proyectos }) {
                     <td className="px-6 py-4 text-right font-mono text-sm">
                       {lastData.muros || 0} / {proyecto.muros_planeados || 0}
                     </td>
-                    <td className="px-6 py-4 text-right font-mono text-sm text-gray-500">
+                    <td className="px-6 py-4 text-right font-mono text-sm text-white/50">
                       {lastData.semana || 0}
                     </td>
                   </tr>

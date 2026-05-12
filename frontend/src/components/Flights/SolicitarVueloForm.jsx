@@ -56,18 +56,18 @@ export function SolicitarVueloForm({ onSuccess }) {
 
   if (sent) {
     return (
-      <div className="bg-white rounded-2xl shadow-lg p-8 max-w-xl mx-auto text-center">
-        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="bg-[#15151B] rounded-2xl shadow-lg p-8 max-w-xl mx-auto text-center">
+        <div className="w-20 h-20 bg-green-500/15 rounded-full flex items-center justify-center mx-auto mb-6">
           <CheckCircle className="h-10 w-10 text-green-600" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-3">¡Solicitud Enviada!</h2>
-        <p className="text-gray-600 mb-6">
+        <h2 className="text-2xl font-bold text-white mb-3">¡Solicitud Enviada!</h2>
+        <p className="text-white/60 mb-6">
           Tu solicitud de vuelo ha sido enviada correctamente. 
           Nos pondremos en contacto contigo para confirmar la fecha.
         </p>
-        <div className="bg-gray-50 rounded-lg p-4 mb-6">
-          <p className="text-sm text-gray-500">Detalles de la solicitud:</p>
-          <p className="font-semibold text-gray-900">{formData.nombre_proyecto}</p>
+        <div className="bg-[#0F0F14] rounded-lg p-4 mb-6">
+          <p className="text-sm text-white/50">Detalles de la solicitud:</p>
+          <p className="font-semibold text-white">{formData.nombre_proyecto}</p>
           <p className="text-[#994B49]">{formData.fecha_vuelo_deseada} {formData.hora_preferencia && `a las ${formData.hora_preferencia}`}</p>
         </div>
         <button
@@ -81,11 +81,11 @@ export function SolicitarVueloForm({ onSuccess }) {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden max-w-xl mx-auto">
+    <div className="bg-[#15151B] rounded-2xl shadow-lg overflow-hidden max-w-xl mx-auto">
       {/* Header */}
       <div className="bg-[#994B49] text-white px-6 py-5">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+          <div className="w-12 h-12 bg-[#15151B]/20 rounded-lg flex items-center justify-center">
             <Plane className="h-6 w-6" />
           </div>
           <div>
@@ -98,14 +98,14 @@ export function SolicitarVueloForm({ onSuccess }) {
       {/* Form */}
       <form onSubmit={handleSubmit} className="p-6 space-y-5">
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          <div className="bg-red-500/10 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg text-sm">
             {error}
           </div>
         )}
 
         {/* Nombre del Proyecto */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-white/80 mb-2">
             <FileText className="h-4 w-4 inline mr-2 text-[#994B49]" />
             Nombre del Proyecto *
           </label>
@@ -116,7 +116,7 @@ export function SolicitarVueloForm({ onSuccess }) {
             onChange={handleChange}
             required
             placeholder="Ej: Construcción Plaza Norte"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49] focus:border-transparent transition-all"
+            className="w-full px-4 py-3 border border-white/15 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49] focus:border-transparent transition-all"
             data-testid="solicitud-nombre-input"
           />
         </div>
@@ -124,7 +124,7 @@ export function SolicitarVueloForm({ onSuccess }) {
         {/* Fechas del Proyecto */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-white/80 mb-2">
               <Calendar className="h-4 w-4 inline mr-2 text-[#994B49]" />
               Inicio del Proyecto *
             </label>
@@ -134,12 +134,12 @@ export function SolicitarVueloForm({ onSuccess }) {
               value={formData.fecha_inicio_proyecto}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49] focus:border-transparent transition-all"
+              className="w-full px-4 py-3 border border-white/15 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49] focus:border-transparent transition-all"
               data-testid="solicitud-fecha-inicio-input"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-white/80 mb-2">
               <Calendar className="h-4 w-4 inline mr-2 text-[#994B49]" />
               Fin del Proyecto *
             </label>
@@ -149,33 +149,33 @@ export function SolicitarVueloForm({ onSuccess }) {
               value={formData.fecha_fin_proyecto}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49] focus:border-transparent transition-all"
+              className="w-full px-4 py-3 border border-white/15 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49] focus:border-transparent transition-all"
               data-testid="solicitud-fecha-fin-input"
             />
           </div>
         </div>
 
         {/* Fecha y Hora del Vuelo */}
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <h3 className="font-medium text-amber-800 mb-3 flex items-center">
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+          <h3 className="font-medium text-amber-300 mb-3 flex items-center">
             <Plane className="h-4 w-4 mr-2" />
             Fecha deseada para el vuelo
           </h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Fecha *</label>
+              <label className="block text-sm text-white/60 mb-1">Fecha *</label>
               <input
                 type="date"
                 name="fecha_vuelo_deseada"
                 value={formData.fecha_vuelo_deseada}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49] focus:border-transparent transition-all bg-white"
+                className="w-full px-4 py-3 border border-white/15 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49] focus:border-transparent transition-all bg-[#15151B]"
                 data-testid="solicitud-fecha-vuelo-input"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">
+              <label className="block text-sm text-white/60 mb-1">
                 <Clock className="h-3 w-3 inline mr-1" />
                 Hora preferida
               </label>
@@ -184,7 +184,7 @@ export function SolicitarVueloForm({ onSuccess }) {
                 name="hora_preferencia"
                 value={formData.hora_preferencia}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49] focus:border-transparent transition-all bg-white"
+                className="w-full px-4 py-3 border border-white/15 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49] focus:border-transparent transition-all bg-[#15151B]"
                 data-testid="solicitud-hora-input"
               />
             </div>
@@ -193,7 +193,7 @@ export function SolicitarVueloForm({ onSuccess }) {
 
         {/* Notas */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-white/80 mb-2">
             📝 Notas y Peticiones Específicas
           </label>
           <textarea
@@ -202,7 +202,7 @@ export function SolicitarVueloForm({ onSuccess }) {
             onChange={handleChange}
             rows={4}
             placeholder="Describe cualquier requerimiento especial, áreas específicas a cubrir, restricciones de horario, etc."
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49] focus:border-transparent transition-all resize-none"
+            className="w-full px-4 py-3 border border-white/15 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49] focus:border-transparent transition-all resize-none"
             data-testid="solicitud-notas-input"
           />
         </div>
@@ -227,7 +227,7 @@ export function SolicitarVueloForm({ onSuccess }) {
           )}
         </button>
 
-        <p className="text-xs text-gray-500 text-center">
+        <p className="text-xs text-white/50 text-center">
           Al enviar esta solicitud, recibirás una confirmación por parte de nuestro equipo.
         </p>
       </form>

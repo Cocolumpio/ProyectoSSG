@@ -291,7 +291,7 @@ export function PointCloudViewer({ modelUrl, onError }) {
       {/* Loading overlay */}
       {loading && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1a1a2e]/90">
-          <div className="w-64 h-3 bg-gray-700 rounded-full overflow-hidden">
+          <div className="w-64 h-3 bg-[#2A2A33] rounded-full overflow-hidden">
             <div 
               className="h-full bg-gradient-to-r from-[#994B49] to-[#B85C5A] transition-all duration-300"
               style={{ width: `${progress}%` }}

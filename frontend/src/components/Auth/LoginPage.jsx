@@ -31,7 +31,7 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-gray-200 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#0B0B0F] via-[#0F0F14] to-[#15151B] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -39,19 +39,20 @@ export function LoginPage() {
             src="/logo-dron.png" 
             alt="DrON Topografía" 
             className="h-28 w-auto mx-auto mb-4"
+            style={{ filter: 'brightness(0) invert(1)' }}
           />
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h2 className="text-2xl font-semibold text-gray-900 text-center mb-6">
+        <div className="bg-[#15151B] rounded-2xl shadow-xl p-8">
+          <h2 className="text-2xl font-semibold text-white text-center mb-6">
             {isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Nombre completo
                 </label>
                 <input
@@ -59,7 +60,7 @@ export function LoginPage() {
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
                   required={!isLogin}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49] focus:border-transparent"
+                  className="w-full px-4 py-3 border border-white/15 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49] focus:border-transparent"
                   placeholder="Tu nombre"
                   data-testid="register-nombre-input"
                 />
@@ -67,7 +68,7 @@ export function LoginPage() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-white/80 mb-1">
                 Correo electrónico
               </label>
               <input
@@ -75,14 +76,14 @@ export function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49] focus:border-transparent"
+                className="w-full px-4 py-3 border border-white/15 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49] focus:border-transparent"
                 placeholder="correo@ejemplo.com"
                 data-testid="login-email-input"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-white/80 mb-1">
                 Contraseña
               </label>
               <div className="relative">
@@ -92,14 +93,14 @@ export function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49] focus:border-transparent pr-12"
+                  className="w-full px-4 py-3 border border-white/15 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49] focus:border-transparent pr-12"
                   placeholder="••••••••"
                   data-testid="login-password-input"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -107,7 +108,7 @@ export function LoginPage() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-500/10 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg text-sm">
                 {error}
               </div>
             )}

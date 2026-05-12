@@ -63,23 +63,23 @@ export function AnalisisFotoIA({ avanceId, proyectoId, semana, onAnalisisComplet
   const getEstadoColor = (estado) => {
     switch (estado) {
       case 'ADELANTADO':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-green-500/15 text-green-300 border-green-500/30';
       case 'RETRASADO':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-red-500/15 text-red-300 border-red-500/30';
       default:
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-blue-500/15 text-blue-300 border-blue-500/30';
     }
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
+    <div className="bg-[#15151B] rounded-xl shadow-lg p-6">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-purple-100 rounded-lg">
+        <div className="p-3 bg-purple-500/15 rounded-lg">
           <Eye className="h-6 w-6 text-purple-600" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-gray-900">Análisis con IA</h3>
-          <p className="text-sm text-gray-500">Detecta pilas y anclas automáticamente</p>
+          <h3 className="text-lg font-bold text-white">Análisis con IA</h3>
+          <p className="text-sm text-white/50">Detecta pilas y anclas automáticamente</p>
         </div>
       </div>
 
@@ -87,7 +87,7 @@ export function AnalisisFotoIA({ avanceId, proyectoId, semana, onAnalisisComplet
       <div className="mb-6">
         <label className="block cursor-pointer">
           <div className={`border-2 border-dashed rounded-xl overflow-hidden transition-colors
-            ${imagenPreview ? 'border-purple-400' : 'border-gray-300 hover:border-purple-400'}`}>
+            ${imagenPreview ? 'border-purple-400' : 'border-white/15 hover:border-purple-400'}`}>
             {imagenPreview ? (
               <div className="relative">
                 <img 
@@ -101,9 +101,9 @@ export function AnalisisFotoIA({ avanceId, proyectoId, semana, onAnalisisComplet
               </div>
             ) : (
               <div className="p-8 text-center">
-                <Camera className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600">Sube una foto aérea del sitio</p>
-                <p className="text-xs text-gray-400 mt-1">JPG, PNG (máx 10MB)</p>
+                <Camera className="h-12 w-12 text-white/40 mx-auto mb-3" />
+                <p className="text-white/60">Sube una foto aérea del sitio</p>
+                <p className="text-xs text-white/40 mt-1">JPG, PNG (máx 10MB)</p>
               </div>
             )}
           </div>
@@ -139,8 +139,8 @@ export function AnalisisFotoIA({ avanceId, proyectoId, semana, onAnalisisComplet
 
       {/* Error */}
       {error && (
-        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-700 text-sm">{error}</p>
+        <div className="mt-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+          <p className="text-red-300 text-sm">{error}</p>
         </div>
       )}
 
@@ -164,14 +164,14 @@ export function AnalisisFotoIA({ avanceId, proyectoId, semana, onAnalisisComplet
 
           {/* Métricas */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+            <div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 rounded-lg p-4 border border-blue-500/30">
               <div className="flex items-center gap-2 mb-2">
                 <div className="p-2 bg-blue-500 rounded-lg">
                   <CheckCircle className="h-4 w-4 text-white" />
                 </div>
-                <span className="text-sm font-medium text-blue-800">Pilas Detectadas</span>
+                <span className="text-sm font-medium text-blue-300">Pilas Detectadas</span>
               </div>
-              <p className="text-3xl font-bold text-blue-700">{resultado.pilas_detectadas}</p>
+              <p className="text-3xl font-bold text-blue-300">{resultado.pilas_detectadas}</p>
               {resultado.pilas_en_proceso > 0 && (
                 <p className="text-xs text-blue-600 mt-1">
                   +{resultado.pilas_en_proceso} en proceso
@@ -179,26 +179,26 @@ export function AnalisisFotoIA({ avanceId, proyectoId, semana, onAnalisisComplet
               )}
             </div>
 
-            <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-4 border border-amber-200">
+            <div className="bg-gradient-to-br from-amber-500/10 to-amber-500/5 rounded-lg p-4 border border-amber-500/30">
               <div className="flex items-center gap-2 mb-2">
                 <div className="p-2 bg-amber-500 rounded-lg">
                   <Anchor className="h-4 w-4 text-white" />
                 </div>
-                <span className="text-sm font-medium text-amber-800">Anclas Detectadas</span>
+                <span className="text-sm font-medium text-amber-300">Anclas Detectadas</span>
               </div>
-              <p className="text-3xl font-bold text-amber-700">{resultado.anclas_detectadas}</p>
+              <p className="text-3xl font-bold text-amber-300">{resultado.anclas_detectadas}</p>
             </div>
           </div>
 
           {/* Porcentaje de Avance */}
-          <div className="bg-gray-50 rounded-lg p-4">
+          <div className="bg-[#0F0F14] rounded-lg p-4">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-gray-700">Avance Estimado por IA</span>
+              <span className="text-sm font-medium text-white/80">Avance Estimado por IA</span>
               <span className="text-lg font-bold text-[#994B49]">
                 {resultado.porcentaje_avance_estimado}%
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
+            <div className="w-full bg-[#1F1F26] rounded-full h-3">
               <div 
                 className="bg-[#994B49] h-3 rounded-full transition-all duration-500"
                 style={{ width: `${Math.min(resultado.porcentaje_avance_estimado, 100)}%` }}
@@ -208,20 +208,20 @@ export function AnalisisFotoIA({ avanceId, proyectoId, semana, onAnalisisComplet
 
           {/* Observaciones */}
           {resultado.observaciones && (
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-gray-700 mb-2">Observaciones</h4>
-              <p className="text-sm text-gray-600">{resultado.observaciones}</p>
+            <div className="bg-[#0F0F14] rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-white/80 mb-2">Observaciones</h4>
+              <p className="text-sm text-white/60">{resultado.observaciones}</p>
             </div>
           )}
 
           {/* Recomendaciones */}
           {resultado.recomendaciones && (
-            <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-              <h4 className="text-sm font-semibold text-amber-800 mb-2 flex items-center gap-2">
+            <div className="bg-amber-500/10 rounded-lg p-4 border border-amber-500/30">
+              <h4 className="text-sm font-semibold text-amber-300 mb-2 flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4" />
                 Recomendaciones
               </h4>
-              <p className="text-sm text-amber-700">{resultado.recomendaciones}</p>
+              <p className="text-sm text-amber-300">{resultado.recomendaciones}</p>
             </div>
           )}
 
@@ -232,7 +232,7 @@ export function AnalisisFotoIA({ avanceId, proyectoId, semana, onAnalisisComplet
               setImagenPreview(null);
               setResultado(null);
             }}
-            className="w-full py-2 text-purple-600 hover:text-purple-700 text-sm"
+            className="w-full py-2 text-purple-600 hover:text-purple-300 text-sm"
           >
             Analizar otra imagen
           </button>
