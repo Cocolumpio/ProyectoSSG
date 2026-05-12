@@ -136,11 +136,12 @@ export function LandingPage() {
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-10 flex items-center justify-between">
           <a href="#top" className="flex items-center gap-2" data-testid="landing-logo">
-            <div className="w-9 h-9 rounded-lg bg-[#994B49] grid place-items-center shadow-lg shadow-[#994B49]/30">
-              <Plane className="h-5 w-5 -rotate-12 text-white" />
-            </div>
-            <span className="font-bold text-lg tracking-tight">DrON<span className="text-[#E07A5F]">.</span></span>
-            <span className="hidden sm:inline text-xs uppercase tracking-[0.2em] text-white/40 ml-2">Topografía</span>
+            <img
+              src="/logo-dron-dark.png"
+              alt="DrON Topografía"
+              className="h-10 sm:h-12 w-auto"
+              style={{ filter: 'brightness(0) invert(1)' }}
+            />
           </a>
 
           <div className="hidden md:flex items-center gap-7 text-sm text-white/70">
@@ -826,10 +827,12 @@ export function LandingPage() {
       <footer className="border-t border-white/5 py-12 px-6 lg:px-10">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#994B49] grid place-items-center">
-              <Plane className="h-4 w-4 -rotate-12 text-white" />
-            </div>
-            <span className="font-bold tracking-tight">DrON Topografía</span>
+            <img
+              src="/logo-dron-dark.png"
+              alt="DrON Topografía"
+              className="h-8 w-auto opacity-80"
+              style={{ filter: 'brightness(0) invert(1)' }}
+            />
             <span className="text-white/30 text-xs ml-2">© 2026</span>
           </div>
           <div className="flex items-center gap-6 text-xs text-white/40">
