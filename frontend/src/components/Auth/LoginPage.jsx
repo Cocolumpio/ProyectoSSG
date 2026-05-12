@@ -38,7 +38,7 @@ export function LoginPage() {
           <img 
             src="/logo-dron.png" 
             alt="DrON Topografía" 
-            className="h-20 w-auto mx-auto mb-4"
+            className="h-28 w-auto mx-auto mb-4"
           />
         </div>
 
