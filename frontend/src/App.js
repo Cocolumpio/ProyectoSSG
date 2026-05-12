@@ -3,10 +3,14 @@ import axios from 'axios';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Plane, CalendarPlus, LogOut, User, ClipboardList, Users } from 'lucide-react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
 // Auth
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginPage } from './components/Auth/LoginPage';
+
+// Landing
+import { LandingPage } from './components/Landing/LandingPage';
 
 // Componentes refactorizados
 import { DashboardView } from './components/Dashboard/DashboardView';
@@ -34,6 +38,11 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 function AppContent() {
   const { user, isAdmin, isAuthenticated, loading, logout } = useAuth();
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
   const [activeView, setActiveView] = useState('dashboard');
   const [proyectos, setProyectos] = useState([]);
   const [vuelos, setVuelos] = useState([]);
@@ -248,7 +257,7 @@ function AppContent() {
                 <span className="text-gray-600">{user?.nombre}</span>
               </div>
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                 title="Cerrar sesión"
                 data-testid="logout-btn"
@@ -516,9 +525,15 @@ function VuelosViewReadOnly({ vuelos, proyectos }) {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/app/*" element={<AppContent />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
