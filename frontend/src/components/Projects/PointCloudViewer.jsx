@@ -111,6 +111,12 @@ export function PointCloudViewer({ modelUrl, onError }) {
           //
           // Strategy: compute robust bounding box from percentiles (1%-99%)
           // of point coordinates and center the geometry on the robust center.
+          //
+          // GEO-PROJECTION: Some PLYs (e.g., from Pix4D with WGS84 output)
+          // store coordinates as decimal degrees (lon/lat) + meters (alt).
+          // In that case X/Y are effectively flat (~0.01 deg) while Z spans
+          // many meters → the model collapses to a vertical line. We detect
+          // this and project lon/lat to local meters using equirectangular.
           // ============================================================
           const positions = geometry.getAttribute('position').array;
           const numPts = positions.length / 3;
@@ -134,10 +140,48 @@ export function PointCloudViewer({ modelUrl, onError }) {
           const sortedY = Array.from(ys.slice(0, sIdx)).sort(sortFn);
           const sortedZ = Array.from(zs.slice(0, sIdx)).sort(sortFn);
           const pct = (arr, p) => arr[Math.floor(arr.length * p)];
-          // Use 1-99 percentile (trims 1% outliers per side per axis)
-          const minX = pct(sortedX, 0.01), maxX = pct(sortedX, 0.99);
-          const minY = pct(sortedY, 0.01), maxY = pct(sortedY, 0.99);
-          const minZ = pct(sortedZ, 0.01), maxZ = pct(sortedZ, 0.99);
+          let minX = pct(sortedX, 0.01), maxX = pct(sortedX, 0.99);
+          let minY = pct(sortedY, 0.01), maxY = pct(sortedY, 0.99);
+          let minZ = pct(sortedZ, 0.01), maxZ = pct(sortedZ, 0.99);
+          
+          // ---- Detect geographic coordinates (lon/lat in decimal degrees) ----
+          // Heuristic: X in [-180,180], Y in [-90,90], and rangeXY << rangeZ
+          const rangeX = maxX - minX;
+          const rangeY = maxY - minY;
+          const rangeZ = maxZ - minZ;
+          const looksGeographic =
+            Math.abs(maxX) <= 180 && Math.abs(minX) <= 180 &&
+            Math.abs(maxY) <= 90  && Math.abs(minY) <= 90  &&
+            rangeX < 1 && rangeY < 1 &&
+            rangeZ > Math.max(rangeX, rangeY) * 50;
+          
+          let isGeo = false;
+          if (looksGeographic) {
+            isGeo = true;
+            console.warn('Detected GEOGRAPHIC coordinates (lon/lat degrees). Projecting to local meters.');
+            const lat0 = (minY + maxY) / 2;
+            const cosLat = Math.cos((lat0 * Math.PI) / 180);
+            const M_PER_DEG_LAT = 110540;       // meters per degree of latitude
+            const M_PER_DEG_LON = 111320 * cosLat; // meters per degree of longitude at lat0
+            // Project ALL points in-place: X = (lon - lon0) * M_per_deg_lon
+            const lon0 = (minX + maxX) / 2;
+            for (let i = 0; i < numPts; i++) {
+              positions[i * 3]     = (positions[i * 3]     - lon0) * M_PER_DEG_LON;
+              positions[i * 3 + 1] = (positions[i * 3 + 1] - lat0) * M_PER_DEG_LAT;
+              // Z (altitude in meters) stays as-is, but we will re-center below
+            }
+            // Re-compute percentiles AFTER projection (X,Y are now in meters)
+            sIdx = 0;
+            for (let i = 0; i < numPts; i += step) {
+              xs[sIdx] = positions[i * 3];
+              ys[sIdx] = positions[i * 3 + 1];
+              sIdx++;
+            }
+            const sX = Array.from(xs.slice(0, sIdx)).sort(sortFn);
+            const sY = Array.from(ys.slice(0, sIdx)).sort(sortFn);
+            minX = pct(sX, 0.01); maxX = pct(sX, 0.99);
+            minY = pct(sY, 0.01); maxY = pct(sY, 0.99);
+          }
           
           const robustCenter = new THREE.Vector3(
             (minX + maxX) / 2,
@@ -152,6 +196,7 @@ export function PointCloudViewer({ modelUrl, onError }) {
           const maxDim = Math.max(robustSize.x, robustSize.y, robustSize.z) || 1;
           
           console.log('Robust bounding box (1-99 percentile):', {
+            isGeographic: isGeo,
             min: { x: minX, y: minY, z: minZ },
             max: { x: maxX, y: maxY, z: maxZ },
             center: robustCenter,
