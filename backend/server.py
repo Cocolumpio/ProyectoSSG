@@ -232,6 +232,11 @@ class AvanceSemanal(BaseModel):
     anclas_instaladas: Optional[int] = None  # Anclas instaladas en esta semana
     muros_completados: Optional[int] = None  # Muros completados en esta semana
     imagenes: List[str] = []  # URLs de las imágenes del vuelo
+    # ---- DEM Volumetría ----
+    dem_gridfs_id: Optional[str] = None  # GridFS ID del DEM TIFF
+    dem_filename: Optional[str] = None
+    dem_uploaded_at: Optional[str] = None
+    dem_metadata: Optional[dict] = None  # crs, bounds, resolution, etc.
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class AvanceSemanalCreate(BaseModel):
@@ -2065,6 +2070,7 @@ from routes import (
     cronograma as routes_cronograma,
     maquinaria_ia as routes_maquinaria_ia,
     analisis_ia as routes_analisis_ia,
+    dem_volumetry as routes_dem_volumetry,
 )
 app.include_router(routes_comparaciones.router)
 app.include_router(routes_exportar.router)
@@ -2073,6 +2079,7 @@ app.include_router(routes_solicitudes_vuelo.router)
 app.include_router(routes_cronograma.router)
 app.include_router(routes_maquinaria_ia.router)
 app.include_router(routes_analisis_ia.router)
+app.include_router(routes_dem_volumetry.router)
 
 app.add_middleware(
     CORSMiddleware,

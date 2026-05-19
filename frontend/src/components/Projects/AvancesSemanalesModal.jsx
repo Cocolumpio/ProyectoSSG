@@ -5,6 +5,7 @@ import { Database, Upload, Plus, Trash2, Calendar, Layers, X, Download, Image, F
 import { PointCloudViewer } from './PointCloudViewer';
 import { AnalisisFotoIA } from './AnalisisFotoIA';
 import { ComparacionAvanceModal } from './ComparacionAvanceModal';
+import { DEMVolumetrySection } from './DEMVolumetrySection';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -1509,6 +1510,25 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                       )}
                     </div>
                   </div>
+                </div>
+
+                {/* Volumetría DEM (TIFF) */}
+                <div className="p-2 sm:p-4">
+                  <DEMVolumetrySection
+                    proyecto={proyecto}
+                    avances={avances}
+                    selectedAvance={selectedAvance}
+                    readOnly={readOnly}
+                    onShowSuccess={onShowSuccess}
+                    onProyectoUpdated={(updated) => {
+                      // Mutate parent's reference so re-render sees terreno_original now exists
+                      Object.assign(proyecto, updated);
+                    }}
+                    onAvanceUpdated={(updated) => {
+                      setAvances(avances.map(a => a.id === updated.id ? updated : a));
+                      setSelectedAvance(updated);
+                    }}
+                  />
                 </div>
 
                 {/* Galería de Imágenes */}

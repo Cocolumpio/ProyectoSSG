@@ -1,9 +1,24 @@
 # DrON Topografía - Product Requirements Document
 
-## Estado Actual (Actualizado: 2026-02-11)
+## Estado Actual (Actualizado: 2026-02-19)
 - **Sistema Funcional**: Dashboard multi-fase completamente operativo
-- **IA 100% Funcional**: Catálogo de Maquinaria + Análisis de Fotos
-- **🆕 Arquitectura Modular**: Refactor P0 completado — server.py reducido de 5089 → 2493 líneas
+- **IA 100% Funcional**: Catálogo de Maquinaria + Análisis de Fotos + Volumetría DEM
+- **🆕 Volumetría DEM (TIFF)**: Cálculo retiro/relleno con heatmap + interpretación IA
+- **🆕 Landing page** pública en `/`, dark mode completo en `/app/*`
+- **Arquitectura Modular**: server.py 5089 → 2475 líneas, 8 routers modulares
+
+## Volumetría DEM (Feb 2026)
+Nueva funcionalidad para calcular volumen de material retirado/rellenado entre semanas:
+
+**Backend**:
+- `services/dem_volumetry.py`: cálculo con rasterio + numpy, reproyección a grilla común, percentiles para outliers, heatmap matplotlib (rojo=retiro, azul=relleno), interpretación con Gemini.
+- `routes/dem_volumetry.py`: 8 endpoints (subir/eliminar DEM avance, subir DEM terreno original al proyecto, calcular volumetría, listar/eliminar comparaciones, servir heatmap PNG, interpretar IA).
+- Modelos: `AvanceSemanal.dem_gridfs_id` + `dem_metadata`, `Proyecto.dem_terreno_original_gridfs_id`, colección `comparaciones_dem`.
+
+**Frontend**:
+- `components/Projects/DEMVolumetrySection.jsx`: UI completa dentro del modal de Avances Semanales — subida de DEM semanal + terreno original, dropdown para elegir contra qué comparar (cualquier avance con DEM o terreno original), tarjetas grandes con Retirado/Rellenado/Neto, heatmap PNG, texto IA opcional, vista de comparaciones previas.
+
+**Resultado de prueba**: validado con DEMs sintéticos — calculó 4500 m³ retirado / 25 m³ rellenado / -4475 m³ neto con precisión perfecta.
 
 ## Refactor P0 Completado (2026-02-11)
 Se extrajeron 7 bloques cohesivos del monolito `server.py` (5089 líneas) hacia routers modulares en `/app/backend/routes/`:
