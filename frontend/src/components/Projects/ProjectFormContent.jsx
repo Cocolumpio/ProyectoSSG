@@ -214,7 +214,7 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
       </div>
 
       {/* Fases de Construcción */}
-      <div className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl p-4 border border-white/10">
+      <div className="bg-[#0F0F14] rounded-xl p-4 border border-white/10">
         <div className="flex items-center gap-2 mb-3">
           <Building2 className="h-5 w-5 text-white/80" />
           <h4 className="font-semibold text-white">Fases de Construcción</h4>
@@ -266,7 +266,7 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
                       ...prev, 
                       volumen_total_planeado: parseFloat(e.target.value) || 0 
                     }))}
-                    className="w-full mt-1 px-3 py-1.5 text-sm border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                    className="w-full mt-1 px-3 py-1.5 text-sm border border-amber-500/40 rounded-lg focus:ring-2 focus:ring-amber-500"
                     placeholder="15051.07"
                     data-testid="project-volumen-planeado-input"
                   />
@@ -319,7 +319,7 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
                       ...prev, 
                       pilas_planeadas: parseInt(e.target.value) || 0 
                     }))}
-                    className="w-full mt-1 px-3 py-1.5 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full mt-1 px-3 py-1.5 text-sm border border-blue-500/40 rounded-lg focus:ring-2 focus:ring-blue-500"
                     placeholder="576"
                     data-testid="project-pilas-planeadas-input"
                   />
@@ -335,7 +335,7 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
                       ...prev, 
                       anclas_planeadas: parseInt(e.target.value) || 0 
                     }))}
-                    className="w-full mt-1 px-3 py-1.5 text-sm border border-teal-300 rounded-lg focus:ring-2 focus:ring-teal-500"
+                    className="w-full mt-1 px-3 py-1.5 text-sm border border-teal-500/40 rounded-lg focus:ring-2 focus:ring-teal-500"
                     placeholder="464"
                     data-testid="project-anclas-planeadas-input"
                   />
@@ -388,7 +388,7 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
                       ...prev, 
                       muros_planeados: parseInt(e.target.value) || 0 
                     }))}
-                    className="w-full mt-1 px-3 py-1.5 text-sm border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full mt-1 px-3 py-1.5 text-sm border border-purple-500/40 rounded-lg focus:ring-2 focus:ring-purple-500"
                     placeholder="50"
                     data-testid="project-muros-planeados-input"
                   />
