@@ -6,6 +6,7 @@ import { PointCloudViewer } from './PointCloudViewer';
 import { AnalisisFotoIA } from './AnalisisFotoIA';
 import { ComparacionAvanceModal } from './ComparacionAvanceModal';
 import { DEMVolumetrySection } from './DEMVolumetrySection';
+import { ProgresionMetricaChart } from './ProgresionMetricaChart';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -1062,214 +1063,75 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                   </div>
                 </div>
 
-                {/* Gráfico de Progresión - Dinámico según tipo de actividad */}
-                {avances.length > 0 && (
-                  <div className="p-2 sm:p-4 flex-shrink-0">
-                    <div className="bg-[#15151B] rounded-xl p-3 sm:p-4 shadow-sm">
-                      {(() => {
-                        // Determinar tipo de métrica basado en actividades_tipo del proyecto
-                        const tipos = proyecto.actividades_tipo || [];
-                        let tipoMetrica = 'excavacion';
-                        let metaTotal = proyecto.volumen_total_planeado || 0;
-                        let campoReal = 'volumen_excavacion';
-                        let unidad = 'm³';
-                        let nombreMetrica = 'Excavación';
-                        let colorPrimario = '#994B49';
-                        let IconoMetrica = Shovel;
-                        
-                        // Prioridad: pilas > muros > anclas > excavacion
-                        if (tipos.includes('pilas') || proyecto.pilas_planeadas > 0) {
-                          tipoMetrica = 'pilas';
-                          metaTotal = proyecto.pilas_planeadas || 0;
-                          campoReal = 'pilas_completadas';
-                          unidad = 'pilas';
-                          nombreMetrica = 'Pilas';
-                          colorPrimario = '#2563EB';
-                          IconoMetrica = Columns3;
-                        } else if (tipos.includes('muros') || proyecto.muros_planeados > 0) {
-                          tipoMetrica = 'muros';
-                          metaTotal = proyecto.muros_planeados || 0;
-                          campoReal = 'muros_completados';
-                          unidad = 'muros';
-                          nombreMetrica = 'Muros';
-                          colorPrimario = '#7C3AED';
-                          IconoMetrica = Building2;
-                        } else if (tipos.includes('anclas') || proyecto.anclas_planeadas > 0) {
-                          tipoMetrica = 'anclas';
-                          metaTotal = proyecto.anclas_planeadas || 0;
-                          campoReal = 'anclas_instaladas';
-                          unidad = 'anclas';
-                          nombreMetrica = 'Anclas';
-                          colorPrimario = '#0D9488';
-                          IconoMetrica = Anchor;
-                        }
-                        
-                        // Calcular datos del gráfico con proyección
-                        const sortedAvances = [...avances].sort((a, b) => a.semana - b.semana);
-                        let acumulado = 0;
-                        const chartData = sortedAvances.map(a => {
-                          acumulado += (a[campoReal] || 0);
-                          return {
-                            semana: `Sem ${a.semana}`,
-                            semanaNum: a.semana,
-                            valor: a[campoReal] || 0,
-                            acumulado: acumulado,
-                            proyeccion: null
-                          };
-                        });
+                {/* Gráficos de Progresión - Uno por cada métrica activa */}
+                {avances.length > 0 && (() => {
+                  const tipos = proyecto.actividades_tipo || [];
+                  const fasesActivas = proyecto.fases || {};
+                  const metricas = [];
 
-                        // Calcular proyección si hay datos y meta
-                        const totalEjecutado = acumulado;
-                        const semanasConDatos = sortedAvances.filter(a => (a[campoReal] || 0) > 0).length;
-                        const ritmoSemanal = semanasConDatos > 0 ? totalEjecutado / semanasConDatos : 0;
-                        
-                        let semanasRestantes = 0;
-                        let semanaMeta = null;
-                        
-                        if (ritmoSemanal > 0 && metaTotal > 0 && totalEjecutado < metaTotal) {
-                          semanasRestantes = Math.ceil((metaTotal - totalEjecutado) / ritmoSemanal);
-                          const ultimaSemana = sortedAvances.length > 0 ? sortedAvances[sortedAvances.length - 1].semana : 0;
-                          semanaMeta = ultimaSemana + semanasRestantes;
-                          
-                          // Agregar puntos de proyección
-                          let proyeccionAcumulado = totalEjecutado;
-                          for (let i = 1; i <= Math.min(semanasRestantes, 8); i++) {
-                            proyeccionAcumulado += ritmoSemanal;
-                            if (proyeccionAcumulado > metaTotal) proyeccionAcumulado = metaTotal;
-                            chartData.push({
-                              semana: `Sem ${ultimaSemana + i}`,
-                              semanaNum: ultimaSemana + i,
-                              valor: null,
-                              acumulado: null,
-                              proyeccion: proyeccionAcumulado
-                            });
-                            if (proyeccionAcumulado >= metaTotal) break;
-                          }
-                          
-                          // Agregar punto de conexión para la proyección
-                          if (chartData.length > sortedAvances.length && sortedAvances.length > 0) {
-                            chartData[sortedAvances.length - 1].proyeccion = totalEjecutado;
-                          }
-                        }
+                  // Excavación
+                  if (
+                    fasesActivas.excavacion ||
+                    tipos.includes('excavacion') ||
+                    (proyecto.volumen_total_planeado || 0) > 0
+                  ) {
+                    metricas.push({
+                      campoReal: 'volumen_excavacion',
+                      metaTotal: proyecto.volumen_total_planeado || 0,
+                      unidad: 'm³',
+                      nombreMetrica: 'Excavación',
+                      colorPrimario: '#994B49',
+                      IconoMetrica: Shovel,
+                    });
+                  }
+                  // Pilas
+                  if (tipos.includes('pilas') || (proyecto.pilas_planeadas || 0) > 0) {
+                    metricas.push({
+                      campoReal: 'pilas_completadas',
+                      metaTotal: proyecto.pilas_planeadas || 0,
+                      unidad: 'pilas',
+                      nombreMetrica: 'Pilas',
+                      colorPrimario: '#2563EB',
+                      IconoMetrica: Columns3,
+                    });
+                  }
+                  // Anclas
+                  if (tipos.includes('anclas') || (proyecto.anclas_planeadas || 0) > 0) {
+                    metricas.push({
+                      campoReal: 'anclas_instaladas',
+                      metaTotal: proyecto.anclas_planeadas || 0,
+                      unidad: 'anclas',
+                      nombreMetrica: 'Anclas',
+                      colorPrimario: '#0D9488',
+                      IconoMetrica: Anchor,
+                    });
+                  }
+                  // Muros
+                  if (tipos.includes('muros') || (proyecto.muros_planeados || 0) > 0) {
+                    metricas.push({
+                      campoReal: 'muros_completados',
+                      metaTotal: proyecto.muros_planeados || 0,
+                      unidad: 'muros',
+                      nombreMetrica: 'Muros',
+                      colorPrimario: '#7C3AED',
+                      IconoMetrica: Building2,
+                    });
+                  }
 
-                        return (
-                          <>
-                            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                              <div className="flex items-center space-x-2">
-                                <IconoMetrica className="h-4 sm:h-5 w-4 sm:w-5" style={{ color: colorPrimario }} />
-                                <h5 className="font-semibold text-white text-sm sm:text-base">Progresión de {nombreMetrica}</h5>
-                              </div>
-                              <div className="flex items-center gap-3 text-xs">
-                                {metaTotal > 0 && (
-                                  <div className="text-white/50">
-                                    Meta: <span className="font-semibold text-green-600">{metaTotal.toLocaleString()} {unidad}</span>
-                                  </div>
-                                )}
-                                {ritmoSemanal > 0 && semanasRestantes > 0 && (
-                                  <div className="text-white/50 bg-orange-500/10 px-2 py-1 rounded">
-                                    📈 Ritmo: <span className="font-semibold text-orange-600">{ritmoSemanal.toLocaleString(undefined, {maximumFractionDigits: 0})} {unidad}/sem</span>
-                                    <span className="mx-1">•</span>
-                                    Meta en: <span className="font-semibold text-orange-600">~{semanasRestantes} sem</span>
-                                  </div>
-                                )}
-                                {totalEjecutado >= metaTotal && metaTotal > 0 && (
-                                  <div className="text-green-600 bg-green-500/10 px-2 py-1 rounded font-semibold">
-                                    ✅ Meta alcanzada
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            <div className="h-[180px] sm:h-[220px]">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={chartData}>
-                                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                                  <XAxis dataKey="semana" stroke="#6B7280" fontSize={11} />
-                                  <YAxis 
-                                    stroke="#6B7280" 
-                                    fontSize={11} 
-                                    domain={[0, metaTotal > 0 ? metaTotal * 1.05 : 'auto']}
-                                    tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : v.toLocaleString()}
-                                    label={{ value: unidad, angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: 10, fill: '#6B7280' } }}
-                                  />
-                                  <Tooltip 
-                                    formatter={(value, name) => {
-                                      if (value === null) return [null, null];
-                                      const label = name === 'acumulado' ? 'Total Acumulado' : 
-                                                   name === 'proyeccion' ? 'Proyección' : 'Esta Semana';
-                                      return [`${value.toLocaleString(undefined, {maximumFractionDigits: 0})} ${unidad}`, label];
-                                    }}
-                                    contentStyle={{ backgroundColor: '#FFF', border: '1px solid #E5E7EB', borderRadius: '8px' }}
-                                  />
-                                  {metaTotal > 0 && (
-                                    <ReferenceLine 
-                                      y={metaTotal} 
-                                      stroke="#22C55E" 
-                                      strokeWidth={2}
-                                      strokeDasharray="8 4"
-                                      label={{ value: 'Meta', position: 'right', fill: '#22C55E', fontSize: 10 }}
-                                    />
-                                  )}
-                                  <Line 
-                                    type="monotone" 
-                                    dataKey="acumulado" 
-                                    stroke={colorPrimario} 
-                                    strokeWidth={3}
-                                    dot={{ fill: colorPrimario, strokeWidth: 2, r: 5 }}
-                                    activeDot={{ r: 7, fill: colorPrimario }}
-                                    name="acumulado"
-                                    connectNulls={false}
-                                  />
-                                  <Line 
-                                    type="monotone" 
-                                    dataKey="proyeccion" 
-                                    stroke="#F97316" 
-                                    strokeWidth={2}
-                                    strokeDasharray="6 3"
-                                    dot={{ fill: '#F97316', strokeWidth: 2, r: 4 }}
-                                    name="proyeccion"
-                                    connectNulls={false}
-                                  />
-                                  <Line 
-                                    type="monotone" 
-                                    dataKey="valor" 
-                                    stroke="#60A5FA" 
-                                    strokeWidth={2}
-                                    strokeDasharray="5 5"
-                                    dot={{ fill: '#60A5FA', strokeWidth: 2, r: 4 }}
-                                    name="valor"
-                                    connectNulls={false}
-                                  />
-                                </LineChart>
-                              </ResponsiveContainer>
-                            </div>
-                            <div className="flex items-center justify-center gap-3 sm:gap-5 mt-2 text-xs flex-wrap">
-                              <div className="flex items-center gap-1.5">
-                                <div className="w-4 h-0.5" style={{ backgroundColor: colorPrimario }}></div>
-                                <span className="text-white/60">Acumulado</span>
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <div className="w-4 h-0.5 bg-blue-400"></div>
-                                <span className="text-white/60">Semanal</span>
-                              </div>
-                              {ritmoSemanal > 0 && semanasRestantes > 0 && (
-                                <div className="flex items-center gap-1.5">
-                                  <div className="w-4 h-0.5 bg-orange-500"></div>
-                                  <span className="text-white/60">Proyección</span>
-                                </div>
-                              )}
-                              {metaTotal > 0 && (
-                                <div className="flex items-center gap-1.5">
-                                  <div className="w-4 h-0.5 bg-green-500"></div>
-                                  <span className="text-white/60">Meta</span>
-                                </div>
-                              )}
-                            </div>
-                          </>
-                        );
-                      })()}
+                  if (metricas.length === 0) return null;
+
+                  return (
+                    <div className="p-2 sm:p-4 flex-shrink-0 space-y-3">
+                      {metricas.map((m) => (
+                        <ProgresionMetricaChart
+                          key={m.campoReal}
+                          avances={avances}
+                          {...m}
+                        />
+                      ))}
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* Visor 3D - Nube de Puntos */}
                 <div className="p-2 sm:p-4 flex-shrink-0">
