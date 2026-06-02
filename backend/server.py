@@ -230,7 +230,7 @@ class AvanceSemanal(BaseModel):
     volumen_excavacion: Optional[float] = None  # Volumen quitado en m³
     pilas_completadas: Optional[int] = None  # Pilas completadas en esta semana
     anclas_instaladas: Optional[int] = None  # Anclas instaladas en esta semana
-    muros_completados: Optional[int] = None  # Muros completados en esta semana
+    muros_completados: Optional[float] = None  # Área de muros completados en m²
     imagenes: List[str] = []  # URLs de las imágenes del vuelo
     # ---- DEM Volumetría ----
     dem_gridfs_id: Optional[str] = None  # GridFS ID del DEM TIFF
@@ -248,7 +248,7 @@ class AvanceSemanalCreate(BaseModel):
     volumen_excavacion: Optional[float] = None  # Volumen quitado en m³
     pilas_completadas: Optional[int] = None  # Pilas completadas
     anclas_instaladas: Optional[int] = None  # Anclas instaladas
-    muros_completados: Optional[int] = None  # Muros completados
+    muros_completados: Optional[float] = None  # Área de muros completados en m²
     imagenes: List[str] = []  # URLs de las imágenes del vuelo
 
 class AvanceSemanalUpdate(BaseModel):
@@ -263,7 +263,7 @@ class AvanceSemanalUpdate(BaseModel):
     volumen_excavacion: Optional[float] = None
     pilas_completadas: Optional[int] = None
     anclas_instaladas: Optional[int] = None
-    muros_completados: Optional[int] = None
+    muros_completados: Optional[float] = None
 
 class Proyecto(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -281,7 +281,7 @@ class Proyecto(BaseModel):
     # Métricas planeadas
     volumen_total_planeado: float = 0.0  # Volumen total estimado a excavar en m³
     pilas_planeadas: int = 0  # Número total de pilas planeadas
-    muros_planeados: int = 0  # Número total de muros planeados
+    muros_planeados: float = 0  # Área total de muros planeados en m²
     anclas_planeadas: int = 0  # Número total de anclas planeadas
     # Métricas ejecutadas
     volumen_ejecutado: float = 0.0  # Volumen excavado en m³
@@ -325,7 +325,7 @@ class ProyectoCreate(BaseModel):
     # Métricas planeadas
     volumen_total_planeado: float = 0.0
     pilas_planeadas: int = 0
-    muros_planeados: int = 0
+    muros_planeados: float = 0
     anclas_planeadas: int = 0
     # Cronograma
     semanas_planeadas: int = 0
@@ -359,7 +359,7 @@ class ProyectoUpdate(BaseModel):
     # Métricas planeadas
     volumen_total_planeado: Optional[float] = None
     pilas_planeadas: Optional[int] = None
-    muros_planeados: Optional[int] = None
+    muros_planeados: Optional[float] = None
     anclas_planeadas: Optional[int] = None
     # Métricas ejecutadas
     volumen_ejecutado: Optional[float] = None
@@ -2071,6 +2071,7 @@ from routes import (
     maquinaria_ia as routes_maquinaria_ia,
     analisis_ia as routes_analisis_ia,
     dem_volumetry as routes_dem_volumetry,
+    presupuesto as routes_presupuesto,
 )
 app.include_router(routes_comparaciones.router)
 app.include_router(routes_exportar.router)
@@ -2080,6 +2081,7 @@ app.include_router(routes_cronograma.router)
 app.include_router(routes_maquinaria_ia.router)
 app.include_router(routes_analisis_ia.router)
 app.include_router(routes_dem_volumetry.router)
+app.include_router(routes_presupuesto.router)
 
 app.add_middleware(
     CORSMiddleware,

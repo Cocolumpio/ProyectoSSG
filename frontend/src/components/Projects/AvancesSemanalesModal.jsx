@@ -943,17 +943,17 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
                             <Building2 className="h-4 w-4 text-purple-600" />
-                            <span className="text-sm font-medium text-purple-300">Muros Completados:</span>
+                            <span className="text-sm font-medium text-purple-300">Área de Muros (m²):</span>
                           </div>
                           {editingMuros ? (
                             <div className="flex items-center space-x-2">
                               <input
                                 type="number"
                                 min="0"
-                                step="1"
+                                step="0.01"
                                 value={editMurosValue}
-                                onChange={(e) => setEditMurosValue(parseInt(e.target.value) || 0)}
-                                className="w-24 px-2 py-1 text-sm border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                onChange={(e) => setEditMurosValue(parseFloat(e.target.value) || 0)}
+                                className="w-28 px-2 py-1 text-sm border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
                                 data-testid="edit-muros-input"
                               />
                               <button
@@ -980,9 +980,9 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                           ) : (
                             <div className="flex items-center space-x-2">
                               <span className="text-lg font-bold text-purple-300" data-testid="muros-value">
-                                {(selectedAvance.muros_completados || 0).toLocaleString()}
+                                {(selectedAvance.muros_completados || 0).toLocaleString('es-MX', { maximumFractionDigits: 2 })}
                               </span>
-                              <span className="text-sm text-purple-500">/ {(proyecto.muros_planeados || 0).toLocaleString()}</span>
+                              <span className="text-sm text-purple-500">/ {(proyecto.muros_planeados || 0).toLocaleString('es-MX', { maximumFractionDigits: 2 })} m²</span>
                               {!readOnly && (
                                 <button
                                   onClick={handleEditMurosClick}
@@ -1760,21 +1760,21 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                       <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/30">
                         <label className="flex items-center gap-2 text-sm font-medium text-purple-300 mb-2">
                           <Building2 className="h-4 w-4" />
-                          Muros Completados
+                          Área de Muros (m²)
                           {proyecto.muros_planeados > 0 && (
                             <span className="text-xs text-purple-500 font-normal">
-                              (Meta: {proyecto.muros_planeados})
+                              (Meta: {proyecto.muros_planeados.toLocaleString('es-MX', { maximumFractionDigits: 2 })} m²)
                             </span>
                           )}
                         </label>
                         <input
                           type="number"
                           min="0"
-                          step="1"
+                          step="0.01"
                           value={formData.muros_completados}
-                          onChange={(e) => setFormData(prev => ({ ...prev, muros_completados: parseInt(e.target.value) || 0 }))}
+                          onChange={(e) => setFormData(prev => ({ ...prev, muros_completados: parseFloat(e.target.value) || 0 }))}
                           className="w-full px-3 py-2 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-[#15151B]"
-                          placeholder="Ej: 5"
+                          placeholder="Ej: 125.50"
                           data-testid="avance-muros-input"
                         />
                       </div>

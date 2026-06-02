@@ -378,18 +378,18 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
             {formData.fases?.edificacion && (
               <div className="mt-3 space-y-2">
                 <div>
-                  <label className="text-xs text-purple-300 font-medium">Muros Planeados</label>
+                  <label className="text-xs text-purple-300 font-medium">Área de Muros Planeada (m²)</label>
                   <input
                     type="number"
                     min="0"
-                    step="1"
+                    step="0.01"
                     value={formData.muros_planeados || ''}
                     onChange={(e) => setFormData(prev => ({ 
                       ...prev, 
-                      muros_planeados: parseInt(e.target.value) || 0 
+                      muros_planeados: parseFloat(e.target.value) || 0 
                     }))}
                     className="w-full mt-1 px-3 py-1.5 text-sm border border-purple-500/40 rounded-lg focus:ring-2 focus:ring-purple-500"
-                    placeholder="50"
+                    placeholder="125.50"
                     data-testid="project-muros-planeados-input"
                   />
                 </div>

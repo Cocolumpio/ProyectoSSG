@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Building2, Plus, Eye, Trash2, Pencil, Layers, X, FileText, Users, UserPlus, FileSpreadsheet, CalendarClock } from 'lucide-react';
+import { Building2, Plus, Eye, Trash2, Pencil, Layers, X, FileText, Users, UserPlus, FileSpreadsheet, CalendarClock, Wallet } from 'lucide-react';
 import { ProjectFormContent } from './ProjectFormContent';
 import { AvancesSemanalesModal } from './AvancesSemanalesModal';
 import { ImportarCronograma } from './ImportarCronograma';
 import { CronogramaProyectoModal } from './CronogramaProyectoModal';
+import { PresupuestoSection } from './PresupuestoSection';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -23,6 +24,8 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
   const [showImportModal, setShowImportModal] = useState(false);
   const [showCronogramaModal, setShowCronogramaModal] = useState(false);
   const [selectedProjectForCronograma, setSelectedProjectForCronograma] = useState(null);
+  const [showPresupuestoModal, setShowPresupuestoModal] = useState(false);
+  const [selectedProjectForPresupuesto, setSelectedProjectForPresupuesto] = useState(null);
   const [formData, setFormData] = useState({
     nombre: '', ubicacion: '', direccion: '', coordenadas: { lat: 0, lng: 0 },
     fecha_inicio: '', fecha_fin_planeada: '', descripcion: '', avance_actual: 0,
@@ -457,6 +460,17 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
                   >
                     <CalendarClock className="h-4 w-4" />
                   </button>
+                  <button 
+                    onClick={() => {
+                      setSelectedProjectForPresupuesto(proyecto);
+                      setShowPresupuestoModal(true);
+                    }} 
+                    className="p-1.5 sm:p-2 text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors" 
+                    title="Presupuesto (IA)"
+                    data-testid={`presupuesto-proyecto-${proyecto.id}`}
+                  >
+                    <Wallet className="h-4 w-4" />
+                  </button>
                   <button onClick={() => handleEditClick(proyecto)} className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-500/10 rounded-lg transition-colors" title="Editar Proyecto" data-testid={`edit-proyecto-${proyecto.id}`}>
                     <Pencil className="h-4 w-4" />
                   </button>
@@ -498,6 +512,43 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
           <Building2 className="h-12 w-12 mx-auto mb-4 text-white/30" />
           <p>No hay proyectos registrados.</p>
           <button onClick={() => { resetForm(); setShowForm(true); }} className="mt-4 text-[#994B49] hover:underline">Agregar primer proyecto</button>
+        </div>
+      )}
+
+      {/* Modal Presupuesto */}
+      {showPresupuestoModal && selectedProjectForPresupuesto && (
+        <div className="fixed inset-0 bg-black/70 z-[1000] flex items-center justify-center p-4" data-testid="presupuesto-modal">
+          <div className="bg-[#0B0B0F] border border-white/10 rounded-xl shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <Wallet className="h-5 w-5 text-amber-400" />
+                <div>
+                  <h3 className="text-white font-semibold">Presupuesto del Proyecto</h3>
+                  <p className="text-xs text-white/40">{selectedProjectForPresupuesto.nombre}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowPresupuestoModal(false);
+                  setSelectedProjectForPresupuesto(null);
+                  onRefresh?.();
+                }}
+                className="text-white/50 hover:text-white"
+                data-testid="close-presupuesto-modal"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <PresupuestoSection
+                proyecto={selectedProjectForPresupuesto}
+                onShowSuccess={onShowSuccess}
+                onProyectoUpdated={(updated) => {
+                  setSelectedProjectForPresupuesto(updated);
+                }}
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>
