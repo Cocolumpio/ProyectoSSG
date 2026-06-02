@@ -7,6 +7,7 @@ import { MapRecenter } from '../common/MapRecenter';
 import { PointCloudViewer } from '../Projects/PointCloudViewer';
 import { GanttChart } from './GanttChart';
 import { ComparacionPlanesView } from './ComparacionPlanesView';
+import { AvanceFinancieroPanel } from './AvanceFinancieroPanel';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -635,6 +636,9 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                         Basado en {stats.volumenExcavado.toLocaleString()} m³ excavados
                       </p>
                     </div>
+
+                    {/* Avance Financiero: Presupuesto vs Ejecutado */}
+                    <AvanceFinancieroPanel proyectoId={selectedProyecto.id} />
 
                     {/* Fechas */}
                     <div className="flex items-center justify-between text-sm text-white/60 px-1">

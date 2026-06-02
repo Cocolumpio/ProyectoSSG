@@ -6,13 +6,19 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import numpy as np
+
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
 from reportlab.lib.enums import TA_CENTER
 
 from core.config import get_db
+from services import avance_financiero as af_service
 
 db = get_db()
 router = APIRouter(prefix="/api")
@@ -293,6 +299,128 @@ async def generar_reporte_ejecutivo(proyecto_id: str):
         ]))
         story.append(costo_table)
     
+    story.append(Spacer(1, 30))
+    
+    # --- PRESUPUESTO vs EJECUTADO (con avances reales del dron) ---
+    af = af_service.calcular_avance_financiero(proyecto, avances)
+    if af.get("tiene_presupuesto") and af["categorias"]:
+        story.append(Paragraph("💼 PRESUPUESTO vs EJECUTADO", section_style))
+        story.append(Paragraph(
+            f"Comparativa con avances reales medidos por dron. Versión: <b>{af.get('version', 'N/D')}</b>",
+            normal_style
+        ))
+        story.append(Spacer(1, 8))
+
+        # Cards de totales
+        tot = af["totales"]
+        totales_data = [
+            ["Presupuestado", "Ejecutado", "Pendiente", "% Avance Financiero"],
+            [
+                f"${tot['presupuestado']:,.0f}",
+                f"${tot['ejecutado']:,.0f}",
+                f"${tot['pendiente']:,.0f}",
+                f"{tot['pct']:.1f}%",
+            ],
+        ]
+        totales_table = Table(totales_data, colWidths=[115, 115, 115, 115])
+        totales_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#D97706')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTSIZE', (0, 1), (-1, 1), 11),
+            ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
+            ('BACKGROUND', (0, 1), (-1, 1), colors.HexColor('#FEF3C7')),
+            ('TEXTCOLOR', (0, 1), (-1, 1), colors.HexColor('#92400E')),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E5E7EB')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('PADDING', (0, 0), (-1, -1), 8),
+        ]))
+        story.append(totales_table)
+        story.append(Spacer(1, 12))
+
+        # Gráfica de barras: Presupuestado vs Ejecutado por categoría
+        try:
+            cats = af["categorias"]
+            nombres = [c["nombre"] for c in cats]
+            presupuestados = [c["presupuestado"] for c in cats]
+            ejecutados = [c["ejecutado"] for c in cats]
+            cat_colors = [c["color"] for c in cats]
+
+            x = np.arange(len(nombres))
+            width = 0.38
+
+            fig, ax = plt.subplots(figsize=(8, 4.5), facecolor='white')
+            bars_p = ax.bar(x - width/2, presupuestados, width, label='Presupuestado',  # noqa: F841
+                            color='#CBD5E1', edgecolor='#94A3B8', linewidth=0.8)
+            bars_e = ax.bar(x + width/2, ejecutados, width, label='Ejecutado (real)',
+                            color=cat_colors, edgecolor='black', linewidth=0.5)
+
+            ax.set_ylabel('MXN', fontsize=9)
+            ax.set_title('Presupuesto vs Ejecutado por Categoría', fontsize=11, fontweight='bold')
+            ax.set_xticks(x)
+            ax.set_xticklabels(nombres, rotation=20, ha='right', fontsize=8)
+            ax.legend(loc='upper right', fontsize=8)
+            ax.grid(axis='y', alpha=0.2, linestyle='--')
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            # Format Y-axis as currency
+            ax.yaxis.set_major_formatter(plt.FuncFormatter(
+                lambda x, _: f'${x/1_000_000:.1f}M' if x >= 1_000_000 else f'${x/1_000:.0f}k'
+            ))
+            # Etiquetar barras de ejecutado con % avance
+            for bar, cat in zip(bars_e, cats):
+                h = bar.get_height()
+                if h > 0:
+                    ax.text(bar.get_x() + bar.get_width()/2., h,
+                            f'{cat["pct_avance"]:.0f}%',
+                            ha='center', va='bottom', fontsize=7, color='#0F172A', fontweight='bold')
+
+            plt.tight_layout()
+            chart_buf = io.BytesIO()
+            plt.savefig(chart_buf, format='png', dpi=130, bbox_inches='tight', facecolor='white')
+            plt.close(fig)
+            chart_buf.seek(0)
+            story.append(RLImage(chart_buf, width=480, height=270))
+            story.append(Spacer(1, 12))
+        except Exception as e:
+            story.append(Paragraph(f"<i>No se pudo generar la gráfica: {e}</i>", normal_style))
+
+        # Tabla detallada por categoría
+        cat_headers = ["Categoría", "Presupuestado", "Ejecutado", "% Avance", "Real medido"]
+        cat_data = [cat_headers]
+        for c in af["categorias"]:
+            real_str = (
+                f"{c['real']:,.2f} / {c['planeado']:,.2f} {c['unidad']}"
+                if c.get("fuente_real") and c.get("planeado") else
+                "—"
+            )
+            cat_data.append([
+                c["nombre"],
+                f"${c['presupuestado']:,.0f}",
+                f"${c['ejecutado']:,.0f}",
+                f"{c['pct_avance']:.1f}%",
+                real_str,
+            ])
+        cat_table = Table(cat_data, colWidths=[100, 110, 110, 65, 105])
+        cat_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#D97706')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+            ('ALIGN', (1, 0), (-1, 0), 'CENTER'),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E5E7EB')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#FAFAFA')]),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('PADDING', (0, 0), (-1, -1), 5),
+        ]))
+        story.append(cat_table)
+        story.append(Spacer(1, 20))
+
     story.append(Spacer(1, 30))
     
     # --- PIE DE PÁGINA ---

@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from core.config import get_db, get_current_admin
 from services import presupuesto as presupuesto_service
+from services import avance_financiero as af_service
 
 db = get_db()
 router = APIRouter(prefix="/api")
@@ -123,6 +124,22 @@ async def obtener_presupuesto(proyecto_id: str):
     if not proyecto:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
     return proyecto.get("presupuesto") or {"empty": True}
+
+
+# ============================================================
+# 3b. AVANCE FINANCIERO (Presupuesto vs Ejecutado)
+# ============================================================
+@router.get("/proyectos/{proyecto_id}/avance-financiero")
+async def avance_financiero(proyecto_id: str):
+    """Calcula el comparativo de Presupuestado vs Ejecutado cruzando el
+    presupuesto del proyecto con los avances reales medidos por el dron."""
+    proyecto = await db.proyectos.find_one({"id": proyecto_id}, {"_id": 0})
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    avances = await db.avances_semanales.find(
+        {"proyecto_id": proyecto_id}, {"_id": 0}
+    ).to_list(length=2000)
+    return af_service.calcular_avance_financiero(proyecto, avances)
 
 
 # ============================================================
