@@ -9,6 +9,7 @@ import { GanttChart } from './GanttChart';
 import { ComparacionPlanesView } from './ComparacionPlanesView';
 import { AvanceFinancieroPanel } from './AvanceFinancieroPanel';
 import { MatrizCarasExcavacion } from './MatrizCarasExcavacion';
+import { ComparativaSemanalCards } from './ComparativaSemanalCards';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -172,10 +173,7 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
   const handleEnviarReporte = async () => {
     setSendingReport(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API}/admin/enviar-reporte-semanal`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(`${API}/admin/enviar-reporte-semanal`, {});
       if (onShowSuccess) {
         onShowSuccess('📊 Reporte semanal enviado exitosamente');
       }
@@ -676,6 +674,11 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                 proyectoId={selectedProyecto.id}
                 isAdmin={!readOnly}
               />
+            </div>
+
+            {/* Comparativa Semanal: Programa vs Real (cards por semana) */}
+            <div className="mt-6">
+              <ComparativaSemanalCards proyectoId={selectedProyecto.id} />
             </div>
 
             {/* Botón para ver Comparación de Planes */}

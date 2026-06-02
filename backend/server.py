@@ -2094,6 +2094,7 @@ from routes import (
     dem_volumetry as routes_dem_volumetry,
     presupuesto as routes_presupuesto,
     caras_excavacion as routes_caras_excavacion,
+    comparativa_semanal as routes_comparativa_semanal,
 )
 app.include_router(routes_comparaciones.router)
 app.include_router(routes_exportar.router)
@@ -2105,6 +2106,7 @@ app.include_router(routes_analisis_ia.router)
 app.include_router(routes_dem_volumetry.router)
 app.include_router(routes_presupuesto.router)
 app.include_router(routes_caras_excavacion.router)
+app.include_router(routes_comparativa_semanal.router)
 
 app.add_middleware(
     CORSMiddleware,

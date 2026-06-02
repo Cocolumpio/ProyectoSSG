@@ -93,6 +93,7 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
         frentes: parsedData.frentes,
         resumen: parsedData.resumen,
         presupuesto: parsedData.presupuesto, // V2: incluye presupuesto detectado
+        programa_semanal: parsedData.programa_semanal, // V2: desglose por semana
         descripcion: descripcionParts.join(', ')
       });
       

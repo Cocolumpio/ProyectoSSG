@@ -159,6 +159,54 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
                         semanas_planeadas = int(cand)
                         break
 
+    # ---- Detectar rangos de columnas por semana ----
+    # Row 20 (encabezado de cronograma): col 13 = PRELIMINARES (SEMANA 0),
+    # luego cada semana ocupa 8 columnas (7 días + 1 separadora).
+    # Si la columna C tiene texto "PRELIMINARES" o un número entero pequeño,
+    # se considera el inicio de una nueva semana.
+    semanas_cols = []  # lista de dicts: {semana, col_inicio, col_fin (inclusive), fecha_inicio, fecha_fin}
+    # Identificar primero la fila de etiquetas de día y la de fechas (suelen ser header_row+1 y header_row+2)
+    day_label_row = None
+    fecha_row = None
+    for r in range(header_row + 1, header_row + 5):
+        for c in range(11, min(40, ws.max_column + 1)):
+            v = ws.cell(row=r, column=c).value
+            if isinstance(v, str) and v.strip().upper() in ("LUN", "LUNES") and day_label_row is None:
+                day_label_row = r
+            if isinstance(v, datetime) and fecha_row is None:
+                fecha_row = r
+        if day_label_row and fecha_row:
+            break
+
+    for c in range(11, ws.max_column + 1):
+        v = ws.cell(row=header_row, column=c).value
+        if v is None:
+            continue
+        # Validar que el inicio tenga "LUN" en day_label_row Y fecha real en fecha_row
+        es_lun = False
+        es_fecha = False
+        if day_label_row:
+            lbl = ws.cell(row=day_label_row, column=c).value
+            es_lun = isinstance(lbl, str) and lbl.strip().upper() in ("LUN", "LUNES")
+        if fecha_row:
+            fd = ws.cell(row=fecha_row, column=c).value
+            es_fecha = isinstance(fd, datetime)
+        if not (es_lun and es_fecha):
+            continue
+
+        if isinstance(v, str) and "PRELIMINARES" in v.upper():
+            semanas_cols.append({"semana": 0, "col_inicio": c, "col_fin": c + 6})
+        elif isinstance(v, (int, float)) and 0 < v <= 60 and v == int(v):
+            semanas_cols.append({"semana": int(v), "col_inicio": c, "col_fin": c + 6})
+
+    # Capturar fechas inicio/fin de cada semana
+
+    for s in semanas_cols:
+        f_i = ws.cell(row=fecha_row, column=s["col_inicio"]).value if fecha_row else None
+        f_f = ws.cell(row=fecha_row, column=s["col_fin"]).value if fecha_row else None
+        s["fecha_inicio"] = f_i.strftime("%Y-%m-%d") if isinstance(f_i, datetime) else None
+        s["fecha_fin"] = f_f.strftime("%Y-%m-%d") if isinstance(f_f, datetime) else s["fecha_inicio"]
+
     # Recorrer las filas de datos
     categorias = {}
     categoria_actual = None
@@ -212,11 +260,26 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
         # Es una partida
         if categoria_actual and isinstance(cantidad, (int, float)) and cantidad > 0:
             unidad_str = str(unidad).strip() if unidad else ""
+
+            # Capturar el desglose por semana (sumando las celdas diarias del item)
+            semanas_planeadas_item = []
+            for s in semanas_cols:
+                suma_semana = 0.0
+                for col in range(s["col_inicio"], s["col_fin"] + 1):
+                    val = ws.cell(row=r, column=col).value
+                    if isinstance(val, (int, float)):
+                        suma_semana += float(val)
+                semanas_planeadas_item.append({
+                    "semana": s["semana"],
+                    "cantidad": round(suma_semana, 4),
+                })
+
             categorias[categoria_actual]["items"].append({
                 "descripcion": concepto_clean,
                 "unidad": unidad_str,
                 "cantidad": float(cantidad),
                 "importe": float(importe) if isinstance(importe, (int, float)) else 0.0,
+                "semanas": semanas_planeadas_item,
             })
 
     # Calcular totales agregados por fase
@@ -293,12 +356,78 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
                 "progreso": 0,
             })
 
+    # Construir programa semanal agregado por fase
+    # Para cada semana, sumar cantidad planeada y importe planeado por fase
+    programa_semanal = []
+    for s in semanas_cols:
+        sem_data = {
+            "semana": s["semana"],
+            "fecha_inicio": s.get("fecha_inicio"),
+            "fecha_fin": s.get("fecha_fin"),
+            "excavacion_m3": 0.0,
+            "pilas": 0.0,
+            "anclas": 0.0,
+            "muros_m2": 0.0,
+            "presupuesto": 0.0,
+            "actividades": [],   # lista de partidas planeadas esta semana
+        }
+        for cat_data in categorias.values():
+            fase = cat_data["fase"]
+            for item in cat_data["items"]:
+                cant_semana = next(
+                    (sw["cantidad"] for sw in item.get("semanas", []) if sw["semana"] == s["semana"]),
+                    0.0,
+                )
+                if cant_semana <= 0:
+                    continue
+                # Calcular importe proporcional al avance planeado de esta semana
+                pct = (cant_semana / item["cantidad"]) if item["cantidad"] else 0
+                importe_semana = pct * item["importe"]
+                sem_data["presupuesto"] += importe_semana
+                sem_data["actividades"].append({
+                    "descripcion": item["descripcion"][:140],
+                    "categoria": cat_data["nombre"],
+                    "fase": fase,
+                    "cantidad": cant_semana,
+                    "unidad": item["unidad"],
+                    "importe": round(importe_semana, 2),
+                })
+
+                # Agregar al total por fase
+                unidad_up = item["unidad"].upper()
+                if fase == "excavacion" and unidad_up in ("M3", "M³"):
+                    sem_data["excavacion_m3"] += cant_semana
+                elif fase == "pilas" and unidad_up in ("PZA", "PZAS", "PIEZA", "PIEZAS"):
+                    sem_data["pilas"] += cant_semana
+                elif fase == "anclas" and unidad_up in ("PZA", "PZAS"):
+                    sem_data["anclas"] += cant_semana
+                elif fase == "muros" and unidad_up in ("M2", "M²"):
+                    sem_data["muros_m2"] += cant_semana
+
+        # Redondear
+        sem_data["excavacion_m3"] = round(sem_data["excavacion_m3"], 2)
+        sem_data["pilas"] = round(sem_data["pilas"], 2)
+        sem_data["anclas"] = round(sem_data["anclas"], 2)
+        sem_data["muros_m2"] = round(sem_data["muros_m2"], 2)
+        sem_data["presupuesto"] = round(sem_data["presupuesto"], 2)
+        # Solo incluir semanas con actividad planeada (filtra padding del template Excel)
+        tiene_actividad = (
+            sem_data["excavacion_m3"] > 0
+            or sem_data["pilas"] > 0
+            or sem_data["anclas"] > 0
+            or sem_data["muros_m2"] > 0
+            or sem_data["presupuesto"] > 0
+        )
+        if tiene_actividad:
+            programa_semanal.append(sem_data)
+
     return {
         "success": True,
         "formato": "programa_obra_v2",
         "nombre_proyecto": nombre_proyecto,
         "frentes": frentes,
         "categorias_detalle": list(categorias.values()),
+        "programa_semanal": programa_semanal,
         "presupuesto": {
             "total": round(presupuesto_total, 2),
             "categorias": cat_presupuesto,

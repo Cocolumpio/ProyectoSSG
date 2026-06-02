@@ -105,6 +105,11 @@ async def crear_proyecto_desde_cronograma(data: dict):
                 "version": presupuesto_data.get("version") or datetime.now(timezone.utc).strftime("v%Y%m%d-%H%M"),
                 "fecha_carga": datetime.now(timezone.utc).isoformat(),
             }
+
+        # Persistir el programa semanal (cards de comparativa por semana)
+        programa_semanal = data.get("programa_semanal")
+        if isinstance(programa_semanal, list) and programa_semanal:
+            proyecto["programa_semanal"] = programa_semanal
         
         await db.proyectos.insert_one(proyecto)
         
@@ -221,6 +226,11 @@ async def actualizar_cronograma_proyecto(proyecto_id: str, file: UploadFile = Fi
                 "version": presupuesto_data.get("version") or datetime.now(timezone.utc).strftime("v%Y%m%d-%H%M"),
                 "fecha_carga": datetime.now(timezone.utc).isoformat(),
             }
+
+        # Persistir el programa semanal
+        programa_semanal = resultado.get("programa_semanal")
+        if isinstance(programa_semanal, list) and programa_semanal:
+            update_data["programa_semanal"] = programa_semanal
         
         await db.proyectos.update_one({"id": proyecto_id}, {"$set": update_data})
         

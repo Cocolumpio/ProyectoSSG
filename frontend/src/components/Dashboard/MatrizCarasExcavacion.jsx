@@ -20,8 +20,6 @@ export function MatrizCarasExcavacion({ proyectoId, isAdmin = false }) {
 
   useEffect(() => {
     if (!proyectoId) return;
-    const token = localStorage.getItem('token');
-    if (!token) return;
     cargarCaras();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proyectoId]);
@@ -29,10 +27,7 @@ export function MatrizCarasExcavacion({ proyectoId, isAdmin = false }) {
   const cargarCaras = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/proyectos/${proyectoId}/caras-excavacion`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(`${API}/proyectos/${proyectoId}/caras-excavacion`);
       setCaras(res.data?.caras || []);
     } catch (err) {
       console.error('Error cargando caras:', err);
@@ -62,11 +57,8 @@ export function MatrizCarasExcavacion({ proyectoId, isAdmin = false }) {
     setUpdating(key);
 
     try {
-      const token = localStorage.getItem('token');
       await axios.put(
-        `${API}/proyectos/${proyectoId}/caras-excavacion/${caraIdx}/${tipo}/${cellIdx}`,
-        null,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${API}/proyectos/${proyectoId}/caras-excavacion/${caraIdx}/${tipo}/${cellIdx}`
       );
     } catch (err) {
       console.error('Error actualizando celda:', err);
