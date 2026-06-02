@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { MapPin, Search, Loader2, Shovel, Columns3, Building2, Anchor, Info } from 'lucide-react';
 import { CatalogoMaquinariaSection } from './CatalogoMaquinariaSection';
+import { CarasExcavacionConfig } from './CarasExcavacionConfig';
 
 export function ProjectFormContent({ formData, setFormData, error, saving, isEdit, onSubmit, onClose, onShowSuccess }) {
   const [searchingAddress, setSearchingAddress] = useState(false);
@@ -397,6 +398,22 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
             )}
           </div>
         </div>
+
+        {/* Distribución de Pilas y Anclas en las 4 caras (solo si la fase Cimentación está activa) */}
+        {formData.fases?.cimentacion && (
+          <CarasExcavacionConfig
+            caras={formData.caras_excavacion || []}
+            onChange={(caras) =>
+              setFormData((prev) => ({
+                ...prev,
+                caras_excavacion: caras,
+                // Mantener pilas/anclas planeadas en sincronía con la suma de las caras
+                pilas_planeadas: caras.reduce((s, c) => s + (parseInt(c.pilas) || 0), 0),
+                anclas_planeadas: caras.reduce((s, c) => s + (parseInt(c.anclas) || 0), 0),
+              }))
+            }
+          />
+        )}
 
         {/* Info si no hay cronograma */}
         <div className="mt-4 flex items-start gap-2 text-xs text-white/60 bg-[#15151B]/50 rounded-lg p-2">

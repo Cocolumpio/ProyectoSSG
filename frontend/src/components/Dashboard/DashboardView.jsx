@@ -8,10 +8,11 @@ import { PointCloudViewer } from '../Projects/PointCloudViewer';
 import { GanttChart } from './GanttChart';
 import { ComparacionPlanesView } from './ComparacionPlanesView';
 import { AvanceFinancieroPanel } from './AvanceFinancieroPanel';
+import { MatrizCarasExcavacion } from './MatrizCarasExcavacion';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onProyectoClick, mapCenter, onShowSuccess }) {
+export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyecto, onProyectoClick, mapCenter, onShowSuccess, readOnly = false }) {
   const [avancesSemanales, setAvancesSemanales] = useState([]);
   const [loadingAvances, setLoadingAvances] = useState(false);
   const [showFullViewer, setShowFullViewer] = useState(false);
@@ -668,6 +669,14 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                 />
               </div>
             )}
+
+            {/* Matriz de Pilas/Anclas por Cara de Excavación */}
+            <div className="mt-6">
+              <MatrizCarasExcavacion
+                proyectoId={selectedProyecto.id}
+                isAdmin={!readOnly}
+              />
+            </div>
 
             {/* Botón para ver Comparación de Planes */}
             {selectedProyecto?.analisis_maquinaria_ia && (

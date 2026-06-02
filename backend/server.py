@@ -265,6 +265,21 @@ class AvanceSemanalUpdate(BaseModel):
     anclas_instaladas: Optional[int] = None
     muros_completados: Optional[float] = None
 
+class CaraExcavacion(BaseModel):
+    """Configuración de una de las 4 caras de la excavación.
+
+    Cada cara tiene su propia lista lineal de pilas y anclas, cada celda
+    almacenada como booleano (True = completada, False = pendiente).
+    """
+    model_config = ConfigDict(extra="ignore")
+
+    nombre: str = ""
+    pilas: int = 0
+    anclas: int = 0
+    pilas_estados: List[bool] = []
+    anclas_estados: List[bool] = []
+
+
 class Proyecto(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
@@ -283,6 +298,8 @@ class Proyecto(BaseModel):
     pilas_planeadas: int = 0  # Número total de pilas planeadas
     muros_planeados: float = 0  # Área total de muros planeados en m²
     anclas_planeadas: int = 0  # Número total de anclas planeadas
+    # Matriz de pilas/anclas dividida en 4 caras de excavación
+    caras_excavacion: List[CaraExcavacion] = []
     # Métricas ejecutadas
     volumen_ejecutado: float = 0.0  # Volumen excavado en m³
     pilas_ejecutadas: int = 0  # Pilas completadas
@@ -327,6 +344,8 @@ class ProyectoCreate(BaseModel):
     pilas_planeadas: int = 0
     muros_planeados: float = 0
     anclas_planeadas: int = 0
+    # Matriz de pilas/anclas por 4 caras de excavación
+    caras_excavacion: List[CaraExcavacion] = []
     # Cronograma
     semanas_planeadas: int = 0
     semanas_excavacion: int = 0
@@ -361,6 +380,8 @@ class ProyectoUpdate(BaseModel):
     pilas_planeadas: Optional[int] = None
     muros_planeados: Optional[float] = None
     anclas_planeadas: Optional[int] = None
+    # Matriz de pilas/anclas por 4 caras de excavación
+    caras_excavacion: Optional[List[CaraExcavacion]] = None
     # Métricas ejecutadas
     volumen_ejecutado: Optional[float] = None
     pilas_ejecutadas: Optional[int] = None
@@ -2072,6 +2093,7 @@ from routes import (
     analisis_ia as routes_analisis_ia,
     dem_volumetry as routes_dem_volumetry,
     presupuesto as routes_presupuesto,
+    caras_excavacion as routes_caras_excavacion,
 )
 app.include_router(routes_comparaciones.router)
 app.include_router(routes_exportar.router)
@@ -2082,6 +2104,7 @@ app.include_router(routes_maquinaria_ia.router)
 app.include_router(routes_analisis_ia.router)
 app.include_router(routes_dem_volumetry.router)
 app.include_router(routes_presupuesto.router)
+app.include_router(routes_caras_excavacion.router)
 
 app.add_middleware(
     CORSMiddleware,

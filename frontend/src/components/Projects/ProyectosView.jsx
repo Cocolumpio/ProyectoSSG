@@ -32,6 +32,7 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
     volumen_total_planeado: 0, semanas_planeadas: 0,
     pilas_planeadas: 0, anclas_planeadas: 0, muros_planeados: 0,
     capacidad_camion: 25, costo_m3: 150,
+    caras_excavacion: [],
     fases: { excavacion: false, cimentacion: false, edificacion: false }
   });
   const [saving, setSaving] = useState(false);
@@ -44,6 +45,7 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
       volumen_total_planeado: 0, semanas_planeadas: 0,
       pilas_planeadas: 0, anclas_planeadas: 0, muros_planeados: 0,
       capacidad_camion: 25, costo_m3: 150,
+      caras_excavacion: [],
       fases: { excavacion: false, cimentacion: false, edificacion: false }
     });
   };
@@ -85,6 +87,7 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
       muros_planeados: proyecto.muros_planeados || 0,
       capacidad_camion: proyecto.capacidad_camion || 25, 
       costo_m3: proyecto.costo_m3 || 150,
+      caras_excavacion: Array.isArray(proyecto.caras_excavacion) ? proyecto.caras_excavacion : [],
       fases
     });
     setShowEditForm(true);

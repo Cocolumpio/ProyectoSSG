@@ -39,14 +39,27 @@ async def recalcular_avance_proyecto(proyecto_id: str) -> float:
     
     # Calcular totales ejecutados
     volumen_excavado = sum((a.get('volumen_excavacion', 0) or 0) for a in avances)
-    pilas_completadas = sum((a.get('pilas_completadas', 0) or 0) for a in avances)
-    anclas_instaladas = sum((a.get('anclas_instaladas', 0) or 0) for a in avances)
     muros_completados = sum((a.get('muros_completados', 0) or 0) for a in avances)
-    
-    # Obtener metas
+
+    # Si hay matriz de caras configurada, las pilas/anclas vienen de las celdas marcadas
+    caras = proyecto.get('caras_excavacion') or []
+    if len(caras) == 4 and any((c.get('pilas') or c.get('anclas')) for c in caras):
+        pilas_completadas = sum(
+            sum(1 for s in (c.get('pilas_estados') or []) if s) for c in caras
+        )
+        anclas_instaladas = sum(
+            sum(1 for s in (c.get('anclas_estados') or []) if s) for c in caras
+        )
+        pilas_planeadas = sum(int(c.get('pilas') or 0) for c in caras)
+        anclas_planeadas = sum(int(c.get('anclas') or 0) for c in caras)
+    else:
+        pilas_completadas = sum((a.get('pilas_completadas', 0) or 0) for a in avances)
+        anclas_instaladas = sum((a.get('anclas_instaladas', 0) or 0) for a in avances)
+        pilas_planeadas = proyecto.get('pilas_planeadas', 0) or 0
+        anclas_planeadas = proyecto.get('anclas_planeadas', 0) or 0
+
+    # Obtener metas restantes
     volumen_planeado = proyecto.get('volumen_total_planeado', 0) or 0
-    pilas_planeadas = proyecto.get('pilas_planeadas', 0) or 0
-    anclas_planeadas = proyecto.get('anclas_planeadas', 0) or 0
     muros_planeados = proyecto.get('muros_planeados', 0) or 0
     
     # Calcular porcentajes por fase
@@ -89,7 +102,9 @@ async def recalcular_avance_proyecto(proyecto_id: str) -> float:
             "volumen_ejecutado": volumen_excavado,
             "pilas_ejecutadas": pilas_completadas,
             "anclas_ejecutadas": anclas_instaladas,
-            "muros_ejecutados": muros_completados
+            "muros_ejecutados": muros_completados,
+            "pilas_planeadas": pilas_planeadas,
+            "anclas_planeadas": anclas_planeadas,
         }}
     )
     
@@ -153,14 +168,27 @@ async def obtener_metricas_proyecto(proyecto_id: str) -> dict:
     ).to_list(100)
     
     volumen_excavado = sum((a.get('volumen_excavacion', 0) or 0) for a in avances)
-    pilas_completadas = sum((a.get('pilas_completadas', 0) or 0) for a in avances)
-    anclas_instaladas = sum((a.get('anclas_instaladas', 0) or 0) for a in avances)
     muros_completados = sum((a.get('muros_completados', 0) or 0) for a in avances)
-    
-    # Obtener metas del proyecto
+
+    # Si hay matriz de caras, pilas/anclas vienen de las celdas marcadas
+    caras = proyecto.get('caras_excavacion') or []
+    if len(caras) == 4 and any((c.get('pilas') or c.get('anclas')) for c in caras):
+        pilas_completadas = sum(
+            sum(1 for s in (c.get('pilas_estados') or []) if s) for c in caras
+        )
+        anclas_instaladas = sum(
+            sum(1 for s in (c.get('anclas_estados') or []) if s) for c in caras
+        )
+        pilas_planeadas = sum(int(c.get('pilas') or 0) for c in caras)
+        anclas_planeadas = sum(int(c.get('anclas') or 0) for c in caras)
+    else:
+        pilas_completadas = sum((a.get('pilas_completadas', 0) or 0) for a in avances)
+        anclas_instaladas = sum((a.get('anclas_instaladas', 0) or 0) for a in avances)
+        pilas_planeadas = proyecto.get('pilas_planeadas', 0) or 0
+        anclas_planeadas = proyecto.get('anclas_planeadas', 0) or 0
+
+    # Obtener metas restantes del proyecto
     volumen_total_planeado = proyecto.get('volumen_total_planeado', 0) or 0
-    pilas_planeadas = proyecto.get('pilas_planeadas', 0) or 0
-    anclas_planeadas = proyecto.get('anclas_planeadas', 0) or 0
     muros_planeados = proyecto.get('muros_planeados', 0) or 0
     
     # Calcular porcentajes

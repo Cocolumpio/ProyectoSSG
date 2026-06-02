@@ -19,6 +19,7 @@ from reportlab.lib.enums import TA_CENTER
 
 from core.config import get_db
 from services import avance_financiero as af_service
+from services.helpers import obtener_metricas_proyecto
 
 db = get_db()
 router = APIRouter(prefix="/api")
@@ -300,7 +301,197 @@ async def generar_reporte_ejecutivo(proyecto_id: str):
         story.append(costo_table)
     
     story.append(Spacer(1, 30))
-    
+
+    # --- AVANCE FÍSICO DE OBRA POR CATEGORÍA ---
+    metricas = await obtener_metricas_proyecto(proyecto_id)
+    categorias_fisicas = []
+    if metricas.get("volumen_planeado", 0) > 0:
+        categorias_fisicas.append({
+            "nombre": "Excavación",
+            "real": metricas["volumen_excavado"],
+            "planeado": metricas["volumen_planeado"],
+            "pct": metricas["avance_excavacion_pct"],
+            "unidad": "m³",
+            "color": "#F59E0B",
+        })
+    if metricas.get("pilas_planeadas", 0) > 0:
+        categorias_fisicas.append({
+            "nombre": "Pilas",
+            "real": metricas["pilas_completadas"],
+            "planeado": metricas["pilas_planeadas"],
+            "pct": metricas["avance_pilas_pct"],
+            "unidad": "pzs",
+            "color": "#3B82F6",
+        })
+    if metricas.get("anclas_planeadas", 0) > 0:
+        categorias_fisicas.append({
+            "nombre": "Anclas",
+            "real": metricas["anclas_instaladas"],
+            "planeado": metricas["anclas_planeadas"],
+            "pct": metricas["avance_anclas_pct"],
+            "unidad": "pzs",
+            "color": "#14B8A6",
+        })
+    if metricas.get("muros_planeados", 0) > 0:
+        categorias_fisicas.append({
+            "nombre": "Muros",
+            "real": metricas["muros_completados"],
+            "planeado": metricas["muros_planeados"],
+            "pct": metricas["avance_muros_pct"],
+            "unidad": "m²",
+            "color": "#A855F7",
+        })
+
+    if categorias_fisicas:
+        story.append(Paragraph("🏗️ AVANCE FÍSICO POR CATEGORÍA", section_style))
+        story.append(Paragraph(
+            "Comparativa de lo planeado vs lo ejecutado en obra medido por dron.",
+            normal_style
+        ))
+        story.append(Spacer(1, 8))
+
+        # Gráfica 1: Barras agrupadas Planeado vs Real (cantidades absolutas, normalizadas a 100% por categoría)
+        try:
+            nombres = [c["nombre"] for c in categorias_fisicas]
+            planeados_pct = [100.0] * len(nombres)  # Planeado siempre 100% (meta)
+            reales_pct = [min(c["pct"], 100) for c in categorias_fisicas]
+            colors_real = [c["color"] for c in categorias_fisicas]
+
+            x = np.arange(len(nombres))
+            width = 0.38
+
+            fig, ax = plt.subplots(figsize=(8, 4.2), facecolor='white')
+            ax.bar(x - width/2, planeados_pct, width, label='Planeado (meta)',
+                   color='#CBD5E1', edgecolor='#94A3B8', linewidth=0.8)
+            bars_r = ax.bar(x + width/2, reales_pct, width, label='Real ejecutado',
+                            color=colors_real, edgecolor='black', linewidth=0.5)
+
+            ax.set_ylabel('% de avance', fontsize=9)
+            ax.set_title('Avance Físico: Planeado vs Real por Categoría',
+                         fontsize=11, fontweight='bold')
+            ax.set_xticks(x)
+            ax.set_xticklabels(nombres, fontsize=9)
+            ax.set_ylim(0, 110)
+            ax.legend(loc='upper right', fontsize=8)
+            ax.grid(axis='y', alpha=0.2, linestyle='--')
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            for bar, cat in zip(bars_r, categorias_fisicas):
+                h = bar.get_height()
+                if h >= 0:
+                    ax.text(bar.get_x() + bar.get_width()/2., h + 2,
+                            f'{cat["pct"]:.1f}%',
+                            ha='center', va='bottom', fontsize=8, color='#0F172A',
+                            fontweight='bold')
+
+            plt.tight_layout()
+            chart_buf = io.BytesIO()
+            plt.savefig(chart_buf, format='png', dpi=130, bbox_inches='tight', facecolor='white')
+            plt.close(fig)
+            chart_buf.seek(0)
+            story.append(RLImage(chart_buf, width=480, height=250))
+            story.append(Spacer(1, 10))
+        except Exception as e:
+            story.append(Paragraph(f"<i>No se pudo generar la gráfica de avance físico: {e}</i>", normal_style))
+
+        # Gráfica 2: Barras horizontales con % por categoría
+        try:
+            nombres = [c["nombre"] for c in categorias_fisicas]
+            porcentajes = [min(c["pct"], 100) for c in categorias_fisicas]
+            cat_colors = [c["color"] for c in categorias_fisicas]
+
+            fig2, ax2 = plt.subplots(figsize=(8, 3.5), facecolor='white')
+            y = np.arange(len(nombres))
+            bars = ax2.barh(y, porcentajes, color=cat_colors, edgecolor='#475569', linewidth=0.5)
+            ax2.barh(y, [100 - p for p in porcentajes], left=porcentajes,
+                     color='#E2E8F0', edgecolor='#CBD5E1', linewidth=0.3)
+            ax2.set_yticks(y)
+            ax2.set_yticklabels(nombres, fontsize=10)
+            ax2.set_xlim(0, 100)
+            ax2.set_xlabel('% de avance', fontsize=9)
+            ax2.set_title('Progreso de Obra por Categoría',
+                          fontsize=11, fontweight='bold')
+            ax2.spines['top'].set_visible(False)
+            ax2.spines['right'].set_visible(False)
+            ax2.invert_yaxis()
+            for bar, pct in zip(bars, porcentajes):
+                ax2.text(bar.get_width() + 1.5, bar.get_y() + bar.get_height()/2.,
+                         f'{pct:.1f}%', va='center', fontsize=9,
+                         color='#0F172A', fontweight='bold')
+
+            plt.tight_layout()
+            chart_buf2 = io.BytesIO()
+            plt.savefig(chart_buf2, format='png', dpi=130, bbox_inches='tight', facecolor='white')
+            plt.close(fig2)
+            chart_buf2.seek(0)
+            story.append(RLImage(chart_buf2, width=480, height=220))
+            story.append(Spacer(1, 10))
+        except Exception as e:
+            story.append(Paragraph(f"<i>No se pudo generar la gráfica horizontal: {e}</i>", normal_style))
+
+        # Tabla detallada por categoría
+        fis_headers = ["Categoría", "Planeado", "Real ejecutado", "% Avance"]
+        fis_data = [fis_headers]
+        for c in categorias_fisicas:
+            fis_data.append([
+                c["nombre"],
+                f"{c['planeado']:,.2f} {c['unidad']}",
+                f"{c['real']:,.2f} {c['unidad']}",
+                f"{c['pct']:.1f}%",
+            ])
+        fis_table = Table(fis_data, colWidths=[110, 130, 130, 90])
+        fis_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#475569')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('ALIGN', (0, 1), (0, -1), 'LEFT'),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E5E7EB')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#FAFAFA')]),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('PADDING', (0, 0), (-1, -1), 6),
+        ]))
+        story.append(fis_table)
+        story.append(Spacer(1, 20))
+
+    # --- MATRIZ DE PILAS/ANCLAS POR CARA (si está configurada) ---
+    caras = proyecto.get("caras_excavacion") or []
+    if len(caras) == 4 and any((c.get('pilas') or c.get('anclas')) for c in caras):
+        story.append(Paragraph("🧱 PROGRESO POR CARA DE EXCAVACIÓN", section_style))
+        cara_headers = ["Cara", "Pilas (compl./total)", "% Pilas", "Anclas (compl./total)", "% Anclas"]
+        cara_data = [cara_headers]
+        for c in caras:
+            p_tot = int(c.get('pilas') or 0)
+            a_tot = int(c.get('anclas') or 0)
+            p_comp = sum(1 for s in (c.get('pilas_estados') or []) if s)
+            a_comp = sum(1 for s in (c.get('anclas_estados') or []) if s)
+            p_pct = (p_comp / p_tot * 100) if p_tot else 0
+            a_pct = (a_comp / a_tot * 100) if a_tot else 0
+            cara_data.append([
+                c.get('nombre', '—'),
+                f"{p_comp} / {p_tot}",
+                f"{p_pct:.1f}%",
+                f"{a_comp} / {a_tot}",
+                f"{a_pct:.1f}%",
+            ])
+        cara_table = Table(cara_data, colWidths=[80, 110, 80, 110, 80])
+        cara_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0E7490')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E5E7EB')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F0FDFA')]),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('PADDING', (0, 0), (-1, -1), 6),
+        ]))
+        story.append(cara_table)
+        story.append(Spacer(1, 20))
+
     # --- PRESUPUESTO vs EJECUTADO (con avances reales del dron) ---
     af = af_service.calcular_avance_financiero(proyecto, avances)
     if af.get("tiene_presupuesto") and af["categorias"]:

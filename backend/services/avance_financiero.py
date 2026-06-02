@@ -54,6 +54,18 @@ def calcular_avance_financiero(proyecto: dict, avances: list) -> Dict[str, Any]:
         "muros_completados": proyecto.get("muros_planeados") or 0,
     }
 
+    # Si hay matriz de caras, sobrescribir pilas/anclas con celdas marcadas
+    caras = proyecto.get("caras_excavacion") or []
+    if len(caras) == 4 and any((c.get("pilas") or c.get("anclas")) for c in caras):
+        reales["pilas_completadas"] = sum(
+            sum(1 for s in (c.get("pilas_estados") or []) if s) for c in caras
+        )
+        reales["anclas_instaladas"] = sum(
+            sum(1 for s in (c.get("anclas_estados") or []) if s) for c in caras
+        )
+        planeados["pilas_completadas"] = sum(int(c.get("pilas") or 0) for c in caras)
+        planeados["anclas_instaladas"] = sum(int(c.get("anclas") or 0) for c in caras)
+
     color_map = {
         "Generales": "#94A3B8",
         "Excavación": "#F59E0B",

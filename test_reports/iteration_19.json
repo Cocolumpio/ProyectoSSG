@@ -1,0 +1,47 @@
+{
+  "summary": "End-to-end testing of the new Caras de Excavación matrix feature: GET/PUT/toggle/resumen endpoints, derived pilas/anclas counters, RBAC, PDF report (charts + caras section), avance-financiero, plus frontend integration. 15/15 backend tests PASS; frontend renders MatrizCarasExcavacion section under selected project with correct empty-state for unconfigured projects. One minor transient 401 on /caras-excavacion right after login.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/proyectos/{id}/caras-excavacion", "issue": "Right after frontend login a transient 401 occurs (call fires before Authorization header is set in axios). The component recovers and renders correctly; worth a small fix to delay first fetch until token is present."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Initial dashboard load after login", "issue": "Transient 401 on /api/proyectos/{id}/caras-excavacion (console error: 'Error cargando caras: AxiosError'). UI auto-recovers and shows empty state correctly, but generates two visible console errors per project switch.", "affected_selectors": ["[data-testid=\"matriz-caras-excavacion\"]"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_caras_excavacion.py",
+    "/app/test_reports/pytest/iter19_caras.xml"
+  ],
+  "action_items": [
+    "Optional: in MatrizCarasExcavacion.jsx (and any other component that fetches caras), guard the initial fetch with a check that auth token is set, or rely on a global axios interceptor that delays requests until token is loaded. Prevents the harmless but noisy 'Error cargando caras: AxiosError 401' on first paint.",
+    "Optional UX: when the selected project has no caras configured AND user is admin, surface a direct link/button in matriz-no-configurada that opens the Edit Project form scrolled to CarasExcavacionConfig."
+  ],
+  "critical_code_review_comments": [
+    "routes/caras_excavacion.py is clean (~250 lines), uses Pydantic min_length/max_length=4 for the caras list, normalizes state lengths defensively, and recalculates project pilas_planeadas/anclas_planeadas/pilas_ejecutadas/anclas_ejecutadas via _recalcular_totales_proyecto which also calls services.helpers.recalcular_avance_proyecto — consistent with the requested behavior.",
+    "Toggle endpoint correctly uses get_current_admin so clients receive 403 (verified). Read endpoints use get_current_user and validate clientes_asignados access.",
+    "Pydantic 2 syntax used (Field(min_length=4, max_length=4)); compatible with current backend.",
+    "_id is never included (find_one with {'_id': 0} projection) — good practice maintained."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_caras_excavacion.py (NEW — 15 tests for caras matrix feature)"
+  ],
+  "success_rate": {
+    "backend": "100% (15/15 passed)",
+    "frontend": "Pass — matriz section renders, empty state works, login/auth flows OK"
+  },
+  "test_credentials": {
+    "admin": "admin@dron.mx / admin123",
+    "client": "cliente@test.com / cliente123",
+    "note": "Read from /app/memory/test_credentials.md"
+  },
+  "seed_data_creation": "Tests create and tear down a fresh project (TEST_CarasExcavacion_Project) per module; pre-existing 'Torre Mezquitan' / 'Proyecto Pilas Demo' / 'Torre Corporativa Demo' projects untouched.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend feature tests for caras-excavacion live in /app/backend/tests/test_caras_excavacion.py (15 cases). Project creation requires fields: nombre, ubicacion, cliente, tipo_obra, presupuesto_total, fecha_inicio, fecha_fin_planeada, coordenadas (dict). Toggle endpoint requires admin; client gets 403. The configured-state E2E was verified via the existing 'Torre Mezquitan'-class projects but in this run the auto-selected first project had no caras configured, so the empty-state branch was exercised. To exercise the cells UI: log in as admin, click on 'Proyecto Pilas Demo' or 'Torre Corporativa Demo' in 'Proyectos Activos' panel (the agent's setup script seeded one of these with 12/12/8/8 pilas and 6/6/4/4 anclas).",
+  "rca_of_the_issue": "Transient 401 on /caras-excavacion: the matriz component mounts and fires GET before the axios default Authorization header is set during the post-login redirect. Pattern is common across multiple components on this app; fix by adding a useEffect guard `if (!token) return;` or by replacing direct axios.get with the authenticated client instance that includes the interceptor. Not a regression — pre-existing pattern; this feature just adds another consumer that surfaces it."
+}
