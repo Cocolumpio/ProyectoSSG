@@ -30,6 +30,303 @@ def excel_date_to_string(excel_date: int) -> str:
         return str(excel_date)
 
 
+# --- Mapeo de categorías de Programa de Obra (formato V2) a fases DrON ---
+# Cada categoría se mapea a (fase_dron, unidad_esperada) o None si es general/no-físico
+_CATEGORIA_PROGRAMA_MAPPING = {
+    "EXCAVACION": "excavacion",
+    "EXCAVACIÓN": "excavacion",
+    "PILAS DE CIMENTACION": "pilas",
+    "PILAS DE CIMENTACIÓN": "pilas",
+    "PILAS": "pilas",
+    "PERFILES DE CIMENTACION": "pilas",  # también pilas (perfiles estructurales)
+    "PERFILES DE CIMENTACIÓN": "pilas",
+    "ANCLAJE": "anclas",
+    "ANCLAS": "anclas",
+    "ANCLAJES": "anclas",
+    "MUROS": "muros",
+    "MUROS DE CONTENCION": "muros",
+    "MUROS DE CONTENCIÓN": "muros",
+    "ESTABILIZACION": "muros",  # estabilización suele ser M2 de muro
+    "ESTABILIZACIÓN": "muros",
+    "ZAPATA CORRIDA": "cimentacion",
+    "ZAPATA LINDERO": "cimentacion",
+    "CIMENTACION": "cimentacion",
+    "CIMENTACIÓN": "cimentacion",
+    "GENERALES": "generales",
+    "PRELIMINARES": "generales",
+}
+
+
+def _normalizar_categoria(nombre: str) -> str:
+    """Normaliza el nombre de la categoría para hacer matching robusto."""
+    if not nombre:
+        return ""
+    return re.sub(r"\s+", " ", str(nombre)).strip().upper()
+
+
+def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
+    """
+    Parser para programas de obra estilo "Avance por Actividades" (formato V2).
+    Detecta automáticamente la presencia del formato y devuelve None si no aplica.
+
+    Estructura esperada:
+      - Fechas de inicio / fin / semanas en filas 8-10
+      - Fila con headers ``CONCEPTO | UNIDAD | CANTIDAD | IMPORTE DE CONTRATO``
+        (suele estar en torno a la fila 20).
+      - Cada categoría (GENERALES, EXCAVACION, ANCLAJE, MUROS, PILAS, ...)
+        en columna C con ``importe`` en col F y sin ``unidad``.
+      - Cada partida bajo la categoría tiene ``unidad`` (M3, M2, PZA, PZAS, ML, ...)
+        y ``cantidad`` numérica.
+    """
+    import openpyxl
+    try:
+        wb = openpyxl.load_workbook(BytesIO(file_content), data_only=True)
+    except Exception:
+        return None
+
+    # Buscar la primera hoja con headers válidos
+    ws = None
+    header_row = None
+    for sheet in wb.sheetnames:
+        candidate = wb[sheet]
+        for r in range(1, min(40, candidate.max_row + 1)):
+            row_vals = [candidate.cell(row=r, column=c).value for c in range(1, 12)]
+            row_str = " | ".join(str(v).upper() for v in row_vals if v is not None)
+            if (
+                "CONCEPTO" in row_str
+                and "UNIDAD" in row_str
+                and "CANTIDAD" in row_str
+                and ("IMPORTE" in row_str or "IMPORTE DE CONTRATO" in row_str)
+            ):
+                ws = candidate
+                header_row = r
+                break
+        if ws:
+            break
+
+    if not ws or not header_row:
+        return None
+
+    # Determinar columnas de concepto / unidad / cantidad / importe
+    col_concepto = col_unidad = col_cantidad = col_importe = None
+    for c in range(1, 15):
+        val = ws.cell(row=header_row, column=c).value
+        if not val:
+            continue
+        s = str(val).strip().upper()
+        if s == "CONCEPTO":
+            col_concepto = c
+        elif s == "UNIDAD":
+            col_unidad = c
+        elif s == "CANTIDAD":
+            col_cantidad = c
+        elif "IMPORTE" in s and col_importe is None:
+            col_importe = c
+
+    if not (col_concepto and col_unidad and col_cantidad):
+        return None
+
+    # Extraer metadatos del proyecto (fechas + semanas) buscando keywords en cols B-D
+    fecha_inicio = None
+    fecha_fin = None
+    semanas_planeadas = 0
+    for r in range(1, header_row):
+        for c in range(1, 8):
+            v = ws.cell(row=r, column=c).value
+            if not isinstance(v, str):
+                continue
+            label = v.upper()
+            if "INICIO DE CONTRATO" in label or "INICIO REAL" in label:
+                for cc in range(c + 1, min(c + 4, 12)):
+                    cand = ws.cell(row=r, column=cc).value
+                    if isinstance(cand, datetime):
+                        if not fecha_inicio:
+                            fecha_inicio = cand.strftime("%Y-%m-%d")
+                        break
+            elif "TERMINO DE CONTRATO" in label or "TÉRMINO DE CONTRATO" in label:
+                for cc in range(c + 1, min(c + 4, 12)):
+                    cand = ws.cell(row=r, column=cc).value
+                    if isinstance(cand, datetime):
+                        fecha_fin = cand.strftime("%Y-%m-%d")
+                        break
+            elif "SEMANAS DE EJECUCIÓN" in label or "SEMANAS DE EJECUCION" in label:
+                # Solo tomar el primer match (suele ser el total de semanas del proyecto)
+                if semanas_planeadas:
+                    continue
+                for cc in range(c + 1, min(c + 4, 12)):
+                    cand = ws.cell(row=r, column=cc).value
+                    if isinstance(cand, (int, float)) and 0 < cand < 500:
+                        semanas_planeadas = int(cand)
+                        break
+
+    # Recorrer las filas de datos
+    categorias = {}
+    categoria_actual = None
+    presupuesto_total = 0.0
+    nombre_proyecto = None
+
+    # Intentar obtener el nombre del proyecto (suele estar en C3 o cerca)
+    for r in range(1, header_row):
+        v = ws.cell(row=r, column=3).value
+        if isinstance(v, str) and v.strip() and "ESPACIO" not in v.upper() and "TIEMPOS" not in v.upper() and "AVANCE" not in v.upper() and "FECHA" not in v.upper() and "SEMANAS" not in v.upper():
+            nombre_proyecto = v.strip()
+            break
+        # Fallback al nombre "Espacio prados monraz" (col C3)
+        if isinstance(v, str) and "ESPACIO" in v.upper() and not nombre_proyecto:
+            nombre_proyecto = v.strip()
+
+    for r in range(header_row + 1, ws.max_row + 1):
+        concepto = ws.cell(row=r, column=col_concepto).value
+        unidad = ws.cell(row=r, column=col_unidad).value
+        cantidad = ws.cell(row=r, column=col_cantidad).value
+        importe = ws.cell(row=r, column=col_importe).value if col_importe else None
+
+        if not isinstance(concepto, str) or not concepto.strip():
+            continue
+        concepto_clean = concepto.strip()
+        if concepto_clean.upper().startswith("TOTALES"):
+            if isinstance(importe, (int, float)):
+                presupuesto_total = float(importe)
+            break
+
+        cat_norm = _normalizar_categoria(concepto_clean)
+        # Heurística: categoría = primera línea sin "unidad" Y con "importe"
+        es_categoria = (
+            (unidad is None or str(unidad).strip() == "")
+            and isinstance(importe, (int, float))
+            and "\n" not in concepto_clean
+            and len(concepto_clean) < 50  # nombres cortos
+        )
+
+        if es_categoria:
+            categoria_actual = concepto_clean
+            fase = _CATEGORIA_PROGRAMA_MAPPING.get(cat_norm, "otros")
+            categorias[categoria_actual] = {
+                "nombre": categoria_actual,
+                "fase": fase,
+                "importe": float(importe or 0),
+                "items": [],
+            }
+            continue
+
+        # Es una partida
+        if categoria_actual and isinstance(cantidad, (int, float)) and cantidad > 0:
+            unidad_str = str(unidad).strip() if unidad else ""
+            categorias[categoria_actual]["items"].append({
+                "descripcion": concepto_clean,
+                "unidad": unidad_str,
+                "cantidad": float(cantidad),
+                "importe": float(importe) if isinstance(importe, (int, float)) else 0.0,
+            })
+
+    # Calcular totales agregados por fase
+    total_excavacion = 0.0
+    total_pilas = 0
+    total_anclas = 0
+    total_muros = 0.0
+    tipos_actividades = set()
+
+    for cat_data in categorias.values():
+        fase = cat_data["fase"]
+        for item in cat_data["items"]:
+            unidad_up = item["unidad"].upper()
+            cant = item["cantidad"]
+            if fase == "excavacion" and unidad_up in ("M3", "M³"):
+                total_excavacion += cant
+                tipos_actividades.add("excavacion")
+            elif fase == "pilas" and unidad_up in ("PZA", "PZAS", "PIEZA", "PIEZAS"):
+                total_pilas += int(round(cant))
+                tipos_actividades.add("pilas")
+            elif fase == "anclas" and unidad_up in ("PZA", "PZAS"):
+                total_anclas += int(round(cant))
+                tipos_actividades.add("anclas")
+            elif fase == "muros" and unidad_up in ("M2", "M²"):
+                total_muros += cant
+                tipos_actividades.add("muros")
+
+    if not presupuesto_total:
+        presupuesto_total = sum(c["importe"] for c in categorias.values())
+
+    # Construir un "frente" único con todas las partidas como actividades planas
+    actividades_frente = []
+    for cat_data in categorias.values():
+        for item in cat_data["items"]:
+            actividades_frente.append({
+                "descripcion": item["descripcion"],
+                "categoria": cat_data["nombre"],
+                "cantidad": item["cantidad"],
+                "unidad": item["unidad"],
+                "importe": item["importe"],
+                "tipo": cat_data["fase"],
+            })
+
+    frentes = []
+    if actividades_frente:
+        frentes.append({
+            "nombre": nombre_proyecto or "Proyecto",
+            "actividades": actividades_frente,
+            "tipo_principal": None,
+        })
+
+    # Construir desglose de presupuesto compatible con el formato existente
+    cat_presupuesto = {}
+    mapeo_categoria_presupuesto = {
+        "excavacion": "Excavación",
+        "pilas": "Cimentación",
+        "anclas": "Anclas",
+        "muros": "Muros",
+        "cimentacion": "Cimentación",
+        "generales": "Generales",
+        "otros": "Otros",
+    }
+    for cat_data in categorias.values():
+        key = mapeo_categoria_presupuesto.get(cat_data["fase"], "Otros")
+        if key not in cat_presupuesto:
+            cat_presupuesto[key] = {"total": 0.0, "conceptos": []}
+        cat_presupuesto[key]["total"] += cat_data["importe"]
+        for item in cat_data["items"]:
+            cat_presupuesto[key]["conceptos"].append({
+                "concepto": item["descripcion"][:200],
+                "cantidad": item["cantidad"],
+                "unidad": item["unidad"],
+                "importe": item["importe"],
+                "progreso": 0,
+            })
+
+    return {
+        "success": True,
+        "formato": "programa_obra_v2",
+        "nombre_proyecto": nombre_proyecto,
+        "frentes": frentes,
+        "categorias_detalle": list(categorias.values()),
+        "presupuesto": {
+            "total": round(presupuesto_total, 2),
+            "categorias": cat_presupuesto,
+            "hoja_seleccionada": ws.title,
+            "filename": "programa_obra.xlsx",
+        },
+        "resumen": {
+            "total_frentes": len(frentes),
+            "total_actividades": len(actividades_frente),
+            "total_dias": semanas_planeadas * 7,
+            "semanas_estimadas": semanas_planeadas or 0,
+            "fecha_inicio": fecha_inicio,
+            "fecha_fin": fecha_fin,
+            "total_pilas": total_pilas,
+            "total_muros": round(total_muros, 2),
+            "total_anclas": total_anclas,
+            "total_excavacion": round(total_excavacion, 2),
+            "tipos_actividades": list(tipos_actividades),
+            "semanas_excavacion": 0,
+            "semanas_pilas": 0,
+            "semanas_muros": 0,
+            "semanas_anclas": 0,
+            "presupuesto_total": round(presupuesto_total, 2),
+            "nombre_proyecto": nombre_proyecto,
+        },
+    }
+
+
 def detectar_tipo_actividad(descripcion: str) -> Dict[str, Any]:
     """
     Detecta el tipo de actividad basado en palabras clave en la descripción.
@@ -57,7 +354,20 @@ def parse_excel_cronograma(file_content: bytes) -> Dict[str, Any]:
     Parsea un archivo Excel de cronograma y extrae la información de frentes y actividades.
     Detecta automáticamente los tipos de actividades (excavación, pilas, muros, anclas).
     Retorna estructura lista para crear proyecto.
+
+    Soporta dos formatos:
+      1. "Programa de Obra V2" (header CONCEPTO|UNIDAD|CANTIDAD|IMPORTE DE CONTRATO,
+         con categorías GENERALES/EXCAVACION/ANCLAJE/MUROS/PILAS/etc.).
+      2. Formato clásico "FRENTE #PILAS" (legacy).
     """
+    # 1) Intentar primero el formato V2 (Avance por Actividades)
+    try:
+        v2 = parse_excel_programa_obra(file_content)
+        if v2 and v2.get("success") and (v2["resumen"]["total_actividades"] > 0):
+            return v2
+    except Exception as e:
+        logging.warning(f"V2 parser falló, intentando legacy: {e}")
+
     try:
         # Leer Excel
         df = pd.read_excel(BytesIO(file_content), header=None)

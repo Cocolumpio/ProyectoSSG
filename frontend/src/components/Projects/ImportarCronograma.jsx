@@ -57,9 +57,10 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
       
       setParsedData(response.data);
       
-      // Extraer nombre del archivo
+      // Si el parser V2 detectó el nombre del proyecto, usarlo; sino el nombre del archivo
+      const detectedName = response.data?.nombre_proyecto || response.data?.resumen?.nombre_proyecto;
       const fileName = selectedFile.name.replace(/\.(xlsx|xls)$/i, '');
-      setNombreProyecto(fileName);
+      setNombreProyecto(detectedName || fileName);
       
     } catch (err) {
       setError(err.response?.data?.detail || 'Error al procesar el archivo');
@@ -91,6 +92,7 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
         coordenadas: { lat: 20.6597, lng: -103.3496 }, // Guadalajara default
         frentes: parsedData.frentes,
         resumen: parsedData.resumen,
+        presupuesto: parsedData.presupuesto, // V2: incluye presupuesto detectado
         descripcion: descripcionParts.join(', ')
       });
       
@@ -273,7 +275,7 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
                 <p className="text-sm text-white/50">Semanas Estimadas</p>
               </div>
             </div>
-            <div className="mt-4 flex gap-4 text-sm text-white/60">
+            <div className="mt-4 flex flex-wrap gap-4 text-sm text-white/60">
               <span className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
                 Inicio: {parsedData.resumen.fecha_inicio}
@@ -282,6 +284,16 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
                 <Calendar className="h-4 w-4" />
                 Fin: {parsedData.resumen.fecha_fin}
               </span>
+              {parsedData.presupuesto?.total > 0 && (
+                <span className="flex items-center gap-1 bg-amber-500/15 text-amber-300 px-2 py-1 rounded">
+                  💰 Presupuesto: ${parsedData.presupuesto.total.toLocaleString('es-MX', { maximumFractionDigits: 0 })} MXN
+                </span>
+              )}
+              {parsedData.formato === 'programa_obra_v2' && (
+                <span className="flex items-center gap-1 bg-cyan-500/15 text-cyan-300 px-2 py-1 rounded text-xs">
+                  ✓ Formato Programa de Obra detectado
+                </span>
+              )}
             </div>
           </div>
 

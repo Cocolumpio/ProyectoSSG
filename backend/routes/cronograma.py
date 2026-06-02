@@ -66,7 +66,7 @@ async def crear_proyecto_desde_cronograma(data: dict):
         
         proyecto = {
             "id": proyecto_id,
-            "nombre": data.get("nombre", "Nuevo Proyecto"),
+            "nombre": data.get("nombre", resumen.get("nombre_proyecto") or "Nuevo Proyecto"),
             "ubicacion": data.get("ubicacion", ""),
             "direccion": data.get("direccion", ""),
             "coordenadas": data.get("coordenadas", {"lat": 0, "lng": 0}),
@@ -96,6 +96,15 @@ async def crear_proyecto_desde_cronograma(data: dict):
             "clientes_asignados": [],
             "created_at": datetime.now(timezone.utc)
         }
+
+        # Si el parser V2 incluyó presupuesto, persistirlo en el proyecto
+        presupuesto_data = data.get("presupuesto")
+        if presupuesto_data and isinstance(presupuesto_data, dict) and presupuesto_data.get("total"):
+            proyecto["presupuesto"] = {
+                **presupuesto_data,
+                "version": presupuesto_data.get("version") or datetime.now(timezone.utc).strftime("v%Y%m%d-%H%M"),
+                "fecha_carga": datetime.now(timezone.utc).isoformat(),
+            }
         
         await db.proyectos.insert_one(proyecto)
         
@@ -203,6 +212,15 @@ async def actualizar_cronograma_proyecto(proyecto_id: str, file: UploadFile = Fi
             update_data["fecha_inicio"] = resumen["fecha_inicio"]
         if resumen.get("fecha_fin"):
             update_data["fecha_fin_planeada"] = resumen["fecha_fin"]
+
+        # Si el parser V2 incluyó presupuesto, persistirlo en el proyecto
+        presupuesto_data = resultado.get("presupuesto")
+        if presupuesto_data and isinstance(presupuesto_data, dict) and presupuesto_data.get("total"):
+            update_data["presupuesto"] = {
+                **presupuesto_data,
+                "version": presupuesto_data.get("version") or datetime.now(timezone.utc).strftime("v%Y%m%d-%H%M"),
+                "fecha_carga": datetime.now(timezone.utc).isoformat(),
+            }
         
         await db.proyectos.update_one({"id": proyecto_id}, {"$set": update_data})
         
