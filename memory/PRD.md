@@ -5,9 +5,21 @@
 - **IA 100% Funcional**: Catálogo de Maquinaria + Análisis de Fotos + Volumetría DEM
 - **Volumetría DEM (TIFF)**: Cálculo retiro/relleno con heatmap + interpretación IA
 - **Landing page** pública en `/`, dark mode completo en `/app/*`
-- **Arquitectura Modular**: server.py refactorizado, 9 routers modulares
-- **🆕 Matriz de Pilas/Anclas por 4 Caras**: configuración por proyecto + heatmap interactivo en dashboard + tabla en PDF
-- **🆕 Reporte Ejecutivo Mejorado**: gráficas de avance físico Planeado vs Real por categoría (vertical agrupadas + horizontales con %)
+- **Arquitectura Modular**: server.py refactorizado, 10 routers modulares
+- **Matriz de Pilas/Anclas por 4 Caras**: configuración por proyecto + heatmap interactivo en dashboard + tabla en PDF
+- **Reporte Ejecutivo Mejorado**: gráficas de avance físico Planeado vs Real por categoría (vertical agrupadas + horizontales con %)
+- **🆕 Programa de Obra V2**: parser detecta automáticamente cronogramas con columnas diarias por semana (LUN-DOM × N semanas)
+- **🆕 Tarjetas Comparativa Semanal**: una tarjeta por cada semana del programa con planeado vs real (drone) + presupuesto, mostrando solo las fases activas en esa semana
+
+## Comparativa Semanal — Programa de Obra V2 (Feb 2026)
+- `services/cronograma_ai.py` extiende parser V2 con detección de bloques de 7 días por semana (PRELIMINARES + N semanas).
+- `routes/comparativa_semanal.py` (NEW): GET `/api/proyectos/{id}/comparativa-semanal` devuelve `total_semanas`, `presupuesto_total_contrato` y array de semanas con planeado/real/pct/acumulado por fase, fechas, estado.
+- Estado por semana: `pendiente` (sin avance real > 0), `ok` (>=90%), `atraso` (>=70%), `critico` (<70%).
+- Frontend `Dashboard/ComparativaSemanalCards.jsx`: tarjetas responsive (grid 1-2-3 col), expandibles para ver actividades planeadas individuales (descripción + cantidad + importe).
+- Solo muestra fases activas por semana — ej. Sem 1 solo Excavación, Sem 2 empieza Pilas/Anclas, Sem 14 solo Pilas.
+- Persistencia: `programa_semanal` se guarda en el doc del proyecto al importar/actualizar cronograma.
+
+**Testing (iter_20)**: 12/12 backend pytest passed; UI verificada con 16 tarjetas renderizando correctamente y filtrado por fase activa. Bug fix: estado="pendiente" cuando no hay métricas reales > 0 (anteriormente fallaba mostrando "critico" por avance.id en el truthy check).
 
 ## Matriz de Pilas/Anclas por Caras (Feb 2026)
 Nueva funcionalidad para distribuir y visualizar el progreso de pilas y anclas en las 4 caras de la excavación:
