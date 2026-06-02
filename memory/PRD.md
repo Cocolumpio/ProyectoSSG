@@ -1,11 +1,30 @@
 # DrON Topografía - Product Requirements Document
 
-## Estado Actual (Actualizado: 2026-02-19)
+## Estado Actual (Actualizado: 2026-02-21)
 - **Sistema Funcional**: Dashboard multi-fase completamente operativo
 - **IA 100% Funcional**: Catálogo de Maquinaria + Análisis de Fotos + Volumetría DEM
-- **🆕 Volumetría DEM (TIFF)**: Cálculo retiro/relleno con heatmap + interpretación IA
-- **🆕 Landing page** pública en `/`, dark mode completo en `/app/*`
-- **Arquitectura Modular**: server.py 5089 → 2475 líneas, 8 routers modulares
+- **Volumetría DEM (TIFF)**: Cálculo retiro/relleno con heatmap + interpretación IA
+- **Landing page** pública en `/`, dark mode completo en `/app/*`
+- **Arquitectura Modular**: server.py refactorizado, 9 routers modulares
+- **🆕 Matriz de Pilas/Anclas por 4 Caras**: configuración por proyecto + heatmap interactivo en dashboard + tabla en PDF
+- **🆕 Reporte Ejecutivo Mejorado**: gráficas de avance físico Planeado vs Real por categoría (vertical agrupadas + horizontales con %)
+
+## Matriz de Pilas/Anclas por Caras (Feb 2026)
+Nueva funcionalidad para distribuir y visualizar el progreso de pilas y anclas en las 4 caras de la excavación:
+
+**Backend**:
+- Modelo `CaraExcavacion`: `{nombre, pilas, anclas, pilas_estados, anclas_estados}` (estados = lista binaria por celda).
+- `routes/caras_excavacion.py`: GET configuración + resumen, PUT configurar (4 caras, admin), PUT toggle celda (admin), GET resumen agregado.
+- `services/helpers.py`: cuando hay matriz configurada, pilas/anclas planeadas y ejecutadas se derivan de las celdas; fallback a avances semanales si no hay matriz.
+- `services/avance_financiero.py`: usa totales de la matriz para Cimentación/Anclas cuando está activa.
+- `routes/reporte_ejecutivo.py`: añade sección "Avance Físico por Categoría" con dos gráficas (vertical agrupada Planeado vs Real, horizontal con %) + tabla detallada; sección extra "Progreso por Cara de Excavación".
+
+**Frontend**:
+- `Projects/CarasExcavacionConfig.jsx`: inline en formulario de proyecto (aparece cuando se activa "Cimentación"), 4 tarjetas con nombre editable + cantidades de pilas/anclas.
+- `Dashboard/MatrizCarasExcavacion.jsx`: heatmap por cara, toggle Pilas/Anclas, click binario, layout responsive con tamaño de celda adaptativo según cantidad.
+- Integrado en `Dashboard/DashboardView.jsx` debajo del Gantt; `ProyectosView.jsx` persiste y rehidrata el campo.
+
+**Testing**: 15/15 tests backend pasados (iter_19); estados read-only para cliente; RBAC validado (admin-only writes).
 
 ## Volumetría DEM (Feb 2026)
 Nueva funcionalidad para calcular volumen de material retirado/rellenado entre semanas:

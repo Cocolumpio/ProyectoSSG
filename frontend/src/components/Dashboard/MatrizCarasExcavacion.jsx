@@ -20,6 +20,8 @@ export function MatrizCarasExcavacion({ proyectoId, isAdmin = false }) {
 
   useEffect(() => {
     if (!proyectoId) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
     cargarCaras();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proyectoId]);
