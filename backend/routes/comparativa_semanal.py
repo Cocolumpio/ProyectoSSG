@@ -83,7 +83,49 @@ async def comparativa_semanal(proyecto_id: str, current_user: dict = Depends(get
         "muros": float(proyecto.get("muros_planeados") or 0),
     }
     presupuesto_total = float((proyecto.get("presupuesto") or {}).get("total") or 0)
+    if not presupuesto_total:
+        presupuesto_total = float((proyecto.get("presupuesto") or {}).get("total_general") or 0)
     presupuesto_cats = (proyecto.get("presupuesto") or {}).get("categorias") or {}
+
+    # Mapeo nombre categoría → fase del proyecto
+    def _cat_a_fase(nombre_cat: str) -> str:
+        n = (nombre_cat or "").lower()
+        if "excav" in n:
+            return "excavacion"
+        if "ancla" in n:
+            return "anclas"
+        if "muro" in n:
+            return "muros"
+        if "cimen" in n or "pila" in n:
+            return "pilas"
+        return "otros"
+
+    # Calcular importe TOTAL por fase a partir del presupuesto del proyecto (APU u otro)
+    importe_total_fase = {"excavacion": 0.0, "pilas": 0.0, "anclas": 0.0, "muros": 0.0, "otros": 0.0}
+    for nombre_cat, info in presupuesto_cats.items():
+        fase = _cat_a_fase(nombre_cat)
+        importe_total_fase[fase] = importe_total_fase.get(fase, 0.0) + float(info.get("total") or 0)
+
+    # Contar cuántas semanas tienen actividad planeada por fase
+    sem_activas_fase = {"excavacion": 0, "pilas": 0, "anclas": 0, "muros": 0}
+    for sem in programa:
+        if float(sem.get("excavacion_m3") or 0) > 0:
+            sem_activas_fase["excavacion"] += 1
+        if float(sem.get("pilas") or 0) > 0:
+            sem_activas_fase["pilas"] += 1
+        if float(sem.get("anclas") or 0) > 0:
+            sem_activas_fase["anclas"] += 1
+        if float(sem.get("muros_m2") or 0) > 0:
+            sem_activas_fase["muros"] += 1
+
+    # Importe promedio por semana de cada fase activa
+    importe_promedio_semana = {
+        f: (importe_total_fase[f] / sem_activas_fase[f]) if sem_activas_fase[f] > 0 else 0.0
+        for f in ("excavacion", "pilas", "anclas", "muros")
+    }
+    # Generales/Otros se prorratea linealmente por todas las semanas
+    total_semanas_programa = max(len(programa), 1)
+    importe_generales_por_semana = importe_total_fase["otros"] / total_semanas_programa
 
     semanas_out = []
     for sem in programa:
@@ -92,7 +134,23 @@ async def comparativa_semanal(proyecto_id: str, current_user: dict = Depends(get
         plan_pil = float(sem.get("pilas") or 0)
         plan_anc = float(sem.get("anclas") or 0)
         plan_mur = float(sem.get("muros_m2") or 0)
-        plan_pres = float(sem.get("presupuesto") or 0)
+        plan_pres_excel = float(sem.get("presupuesto") or 0)
+
+        # Presupuesto de la semana: si el archivo de programa de obra ya traía
+        # importes, los usamos; si no, distribuimos el presupuesto promedio por
+        # semana de cada fase activa en esa semana.
+        if plan_pres_excel > 0:
+            plan_pres = plan_pres_excel
+        else:
+            plan_pres = importe_generales_por_semana
+            if plan_exc > 0:
+                plan_pres += importe_promedio_semana["excavacion"]
+            if plan_pil > 0:
+                plan_pres += importe_promedio_semana["pilas"]
+            if plan_anc > 0:
+                plan_pres += importe_promedio_semana["anclas"]
+            if plan_mur > 0:
+                plan_pres += importe_promedio_semana["muros"]
 
         # Acumular planeado
         plan_acum["excavacion"] += plan_exc
