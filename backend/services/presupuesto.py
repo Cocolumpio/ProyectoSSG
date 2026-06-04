@@ -33,9 +33,10 @@ def listar_hojas(excel_bytes: bytes) -> list:
         hojas = []
         for name in wb.sheetnames:
             ws = wb[name]
-            # Detectar si parece presupuesto (busca palabras clave en primeras 10 filas)
+            # Detectar si parece presupuesto (busca palabras clave en primeras 25 filas
+            # para capturar APU donde los headers aparecen en R13+)
             sample_text = ""
-            for row in ws.iter_rows(min_row=1, max_row=10, values_only=True):
+            for row in ws.iter_rows(min_row=1, max_row=25, values_only=True):
                 for c in row:
                     if c is not None:
                         sample_text += str(c) + " "
@@ -43,7 +44,9 @@ def listar_hojas(excel_bytes: bytes) -> list:
             es_presupuesto = any(
                 kw in sample_lower for kw in [
                     "concepto", "importe", "p. unitario", "p.u.", "subtotal",
-                    "total", "presupuesto", "cantidad", "unidad"
+                    "total", "presupuesto", "cantidad", "unidad",
+                    # APU markers
+                    "partida:", "análisis:", "analisis:", "precios unitarios",
                 ]
             )
             # Heurística para identificar versiones (R3, R4, PPTO, Neodata, etc.)
