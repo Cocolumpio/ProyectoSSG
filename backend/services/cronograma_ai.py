@@ -35,19 +35,25 @@ def excel_date_to_string(excel_date: int) -> str:
 _CATEGORIA_PROGRAMA_MAPPING = {
     "EXCAVACION": "excavacion",
     "EXCAVACIÓN": "excavacion",
+    "EXCAVACION Y CARGA DE MATERIAL": "excavacion",
+    "EXCAVACIÓN Y CARGA DE MATERIAL": "excavacion",
     "PILAS DE CIMENTACION": "pilas",
     "PILAS DE CIMENTACIÓN": "pilas",
     "PILAS": "pilas",
     "PERFILES DE CIMENTACION": "pilas",  # también pilas (perfiles estructurales)
     "PERFILES DE CIMENTACIÓN": "pilas",
+    "REFORZAMIENTO DE COLINDANCIAS": "pilas",  # Clemente: pilas de contención
     "ANCLAJE": "anclas",
     "ANCLAS": "anclas",
     "ANCLAJES": "anclas",
+    "ESTABILIZACION": "anclas",  # Clemente: aquí van los anclajes
+    "ESTABILIZACIÓN": "anclas",  # OJO: en Prados V2 esto era "muros" - aquí prevalece "anclas"
     "MUROS": "muros",
+    "MURO": "muros",
     "MUROS DE CONTENCION": "muros",
     "MUROS DE CONTENCIÓN": "muros",
-    "ESTABILIZACION": "muros",  # estabilización suele ser M2 de muro
-    "ESTABILIZACIÓN": "muros",
+    "MURO DE CONTENCION": "muros",
+    "MURO DE CONTENCIÓN": "muros",
     "ZAPATA CORRIDA": "cimentacion",
     "ZAPATA LINDERO": "cimentacion",
     "CIMENTACION": "cimentacion",
@@ -92,12 +98,16 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
         for r in range(1, min(40, candidate.max_row + 1)):
             row_vals = [candidate.cell(row=r, column=c).value for c in range(1, 12)]
             row_str = " | ".join(str(v).upper() for v in row_vals if v is not None)
-            if (
-                "CONCEPTO" in row_str
-                and "UNIDAD" in row_str
-                and "CANTIDAD" in row_str
-                and ("IMPORTE" in row_str or "IMPORTE DE CONTRATO" in row_str)
-            ):
+            # Acepta header con CONCEPTO + UNIDAD + (CANTIDAD o VOLUMEN DE PRESUPUESTO).
+            # El campo IMPORTE es opcional — algunos formatos solo tienen volumen.
+            tiene_concepto = "CONCEPTO" in row_str
+            tiene_unidad = "UNIDAD" in row_str
+            tiene_cantidad = (
+                "CANTIDAD" in row_str
+                or "VOLUMEN DE PRESUPUESTO" in row_str
+                or "VOLUMEN PRESUPUESTO" in row_str
+            )
+            if tiene_concepto and tiene_unidad and tiene_cantidad:
                 ws = candidate
                 header_row = r
                 break
@@ -118,7 +128,7 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
             col_concepto = c
         elif s == "UNIDAD":
             col_unidad = c
-        elif s == "CANTIDAD":
+        elif s in ("CANTIDAD", "VOLUMEN DE PRESUPUESTO", "VOLUMEN PRESUPUESTO"):
             col_cantidad = c
         elif "IMPORTE" in s and col_importe is None:
             col_importe = c
@@ -160,16 +170,15 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
                         break
 
     # ---- Detectar rangos de columnas por semana ----
-    # Row 20 (encabezado de cronograma): col 13 = PRELIMINARES (SEMANA 0),
-    # luego cada semana ocupa 8 columnas (7 días + 1 separadora).
-    # Si la columna C tiene texto "PRELIMINARES" o un número entero pequeño,
-    # se considera el inicio de una nueva semana.
-    semanas_cols = []  # lista de dicts: {semana, col_inicio, col_fin (inclusive), fecha_inicio, fecha_fin}
+    # Soporta dos variantes:
+    #  • Prados V2: "PRELIMINARES (SEMANA 0)" + número plano + 1 col separadora (8 cols/semana)
+    #  • Clemente:  "SEMANA 01", "SEMANA 02"... consecutivas (7 cols/semana, sin separadora)
+    semanas_cols = []
     # Identificar primero la fila de etiquetas de día y la de fechas (suelen ser header_row+1 y header_row+2)
     day_label_row = None
     fecha_row = None
     for r in range(header_row + 1, header_row + 5):
-        for c in range(11, min(40, ws.max_column + 1)):
+        for c in range(1, min(40, ws.max_column + 1)):
             v = ws.cell(row=r, column=c).value
             if isinstance(v, str) and v.strip().upper() in ("LUN", "LUNES") and day_label_row is None:
                 day_label_row = r
@@ -178,11 +187,24 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
         if day_label_row and fecha_row:
             break
 
-    for c in range(11, ws.max_column + 1):
+    import re as _re
+    semana_re = _re.compile(r"^\s*SEMANA\s*0*(\d{1,3})\s*$", _re.IGNORECASE)
+
+    # Encontrar primera columna válida (LUN + fecha)
+    primera_col_lun = None
+    if day_label_row and fecha_row:
+        for c in range(1, ws.max_column + 1):
+            lbl = ws.cell(row=day_label_row, column=c).value
+            fd = ws.cell(row=fecha_row, column=c).value
+            if isinstance(lbl, str) and lbl.strip().upper() in ("LUN", "LUNES") and isinstance(fd, datetime):
+                primera_col_lun = c
+                break
+
+    for c in range(max(primera_col_lun or 1, 1), ws.max_column + 1):
         v = ws.cell(row=header_row, column=c).value
         if v is None:
             continue
-        # Validar que el inicio tenga "LUN" en day_label_row Y fecha real en fecha_row
+        # Esta columna debe ser inicio de semana (LUN + fecha)
         es_lun = False
         es_fecha = False
         if day_label_row:
@@ -194,10 +216,22 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
         if not (es_lun and es_fecha):
             continue
 
-        if isinstance(v, str) and "PRELIMINARES" in v.upper():
-            semanas_cols.append({"semana": 0, "col_inicio": c, "col_fin": c + 6})
-        elif isinstance(v, (int, float)) and 0 < v <= 60 and v == int(v):
-            semanas_cols.append({"semana": int(v), "col_inicio": c, "col_fin": c + 6})
+        # Determinar el número de semana
+        semana_num = None
+        if isinstance(v, str):
+            v_up = v.upper()
+            if "PRELIMINARES" in v_up:
+                semana_num = 0
+            else:
+                m = semana_re.match(v.strip())
+                if m:
+                    semana_num = int(m.group(1))
+        elif isinstance(v, (int, float)) and 0 < v <= 100 and v == int(v):
+            semana_num = int(v)
+
+        if semana_num is None:
+            continue
+        semanas_cols.append({"semana": semana_num, "col_inicio": c, "col_fin": c + 6})
 
     # Capturar fechas inicio/fin de cada semana
 
@@ -238,12 +272,16 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
             break
 
         cat_norm = _normalizar_categoria(concepto_clean)
-        # Heurística: categoría = primera línea sin "unidad" Y con "importe"
+        # Heurística: una categoría es una fila SIN unidad y SIN cantidad numérica,
+        # con texto corto (suelen ser headers de sección como EXCAVACION, ANCLAJE, MUROS DE CONTENCION).
+        # Acepta tanto la variante con importe (Prados V2) como sin importe (Clemente).
+        sin_unidad = unidad is None or str(unidad).strip() == ""
+        sin_cantidad = not isinstance(cantidad, (int, float)) or cantidad == 0
         es_categoria = (
-            (unidad is None or str(unidad).strip() == "")
-            and isinstance(importe, (int, float))
+            sin_unidad
+            and sin_cantidad
             and "\n" not in concepto_clean
-            and len(concepto_clean) < 50  # nombres cortos
+            and len(concepto_clean) < 60
         )
 
         if es_categoria:
@@ -252,7 +290,7 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
             categorias[categoria_actual] = {
                 "nombre": categoria_actual,
                 "fase": fase,
-                "importe": float(importe or 0),
+                "importe": float(importe or 0) if isinstance(importe, (int, float)) else 0.0,
                 "items": [],
             }
             continue
@@ -281,6 +319,33 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
                 "importe": float(importe) if isinstance(importe, (int, float)) else 0.0,
                 "semanas": semanas_planeadas_item,
             })
+
+    # Post-procesamiento: refinar la fase de cada categoría según la unidad
+    # mayoritaria de sus partidas. Esto resuelve casos ambiguos (p. ej.
+    # "ESTABILIZACION" puede ser muros M2 en un proyecto o anclajes PZA en otro).
+    for cat_data in categorias.values():
+        # Si los items son todos M3 → excavación; todos M2 → muros; todos PZA → anclas/pilas
+        unidades = [it["unidad"].upper() for it in cat_data["items"]]
+        if not unidades:
+            continue
+        cat_norm_local = _normalizar_categoria(cat_data["nombre"])
+        # Solo refinar si la categoría no tiene mapping explícito fuerte
+        if cat_data["fase"] == "otros" or cat_norm_local in (
+            "ESTABILIZACION", "ESTABILIZACIÓN", "REFORZAMIENTO DE COLINDANCIAS"
+        ):
+            unidad_mayor = max(set(unidades), key=unidades.count)
+            if unidad_mayor in ("M3", "M³"):
+                cat_data["fase"] = "excavacion"
+            elif unidad_mayor in ("M2", "M²"):
+                cat_data["fase"] = "muros"
+            elif unidad_mayor in ("PZA", "PZAS", "PIEZA", "PIEZAS"):
+                # Heurística: si el nombre menciona "pila" o "colindancia", es pila;
+                # de lo contrario, es ancla.
+                nombre_up = cat_data["nombre"].upper()
+                if "PILA" in nombre_up or "COLINDANCIA" in nombre_up or "PERFIL" in nombre_up:
+                    cat_data["fase"] = "pilas"
+                else:
+                    cat_data["fase"] = "anclas"
 
     # Calcular totales agregados por fase
     total_excavacion = 0.0
@@ -426,6 +491,19 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
         )
         if tiene_actividad:
             programa_semanal.append(sem_data)
+
+    # Fallback: usar el programa_semanal detectado si no encontramos los metadatos en filas previas
+    if not semanas_planeadas and semanas_cols:
+        # Usar el total de columnas-semana detectadas (incluye las vacías al final)
+        semanas_planeadas = max(s["semana"] for s in semanas_cols)
+    if not fecha_inicio and semanas_cols:
+        fechas_ini = [s.get("fecha_inicio") for s in semanas_cols if s.get("fecha_inicio")]
+        if fechas_ini:
+            fecha_inicio = min(fechas_ini)
+    if not fecha_fin and semanas_cols:
+        fechas_fin = [s.get("fecha_fin") for s in semanas_cols if s.get("fecha_fin")]
+        if fechas_fin:
+            fecha_fin = max(fechas_fin)
 
     return {
         "success": True,
@@ -649,7 +727,7 @@ def parse_excel_cronograma(file_content: bytes) -> Dict[str, Any]:
                 fin = datetime.strptime(fecha_fin_proyecto, "%Y-%m-%d")
                 dias_totales = (fin - inicio).days
                 semanas_estimadas = max(1, (dias_totales + 6) // 7)  # Redondear hacia arriba
-            except:
+            except Exception:
                 semanas_estimadas = max(1, total_dias // 7) if total_dias > 0 else len(frentes) * 4
         
         return {
