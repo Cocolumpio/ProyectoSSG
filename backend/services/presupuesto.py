@@ -142,6 +142,182 @@ def detectar_columnas_relevantes(rows: list, version: Optional[str] = None) -> d
     return cols
 
 
+def _normalizar_categoria_apu(nombre: str) -> str:
+    """Normaliza el nombre de la partida APU a una categoría estándar DrON."""
+    n = (nombre or "").upper().strip()
+    if any(k in n for k in ["EXCAVAC", "RELLENO", "CARGA", "RETIRO"]):
+        return "Excavación"
+    if any(k in n for k in ["ANCLA", "ANCLAJE", "ESTABILIZAC", "TORON"]):
+        return "Anclas"
+    if any(k in n for k in ["MURO", "RECUBRIMIENTO", "LANZADO"]):
+        return "Muros"
+    if any(k in n for k in ["PILA", "REFORZAMIENTO", "COLINDANCIA", "PERFORAC", "PERFIL"]):
+        return "Cimentación"
+    if any(k in n for k in ["ZAPATA", "CIMENT", "LOSA", "TRABE", "DALA"]):
+        return "Cimentación"
+    if any(k in n for k in ["TOPOGRAF", "TRASLAD", "MOVILIZAC", "MANIOBRA", "FLETE"]):
+        return "Generales"
+    if any(k in n for k in ["EDIFICAC", "ESTRUCT", "COLUMNA", "ENTREPISO"]):
+        return "Edificación"
+    return "Otros"
+
+
+def parse_excel_apu(excel_bytes: bytes) -> Optional[dict]:
+    """
+    Parser para archivos "Análisis de Precios Unitarios" (APU/PU).
+
+    Estructura típica:
+      • Encabezado del análisis: columnas Código | Concepto | Unidad | P. Unitario | Op. | Cantidad | Importe | %
+      • Filas de partida:
+          Partida:   <NOMBRE CATEGORÍA>    Análisis No.:  <n>
+          Análisis:  <CÓDIGO>  <unidad>  <cantidad>  <importe>
+          <descripción>
+          ... bloques BÁSICOS / MATERIALES / MANO DE OBRA / EQUIPO Y HERRAMIENTA ...
+          SUBTOTAL: ...
+          (CD) Costo directo
+          PRECIO UNITARIO
+          (* texto *)
+
+    Devuelve un dict con la misma estructura que extraer_presupuesto_con_ia(),
+    o None si la hoja no parece formato APU.
+    """
+    try:
+        wb = load_workbook(io.BytesIO(excel_bytes), data_only=True, keep_vba=False)
+    except Exception:
+        return None
+
+    # Buscar la primera hoja con marcadores "Partida:" + "Análisis:"
+    ws = None
+    for name in wb.sheetnames:
+        candidate = wb[name]
+        encontrado = False
+        for r in range(1, min(60, candidate.max_row + 1)):
+            for c in range(1, 4):
+                v = candidate.cell(row=r, column=c).value
+                if isinstance(v, str) and v.strip().upper().startswith("PARTIDA:"):
+                    encontrado = True
+                    break
+            if encontrado:
+                break
+        if encontrado:
+            ws = candidate
+            break
+    if not ws:
+        return None
+
+    # Detectar columnas a partir del header "Código | Concepto | Unidad | P. Unitario | Op. | Cantidad | Importe"
+    header_row = None
+    for r in range(1, min(40, ws.max_row + 1)):
+        vals = [str(ws.cell(row=r, column=c).value or "").upper() for c in range(1, 9)]
+        joined = " | ".join(vals)
+        if "CÓDIGO" in joined and "CONCEPTO" in joined and "UNIDAD" in joined and "IMPORTE" in joined:
+            header_row = r
+            break
+    if not header_row:
+        return None
+
+    col_concepto = col_unidad = col_pu = col_cantidad = col_importe = None
+    for c in range(1, 10):
+        h = str(ws.cell(row=header_row, column=c).value or "").upper().strip()
+        if "CONCEPTO" in h:
+            col_concepto = c
+        elif "UNIDAD" in h:
+            col_unidad = c
+        elif "P. UNITARIO" in h or "PRECIO UNITARIO" in h:
+            col_pu = c
+        elif "CANTIDAD" in h:
+            col_cantidad = c
+        elif "IMPORTE" in h:
+            col_importe = c
+
+    if not (col_concepto and col_importe):
+        return None
+
+    # Recorrer y extraer cada análisis
+    categorias = {}
+    categoria_actual = None
+
+    for r in range(header_row + 1, ws.max_row + 1):
+        v_a = ws.cell(row=r, column=1).value
+        v_b = ws.cell(row=r, column=col_concepto).value
+        v_a_str = str(v_a or "").strip().upper()
+        v_b_str = str(v_b or "").strip()
+
+        # 1) Cabecera de partida: A="Partida:" → B = nombre categoría
+        if v_a_str.startswith("PARTIDA"):
+            categoria_actual = v_b_str
+            continue
+
+        # 2) Cabecera de análisis: A="Análisis:" → B = código, C=unidad, D=cantidad, E=importe (col_pu en este caso es D)
+        if v_a_str.startswith("ANÁLISIS") or v_a_str.startswith("ANALISIS"):
+            # Columnas en esta variante: B=código, D=unidad, F=cantidad, G=importe
+            codigo = v_b_str
+            unidad = str(ws.cell(row=r, column=col_unidad).value or "").strip() if col_unidad else ""
+            # En el header de análisis, "P. Unitario" suele tener la unidad (M3)
+            if not unidad or len(unidad) > 6:
+                # caer al col_pu si el campo unidad no es legible
+                alt_unidad = str(ws.cell(row=r, column=col_pu).value or "").strip() if col_pu else ""
+                if alt_unidad and len(alt_unidad) <= 6:
+                    unidad = alt_unidad
+            cantidad = ws.cell(row=r, column=col_cantidad).value if col_cantidad else None
+            importe = ws.cell(row=r, column=col_importe).value if col_importe else None
+
+            try:
+                cant_f = float(cantidad) if isinstance(cantidad, (int, float)) else None
+            except Exception:
+                cant_f = None
+            try:
+                imp_f = float(importe) if isinstance(importe, (int, float)) else None
+            except Exception:
+                imp_f = None
+
+            if not categoria_actual or imp_f is None or imp_f == 0:
+                continue
+
+            # Recopilar descripción de las siguientes 1-3 filas (texto largo en columna B)
+            descripcion = ""
+            for dr in range(r + 1, min(r + 4, ws.max_row + 1)):
+                desc_val = ws.cell(row=dr, column=1).value
+                if isinstance(desc_val, str) and len(desc_val) > 30:
+                    descripcion = desc_val.strip()
+                    break
+
+            cat_estandar = _normalizar_categoria_apu(categoria_actual)
+            if cat_estandar not in categorias:
+                categorias[cat_estandar] = {"total": 0.0, "conceptos": []}
+
+            p_unit = (imp_f / cant_f) if cant_f else None
+            categorias[cat_estandar]["conceptos"].append({
+                "concepto": (descripcion or codigo)[:300],
+                "unidad": unidad,
+                "cantidad": cant_f,
+                "p_unitario": round(p_unit, 2) if p_unit is not None else None,
+                "importe": round(imp_f, 2),
+                "seccion_excel": categoria_actual,
+                "codigo": codigo,
+            })
+            categorias[cat_estandar]["total"] += imp_f
+            continue
+
+    if not categorias:
+        return None
+
+    # Redondear totales
+    for cat in categorias.values():
+        cat["total"] = round(cat["total"], 2)
+    total_general = round(sum(c["total"] for c in categorias.values()), 2)
+    num_conceptos = sum(len(c["conceptos"]) for c in categorias.values())
+
+    return {
+        "version": "APU",
+        "sheet": ws.title,
+        "categorias": categorias,
+        "total_general": total_general,
+        "num_conceptos": num_conceptos,
+        "formato": "apu",
+    }
+
+
 async def extraer_presupuesto_con_ia(
     excel_bytes: bytes,
     sheet_name: str,
@@ -171,6 +347,16 @@ async def extraer_presupuesto_con_ia(
             "total_general": 5740000.0,
         }
     """
+    # 1) Intentar primero el parser APU (Análisis de Precios Unitarios), que es
+    # determinista y no requiere llamada a la IA. Si funciona, lo usamos.
+    try:
+        apu = parse_excel_apu(excel_bytes)
+        if apu and apu["num_conceptos"] > 0:
+            logger.info(f"Formato APU detectado: {apu['num_conceptos']} conceptos, total ${apu['total_general']:,.2f}")
+            return apu
+    except Exception as e:
+        logger.warning(f"Parser APU falló, intentando flujo IA: {e}")
+
     rows = extraer_filas_planas(excel_bytes, sheet_name)
     if not rows:
         raise ValueError(f"La hoja '{sheet_name}' está vacía")
