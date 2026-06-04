@@ -51,10 +51,21 @@ export function PresupuestoSection({ proyecto, readOnly, onShowSuccess, onProyec
     try {
       const r = await axios.get(`${API}/proyectos/${proyecto.id}/presupuesto`);
       if (r.data && !r.data.empty) {
-        setPresupuesto(r.data);
+        // Normalizar estructura (V2 del cronograma vs análisis IA tradicional)
+        const data = { ...r.data };
+        // Total: usar total_general si existe, sino total
+        if (data.total_general == null) data.total_general = data.total || 0;
+        // num_conceptos: contar si falta
+        if (data.num_conceptos == null) {
+          data.num_conceptos = Object.values(data.categorias || {})
+            .reduce((acc, info) => acc + (info?.conceptos?.length || 0), 0);
+        }
+        if (!data.version) data.version = 'V2';
+        if (!data.filename) data.filename = 'cronograma.xlsx';
+        setPresupuesto(data);
         // Expand all by default
         const exp = {};
-        Object.keys(r.data.categorias || {}).forEach(k => { exp[k] = true; });
+        Object.keys(data.categorias || {}).forEach(k => { exp[k] = true; });
         setExpanded(exp);
       } else {
         setPresupuesto(null);
@@ -370,10 +381,10 @@ export function PresupuestoSection({ proyecto, readOnly, onShowSuccess, onProyec
                                   </td>
                                   <td className="text-center px-2 py-2 text-white/50">{c.unidad}</td>
                                   <td className="text-right px-2 py-2">
-                                    {c.cantidad !== null ? c.cantidad.toLocaleString('es-MX', { maximumFractionDigits: 2 }) : '—'}
+                                    {c.cantidad != null ? Number(c.cantidad).toLocaleString('es-MX', { maximumFractionDigits: 2 }) : '—'}
                                   </td>
                                   <td className="text-right px-2 py-2 text-white/60">
-                                    {c.p_unitario !== null ? `$${c.p_unitario.toLocaleString('es-MX', { maximumFractionDigits: 2 })}` : '—'}
+                                    {c.p_unitario != null ? `$${Number(c.p_unitario).toLocaleString('es-MX', { maximumFractionDigits: 2 })}` : '—'}
                                   </td>
                                   <td className="text-right px-3 py-2 font-medium" style={{ color }}>
                                     {fmtMoney(c.importe)}

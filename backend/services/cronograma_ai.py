@@ -348,13 +348,19 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
             cat_presupuesto[key] = {"total": 0.0, "conceptos": []}
         cat_presupuesto[key]["total"] += cat_data["importe"]
         for item in cat_data["items"]:
+            cant_val = item["cantidad"] if item["cantidad"] else None
+            imp_val = item["importe"] or 0
+            p_unit = (imp_val / cant_val) if (cant_val and cant_val > 0) else None
             cat_presupuesto[key]["conceptos"].append({
                 "concepto": item["descripcion"][:200],
-                "cantidad": item["cantidad"],
+                "cantidad": cant_val,
                 "unidad": item["unidad"],
-                "importe": item["importe"],
+                "p_unitario": p_unit,
+                "importe": imp_val,
                 "progreso": 0,
             })
+
+    num_conceptos_total = sum(len(c["conceptos"]) for c in cat_presupuesto.values())
 
     # Construir programa semanal agregado por fase
     # Para cada semana, sumar cantidad planeada y importe planeado por fase
@@ -430,6 +436,9 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
         "programa_semanal": programa_semanal,
         "presupuesto": {
             "total": round(presupuesto_total, 2),
+            "total_general": round(presupuesto_total, 2),
+            "num_conceptos": num_conceptos_total,
+            "version": "V2",
             "categorias": cat_presupuesto,
             "hoja_seleccionada": ws.title,
             "filename": "programa_obra.xlsx",
