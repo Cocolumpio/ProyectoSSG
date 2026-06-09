@@ -295,16 +295,16 @@ class Proyecto(BaseModel):
     actividades_tipo: List[str] = []  # ["excavacion", "pilas", "muros", "anclas", "cimentacion"]
     # Métricas planeadas
     volumen_total_planeado: float = 0.0  # Volumen total estimado a excavar en m³
-    pilas_planeadas: int = 0  # Número total de pilas planeadas
+    pilas_planeadas: float = 0  # Número total de pilas planeadas
     muros_planeados: float = 0  # Área total de muros planeados en m²
-    anclas_planeadas: int = 0  # Número total de anclas planeadas
+    anclas_planeadas: float = 0  # Número total de anclas planeadas
     # Matriz de pilas/anclas dividida en 4 caras de excavación
     caras_excavacion: List[CaraExcavacion] = []
     # Métricas ejecutadas
     volumen_ejecutado: float = 0.0  # Volumen excavado en m³
-    pilas_ejecutadas: int = 0  # Pilas completadas
-    muros_ejecutados: int = 0  # Muros completados
-    anclas_ejecutadas: int = 0  # Anclas instaladas
+    pilas_ejecutadas: float = 0  # Pilas completadas
+    muros_ejecutados: float = 0  # Muros completados
+    anclas_ejecutadas: float = 0  # Anclas instaladas
     # Cronograma
     semanas_planeadas: int = 0  # Número de semanas planeadas de trabajo según cronograma
     semanas_excavacion: int = 0  # Semanas dedicadas a excavación
@@ -341,9 +341,9 @@ class ProyectoCreate(BaseModel):
     actividades_tipo: List[str] = []  # ["excavacion", "pilas", "muros", "anclas", "cimentacion"]
     # Métricas planeadas
     volumen_total_planeado: float = 0.0
-    pilas_planeadas: int = 0
+    pilas_planeadas: float = 0
     muros_planeados: float = 0
-    anclas_planeadas: int = 0
+    anclas_planeadas: float = 0
     # Matriz de pilas/anclas por 4 caras de excavación
     caras_excavacion: List[CaraExcavacion] = []
     # Cronograma
@@ -377,16 +377,16 @@ class ProyectoUpdate(BaseModel):
     actividades_tipo: Optional[List[str]] = None
     # Métricas planeadas
     volumen_total_planeado: Optional[float] = None
-    pilas_planeadas: Optional[int] = None
+    pilas_planeadas: Optional[float] = None
     muros_planeados: Optional[float] = None
-    anclas_planeadas: Optional[int] = None
+    anclas_planeadas: Optional[float] = None
     # Matriz de pilas/anclas por 4 caras de excavación
     caras_excavacion: Optional[List[CaraExcavacion]] = None
     # Métricas ejecutadas
     volumen_ejecutado: Optional[float] = None
-    pilas_ejecutadas: Optional[int] = None
-    muros_ejecutados: Optional[int] = None
-    anclas_ejecutadas: Optional[int] = None
+    pilas_ejecutadas: Optional[float] = None
+    muros_ejecutados: Optional[float] = None
+    anclas_ejecutadas: Optional[float] = None
     # Cronograma
     semanas_planeadas: Optional[int] = None
     semanas_excavacion: Optional[int] = None

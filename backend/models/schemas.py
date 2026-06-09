@@ -130,14 +130,14 @@ class Proyecto(BaseModel):
     fases_activas: List[str] = []
     # Métricas planeadas
     volumen_total_planeado: float = 0.0
-    pilas_planeadas: int = 0
-    muros_planeados: int = 0
-    anclas_planeadas: int = 0
+    pilas_planeadas: float = 0
+    muros_planeados: float = 0
+    anclas_planeadas: float = 0
     # Métricas ejecutadas
     volumen_ejecutado: float = 0.0
-    pilas_ejecutadas: int = 0
-    muros_ejecutados: int = 0
-    anclas_ejecutadas: int = 0
+    pilas_ejecutadas: float = 0
+    muros_ejecutados: float = 0
+    anclas_ejecutadas: float = 0
     # Cronograma
     semanas_planeadas: int = 0
     semanas_excavacion: int = 0
@@ -169,9 +169,9 @@ class ProyectoCreate(BaseModel):
     fases_activas: List[str] = []
     # Métricas planeadas
     volumen_total_planeado: float = 0.0
-    pilas_planeadas: int = 0
-    muros_planeados: int = 0
-    anclas_planeadas: int = 0
+    pilas_planeadas: float = 0
+    muros_planeados: float = 0
+    anclas_planeadas: float = 0
     # Cronograma
     semanas_planeadas: int = 0
     semanas_excavacion: int = 0
@@ -198,14 +198,14 @@ class ProyectoUpdate(BaseModel):
     fases_activas: Optional[List[str]] = None
     # Métricas planeadas
     volumen_total_planeado: Optional[float] = None
-    pilas_planeadas: Optional[int] = None
-    muros_planeados: Optional[int] = None
-    anclas_planeadas: Optional[int] = None
+    pilas_planeadas: Optional[float] = None
+    muros_planeados: Optional[float] = None
+    anclas_planeadas: Optional[float] = None
     # Métricas ejecutadas
     volumen_ejecutado: Optional[float] = None
-    pilas_ejecutadas: Optional[int] = None
-    muros_ejecutados: Optional[int] = None
-    anclas_ejecutadas: Optional[int] = None
+    pilas_ejecutadas: Optional[float] = None
+    muros_ejecutados: Optional[float] = None
+    anclas_ejecutadas: Optional[float] = None
     # Cronograma
     semanas_planeadas: Optional[int] = None
     semanas_excavacion: Optional[int] = None
