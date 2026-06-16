@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Building2, Plane, TrendingUp, Database, Map as MapIcon, Box, Calendar, Truck, DollarSign, BarChart3, Layers, ExternalLink, Maximize2, Columns3, Anchor, Shovel, Mail, Loader2, GitCompare } from 'lucide-react';
@@ -19,6 +19,7 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
   const [showFullViewer, setShowFullViewer] = useState(false);
   const [sendingReport, setSendingReport] = useState(false);
   const [showComparacion, setShowComparacion] = useState(false);
+  const [comparativaSemanal, setComparativaSemanal] = useState(null);
   
   // Vuelos del proyecto seleccionado
   const vuelosDelProyecto = selectedProyecto
@@ -58,6 +59,23 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
     
     fetchAvances();
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProyecto?.id]);
+
+  // Cargar comparativa semanal (programa vs real) para calcular % esperado
+  useEffect(() => {
+    const fetchComparativa = async () => {
+      if (!selectedProyecto?.id) {
+        setComparativaSemanal(null);
+        return;
+      }
+      try {
+        const res = await axios.get(`${API}/proyectos/${selectedProyecto.id}/comparativa-semanal`);
+        setComparativaSemanal(res.data?.tiene_programa ? res.data : null);
+      } catch (err) {
+        setComparativaSemanal(null);
+      }
+    };
+    fetchComparativa();
   }, [selectedProyecto?.id]);
 
   // Calcular estadísticas del proyecto seleccionado
@@ -134,6 +152,41 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
       const restante = 100 - avanceTotal;
       semanasProyectadas = Math.ceil(restante / ritmoSemanal);
     }
+
+    // Avance ESPERADO según el programa de obra hasta la última semana con avance subido
+    let avanceEsperado = null;
+    let ultimaSemanaConAvance = null;
+    let desviacion = null;
+    if (comparativaSemanal?.semanas?.length > 0) {
+      // Encontrar la última semana con avance (real > 0 en alguna fase)
+      const semanasComp = comparativaSemanal.semanas;
+      const ultimasConAvance = semanasComp.filter(s => s.tiene_avance);
+      const refSem = ultimasConAvance.length > 0
+        ? ultimasConAvance[ultimasConAvance.length - 1]
+        : semanasComp[0]; // si no hay avance, primera semana del programa
+
+      ultimaSemanaConAvance = refSem.semana;
+
+      // Calcular % esperado: acumulado planeado / total planeado por fase, promediado por fases activas
+      const acumPlan = refSem.acumulado?.planeado || {};
+      const porcentajesEsperados = [];
+      if (volumenPlaneado > 0) {
+        porcentajesEsperados.push(Math.min((acumPlan.excavacion_m3 || 0) / volumenPlaneado * 100, 100));
+      }
+      if (pilasPlaneadas > 0) {
+        porcentajesEsperados.push(Math.min((acumPlan.pilas || 0) / pilasPlaneadas * 100, 100));
+      }
+      if (anclasPlaneadas > 0) {
+        porcentajesEsperados.push(Math.min((acumPlan.anclas || 0) / anclasPlaneadas * 100, 100));
+      }
+      if (murosPlaneados > 0) {
+        porcentajesEsperados.push(Math.min((acumPlan.muros_m2 || 0) / murosPlaneados * 100, 100));
+      }
+      if (porcentajesEsperados.length > 0) {
+        avanceEsperado = porcentajesEsperados.reduce((a, b) => a + b, 0) / porcentajesEsperados.length;
+        desviacion = avanceTotal - avanceEsperado;
+      }
+    }
     
     return {
       volumenPlaneado,
@@ -163,10 +216,13 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
       // Avance total del proyecto
       avanceTotal,
       semanasProyectadas,
+      avanceEsperado,
+      ultimaSemanaConAvance,
+      desviacion,
     };
   };
 
-  const stats = calcularEstadisticasProyecto();
+  const stats = useMemo(() => calcularEstadisticasProyecto(), [selectedProyecto, avancesSemanales, comparativaSemanal]);
   const ultimoAvance = avancesSemanales.length > 0 ? avancesSemanales[0] : null;
 
   // Función para enviar reporte semanal
@@ -331,6 +387,21 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
               <div className="text-right">
                 <div className="text-3xl sm:text-4xl font-bold">{stats?.avanceTotal?.toFixed(1) || 0}%</div>
                 <div className="text-white/80 text-sm">Avance Total</div>
+                {stats?.avanceEsperado != null && (
+                  <div className="mt-1 inline-flex items-center gap-1 text-xs">
+                    <span className="text-white/60">Esperado:</span>
+                    <span className="font-semibold text-white">{stats.avanceEsperado.toFixed(1)}%</span>
+                    {stats.desviacion != null && (
+                      <span className={`px-1.5 py-0.5 rounded font-bold ${
+                        stats.desviacion >= -2 ? 'bg-emerald-500/30 text-emerald-200' :
+                        stats.desviacion >= -10 ? 'bg-amber-500/30 text-amber-200' :
+                        'bg-rose-500/30 text-rose-200'
+                      }`}>
+                        {stats.desviacion >= 0 ? '+' : ''}{stats.desviacion.toFixed(1)}%
+                      </span>
+                    )}
+                  </div>
+                )}
                 {stats?.semanasProyectadas && stats.semanasPlaneadas === 0 && (
                   <div className="text-white/60 text-xs mt-1">
                     📈 Proyección: ~{stats.semanasProyectadas} sem restantes
@@ -463,12 +534,42 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                         <span className="text-sm font-semibold text-white">Avance Total del Proyecto</span>
                         <span className="text-2xl font-bold text-[#994B49]">{stats.avanceTotal.toFixed(1)}%</span>
                       </div>
-                      <div className="w-full bg-[#1F1F26] rounded-full h-4 mb-3">
+                      <div className="relative w-full bg-[#1F1F26] rounded-full h-4 mb-3 overflow-visible">
+                        {/* Marcador del "esperado" (línea vertical) */}
+                        {stats.avanceEsperado != null && (
+                          <div
+                            className="absolute top-[-4px] bottom-[-4px] w-0.5 bg-cyan-300 z-10"
+                            style={{ left: `${Math.min(stats.avanceEsperado, 100)}%` }}
+                            title={`Esperado: ${stats.avanceEsperado.toFixed(1)}%`}
+                          >
+                            <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-cyan-300 whitespace-nowrap bg-[#0F0F14] px-1 rounded">
+                              Plan {stats.avanceEsperado.toFixed(1)}%
+                            </div>
+                          </div>
+                        )}
                         <div
                           className="bg-gradient-to-r from-[#994B49] to-[#B85C5A] h-4 rounded-full transition-all duration-500"
                           style={{ width: `${stats.avanceTotal}%` }}
                         />
                       </div>
+                      {stats.avanceEsperado != null && (
+                        <div className="flex items-center justify-between text-xs mb-2 pt-1">
+                          <span className="text-white/60">
+                            Esperado al cierre de la <span className="font-semibold text-white">Sem {stats.ultimaSemanaConAvance}</span>:
+                            <span className="text-cyan-300 font-bold ml-1">{stats.avanceEsperado.toFixed(1)}%</span>
+                          </span>
+                          {stats.desviacion != null && (
+                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                              stats.desviacion >= -2 ? 'bg-emerald-500/20 text-emerald-300' :
+                              stats.desviacion >= -10 ? 'bg-amber-500/20 text-amber-300' :
+                              'bg-rose-500/20 text-rose-300'
+                            }`} data-testid="desviacion-badge">
+                              {stats.desviacion >= 0 ? '+' : ''}{stats.desviacion.toFixed(1)}%
+                              {stats.desviacion >= -2 ? ' al día' : stats.desviacion >= -10 ? ' atrasado' : ' crítico'}
+                            </span>
+                          )}
+                        </div>
+                      )}
                       <div className="flex items-center justify-between text-xs text-white/60">
                         <span>Semanas trabajadas: <span className="font-medium text-white">{stats.semanasTrabajas}</span></span>
                         {stats.semanasPlaneadas > 0 ? (
