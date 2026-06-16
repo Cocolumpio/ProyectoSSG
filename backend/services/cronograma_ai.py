@@ -95,17 +95,18 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
     header_row = None
     for sheet in wb.sheetnames:
         candidate = wb[sheet]
-        for r in range(1, min(40, candidate.max_row + 1)):
+        for r in range(1, min(80, candidate.max_row + 1)):
             row_vals = [candidate.cell(row=r, column=c).value for c in range(1, 12)]
             row_str = " | ".join(str(v).upper() for v in row_vals if v is not None)
-            # Acepta header con CONCEPTO + UNIDAD + (CANTIDAD o VOLUMEN DE PRESUPUESTO).
-            # El campo IMPORTE es opcional — algunos formatos solo tienen volumen.
+            # Acepta header con CONCEPTO + UNIDAD + (CANTIDAD o VOLUMEN o PRESUPUESTO).
+            # El campo IMPORTE es opcional — algunos formatos solo tienen volumen/presupuesto.
             tiene_concepto = "CONCEPTO" in row_str
             tiene_unidad = "UNIDAD" in row_str
             tiene_cantidad = (
                 "CANTIDAD" in row_str
                 or "VOLUMEN DE PRESUPUESTO" in row_str
                 or "VOLUMEN PRESUPUESTO" in row_str
+                or "PRESUPUESTO" in row_str  # Torre Mezquitan format
             )
             if tiene_concepto and tiene_unidad and tiene_cantidad:
                 ws = candidate
@@ -128,7 +129,7 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
             col_concepto = c
         elif s == "UNIDAD":
             col_unidad = c
-        elif s in ("CANTIDAD", "VOLUMEN DE PRESUPUESTO", "VOLUMEN PRESUPUESTO"):
+        elif s in ("CANTIDAD", "VOLUMEN DE PRESUPUESTO", "VOLUMEN PRESUPUESTO", "PRESUPUESTO"):
             col_cantidad = c
         elif "IMPORTE" in s and col_importe is None:
             col_importe = c
