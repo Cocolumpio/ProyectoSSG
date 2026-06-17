@@ -2095,6 +2095,7 @@ from routes import (
     presupuesto as routes_presupuesto,
     caras_excavacion as routes_caras_excavacion,
     comparativa_semanal as routes_comparativa_semanal,
+    google_calendar as routes_google_calendar,
 )
 app.include_router(routes_comparaciones.router)
 app.include_router(routes_exportar.router)
@@ -2107,6 +2108,7 @@ app.include_router(routes_dem_volumetry.router)
 app.include_router(routes_presupuesto.router)
 app.include_router(routes_caras_excavacion.router)
 app.include_router(routes_comparativa_semanal.router)
+app.include_router(routes_google_calendar.router)
 
 app.add_middleware(
     CORSMiddleware,

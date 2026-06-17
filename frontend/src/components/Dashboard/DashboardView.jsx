@@ -10,6 +10,7 @@ import { ComparacionPlanesView } from './ComparacionPlanesView';
 import { AvanceFinancieroPanel } from './AvanceFinancieroPanel';
 import { MatrizCarasExcavacion } from './MatrizCarasExcavacion';
 import { ComparativaSemanalCards } from './ComparativaSemanalCards';
+import { GoogleCalendarPanel } from './GoogleCalendarPanel';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -781,6 +782,16 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
             <div className="mt-6">
               <ComparativaSemanalCards proyectoId={selectedProyecto.id} />
             </div>
+
+            {/* Google Calendar: programación automática de vuelos */}
+            {!readOnly && (
+              <div className="mt-6">
+                <GoogleCalendarPanel
+                  proyectoId={selectedProyecto.id}
+                  tieneProgramaSemanal={!!comparativaSemanal?.tiene_programa}
+                />
+              </div>
+            )}
 
             {/* Botón para ver Comparación de Planes */}
             {selectedProyecto?.analisis_maquinaria_ia && (
