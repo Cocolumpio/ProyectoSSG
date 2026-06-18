@@ -44,7 +44,9 @@ export function GoogleCalendarPanel({ proyectoId, tieneProgramaSemanal }) {
 
   const conectar = async () => {
     try {
-      const baseUrl = process.env.REACT_APP_BACKEND_URL;
+      // Usar el origen actual del navegador (no env var) para garantizar
+      // que coincida con el dominio donde el usuario está navegando.
+      const baseUrl = window.location.origin;
       const r = await axios.get(`${API}/oauth/calendar/login`, {
         params: { base_url: baseUrl },
       });

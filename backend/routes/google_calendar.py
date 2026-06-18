@@ -11,7 +11,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List
 
 import requests
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 from google.auth.transport.requests import Request as GoogleRequest
 from google.oauth2.credentials import Credentials
@@ -74,18 +74,19 @@ async def oauth_login(
 
 
 @router.get("/oauth/calendar/callback")
-async def oauth_callback(code: str, state: str = ""):
+async def oauth_callback(request: Request, code: str, state: str = ""):
     """Google redirige aquí tras login. Intercambiamos code → tokens."""
     if not CLIENT_ID or not CLIENT_SECRET:
         raise HTTPException(500, "Google OAuth no está configurado")
     if not state:
         raise HTTPException(400, "state (user_id) faltante")
 
-    # Reconstruir redirect_uri desde el host del request
-    # Para simplificar, asumimos REACT_APP_BACKEND_URL si está disponible
-    redirect_uri = _redirect_uri()
-    if not redirect_uri:
-        raise HTTPException(500, "BACKEND_BASE_URL no configurado")
+    # Construir el redirect_uri exactamente como Google lo recibió: a partir del
+    # request actual. Importante: si el frontend está detrás de un proxy/ingress
+    # debemos respetar X-Forwarded-Proto y X-Forwarded-Host.
+    forwarded_proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+    forwarded_host = request.headers.get("x-forwarded-host") or request.headers.get("host")
+    redirect_uri = f"{forwarded_proto}://{forwarded_host}/api/oauth/calendar/callback"
 
     token_resp = requests.post("https://oauth2.googleapis.com/token", data={
         "code": code,
@@ -96,7 +97,7 @@ async def oauth_callback(code: str, state: str = ""):
     }, timeout=15).json()
 
     if "access_token" not in token_resp:
-        logger.error(f"Error en intercambio de token: {token_resp}")
+        logger.error(f"Error en intercambio de token (redirect_uri={redirect_uri}): {token_resp}")
         raise HTTPException(400, f"OAuth error: {token_resp.get('error_description') or token_resp.get('error') or 'unknown'}")
 
     # Obtener email del usuario de Google
@@ -123,8 +124,8 @@ async def oauth_callback(code: str, state: str = ""):
         upsert=True,
     )
 
-    # Redirigir al frontend con un flag de éxito
-    frontend_base = BACKEND_BASE_URL.rstrip("/")
+    # Redirigir al frontend con un flag de éxito (mismo host del request)
+    frontend_base = f"{forwarded_proto}://{forwarded_host}"
     return RedirectResponse(f"{frontend_base}/app?google_calendar=connected")
 
 
