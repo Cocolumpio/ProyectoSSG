@@ -278,6 +278,14 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
           value={estadisticas?.total_vuelos || 0}
           color="brick"
           testId="kpi-vuelos"
+          tooltip={
+            estadisticas?.vuelos_por_proyecto?.length > 0
+              ? estadisticas.vuelos_por_proyecto
+                  .slice(0, 8)
+                  .map((v) => `${v.nombre}: ${v.vuelos}`)
+                  .join('\n')
+              : 'Cuando los proyectos tengan programa de obra, cada semana iniciada cuenta como 1 vuelo'
+          }
         />
         <KPICard
           icon={TrendingUp}
@@ -294,6 +302,38 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
           testId="kpi-volumetria"
         />
       </div>
+
+      {/* Desglose de vuelos por proyecto */}
+      {estadisticas?.vuelos_por_proyecto?.length > 0 && (
+        <div
+          className="bg-[#15151B] rounded-xl p-4 border border-white/10 shadow-sm"
+          data-testid="vuelos-por-proyecto"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <Plane className="h-4 w-4 text-[#994B49]" />
+            <h3 className="text-sm font-semibold text-white">Vuelos por Proyecto</h3>
+            <span className="text-xs text-white/40">(según semanas iniciadas en cada programa de obra)</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {estadisticas.vuelos_por_proyecto.map((v) => (
+              <div
+                key={v.proyecto_id}
+                className="flex items-center justify-between bg-[#0F0F14] rounded-lg p-3 border border-white/5 hover:border-[#994B49]/40 transition-colors cursor-pointer"
+                onClick={() => {
+                  const p = proyectos.find((x) => x.id === v.proyecto_id);
+                  if (p) onProyectoClick(p);
+                }}
+                data-testid={`vuelo-proyecto-${v.proyecto_id}`}
+              >
+                <span className="text-sm text-white/80 truncate pr-2" title={v.nombre}>{v.nombre}</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#994B49]/20 text-[#994B49] text-xs font-bold whitespace-nowrap">
+                  <Plane className="h-3 w-3" /> {v.vuelos}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Mapa */}

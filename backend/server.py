@@ -2048,22 +2048,62 @@ async def obtener_estadisticas(current_user: dict = Depends(get_optional_user)):
     
     total_proyectos = await db.proyectos.count_documents(query)
     
-    # Obtener IDs de proyectos filtrados
-    proyectos = await db.proyectos.find(query, {"id": 1, "avance_actual": 1, "_id": 0}).to_list(1000)
+    # Obtener proyectos con programa_semanal y fechas para contar vuelos
+    proyectos = await db.proyectos.find(
+        query,
+        {"id": 1, "nombre": 1, "avance_actual": 1, "programa_semanal": 1,
+         "fecha_inicio": 1, "_id": 0}
+    ).to_list(1000)
     proyecto_ids = [p.get("id") for p in proyectos]
     
-    # Contar vuelos solo de esos proyectos
-    if proyecto_ids:
-        vuelos_query = {"proyecto_id": {"$in": proyecto_ids}}
-    else:
-        vuelos_query = {} if not query else {"proyecto_id": {"$in": []}}
-    
-    total_vuelos = await db.vuelos.count_documents(vuelos_query)
+    # NUEVA LÓGICA: cada semana que ya inició cuenta como 1 vuelo realizado.
+    # • Si el proyecto tiene programa_semanal: cuenta semanas cuya fecha_inicio <= hoy.
+    # • Si no tiene programa pero tiene fecha_inicio: usa (semanas transcurridas
+    #   desde la fecha de inicio del proyecto).
+    # • Fallback: conteo manual de db.vuelos.
+    from datetime import date as _date, datetime as _dt
+    hoy = _date.today()
+    hoy_iso = hoy.isoformat()
+    vuelos_por_proyecto = []
+    total_vuelos = 0
+
+    for p in proyectos:
+        prog = p.get("programa_semanal") or []
+        vuelos_proy = 0
+        if prog:
+            for s in prog:
+                fi = s.get("fecha_inicio")
+                if fi and fi <= hoy_iso:
+                    vuelos_proy += 1
+        elif p.get("fecha_inicio"):
+            # Sin programa pero con fecha de inicio del proyecto → semanas transcurridas
+            try:
+                fi = _dt.fromisoformat(p["fecha_inicio"]).date()
+                if fi <= hoy:
+                    vuelos_proy = max(0, (hoy - fi).days // 7 + 1)
+            except Exception:
+                vuelos_proy = 0
+        else:
+            # Fallback a registros manuales de vuelos
+            vuelos_proy = await db.vuelos.count_documents({"proyecto_id": p["id"]})
+        total_vuelos += vuelos_proy
+        if vuelos_proy > 0:
+            vuelos_por_proyecto.append({
+                "proyecto_id": p["id"],
+                "nombre": p.get("nombre"),
+                "vuelos": vuelos_proy,
+            })
+
+    vuelos_por_proyecto.sort(key=lambda x: x["vuelos"], reverse=True)
     
     # Calcular avance promedio
     avance_promedio = sum(p.get('avance_actual', 0) for p in proyectos) / max(total_proyectos, 1)
     
-    # Volumetría total
+    # Volumetría total (sigue viniendo de los vuelos manuales si existen)
+    if proyecto_ids:
+        vuelos_query = {"proyecto_id": {"$in": proyecto_ids}}
+    else:
+        vuelos_query = {"proyecto_id": {"$in": []}}
     vuelos = await db.vuelos.find(vuelos_query, {"volumetria": 1, "_id": 0}).to_list(1000)
     vol_total = {
         "excavacion": sum(v.get('volumetria', {}).get('excavacion', 0) for v in vuelos),
@@ -2074,6 +2114,7 @@ async def obtener_estadisticas(current_user: dict = Depends(get_optional_user)):
     return {
         "total_proyectos": total_proyectos,
         "total_vuelos": total_vuelos,
+        "vuelos_por_proyecto": vuelos_por_proyecto,
         "avance_promedio": round(avance_promedio, 1),
         "volumetria_total": vol_total
     }
