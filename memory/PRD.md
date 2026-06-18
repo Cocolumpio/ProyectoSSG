@@ -10,6 +10,29 @@
 - **Reporte Ejecutivo Mejorado**: gráficas de avance físico Planeado vs Real por categoría (vertical agrupadas + horizontales con %)
 - **🆕 Programa de Obra V2**: parser detecta automáticamente cronogramas con columnas diarias por semana (LUN-DOM × N semanas)
 - **🆕 Tarjetas Comparativa Semanal**: una tarjeta por cada semana del programa con planeado vs real (drone) + presupuesto, mostrando solo las fases activas en esa semana
+- **🆕 Alertas WhatsApp + Comentarios Semanales (Feb 2026)**: Twilio + IA recomendaciones de recuperación + comentarios por semana en avances.
+
+## 🆕 Alertas WhatsApp + Comentarios Semanales (Feb 2026)
+Sistema de detección de desviación ≥10% que notifica a directores vía WhatsApp con un plan de recuperación generado por IA (Claude Sonnet 4.5 via Emergent LLM Key).
+
+**Backend**:
+- `routes/directores.py`: CRUD admin para `db.directores` ({id, nombre, whatsapp, cargo, activo, created_at}).
+- `services/whatsapp.py`: cliente Twilio, normalización a E.164 (default +52), captura excepciones (success=false).
+- `services/ia_recomendacion.py`: prompt estructurado a Claude Sonnet 4.5 → DIAGNÓSTICO / PREGUNTAS CLAVE / ACCIONES INMEDIATAS / REVISAR PROGRAMA / PLAN DE RECUPERACIÓN. Fallback heurístico por fase (excavación/anclas/pilas/muros).
+- `routes/alertas.py`: 
+  - POST `/api/proyectos/{id}/alerta-desviacion?forzar=bool` — evalúa última semana con avance real > 0, compara acumulado por fase contra programa, dispara WhatsApp si desviación ≤ -10% o forzar=true. Idempotente (clave `proyecto:semana` en `db.alertas_enviadas`).
+  - GET `/api/proyectos/{id}/alertas-historial` — lista de alertas enviadas (admin + cliente con acceso).
+  - PUT/GET/DELETE `/api/proyectos/{id}/comentario-semana/{semana}` — admin guarda justificación textual ≤2000 chars; cliente sólo lee.
+  - `evaluar_y_disparar_si_aplica(proyecto_id)` hook llamado desde el flujo de upload de avance semanal en `server.py`.
+
+**Frontend**:
+- `components/Admin/DirectoresAdmin.jsx`: CRUD de destinatarios, integrado dentro de `UsuariosAdminView` (después del search).
+- `components/Dashboard/AlertasDesviacionPanel.jsx`: panel del dashboard (sólo admin) con botones Evaluar desviación / Probar envío real (con confirm) / Ver historial. Muestra recomendación IA en `<details>`.
+- `components/Projects/ComentarioSemanaSection.jsx`: textarea por semana dentro de `AvancesSemanalesModal` (admin edita, cliente sólo lee). Persiste autor + timestamp.
+
+**Stack añadido**: `twilio`, `aiohttp-retry` (backend). Variables: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM`.
+
+**Testing (iter_21)**: 14/14 pytest backend pasados (1 skipped por falta de proyecto con programa+avances), frontend admin y cliente verificados (cliente no ve panel de alertas ni edita comentarios).
 
 ## Comparativa Semanal — Programa de Obra V2 (Feb 2026)
 - `services/cronograma_ai.py` extiende parser V2 con detección de bloques de 7 días por semana (PRELIMINARES + N semanas).
