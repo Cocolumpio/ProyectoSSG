@@ -11,6 +11,7 @@ import { AvanceFinancieroPanel } from './AvanceFinancieroPanel';
 import { MatrizCarasExcavacion } from './MatrizCarasExcavacion';
 import { ComparativaSemanalCards } from './ComparativaSemanalCards';
 import { GoogleCalendarPanel } from './GoogleCalendarPanel';
+import { AlertasDesviacionPanel } from './AlertasDesviacionPanel';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -829,6 +830,16 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                 <GoogleCalendarPanel
                   proyectoId={selectedProyecto.id}
                   tieneProgramaSemanal={!!comparativaSemanal?.tiene_programa}
+                />
+              </div>
+            )}
+
+            {/* Alertas de Desviación por WhatsApp (solo admin) */}
+            {!readOnly && (
+              <div className="mt-6">
+                <AlertasDesviacionPanel
+                  proyectoId={selectedProyecto.id}
+                  proyectoNombre={selectedProyecto.nombre}
                 />
               </div>
             )}

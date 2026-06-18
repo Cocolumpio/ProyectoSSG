@@ -1,0 +1,43 @@
+{
+  "summary": "End-to-end testing of new feature set: Directores CRUD + Alertas de Desviación WhatsApp + Comentarios Semanales. Backend pytest: 14 passed, 1 skipped (forzar idempotency — skipped because no project in DB has programa_semanal+avances; backend code path verified by source review). Frontend admin flow verified live: Usuarios tab now shows 'Directores con alertas de WhatsApp' panel (data-testid='directores-admin'), Agregar/edit/eliminar work end-to-end (TEST_UI_Director created and visible, then cleaned up). Dashboard 'Alertas de Desviación · WhatsApp' panel renders with all three required buttons (evaluar, forzar, toggle-historial); Evaluar desviación on a project sin programa returns 400 → UI correctly displays alerta-resultado block with reason '❌ El proyecto no tiene programa o no hay avances reales todavía'. Historial list toggles open. Cliente role correctly hides Usuarios tab and Alertas panel (no UI breakage).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_directores_alertas_comentarios.py",
+    "/app/test_reports/pytest/iter21_directores_alertas.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "routes/directores.py: Clean CRUD with admin gate via get_current_admin, UUID ids, _id projection excluded. Validates blank nombre/whatsapp with 400, returns 404 on unknown id. No issues.",
+    "routes/alertas.py: Idempotency key 'proyecto:semana' enforced when forzar=false; forzar=true bypasses (could be tightened to skip insert when prior row exists, but spec allows duplicate row on forzar). Twilio errors are swallowed inside wa_service.enviar_whatsapp returning success=false; endpoint always returns 200/400, never 500. Verified.",
+    "services/whatsapp.py: _format_to handles +52 default and bare digits correctly. Twilio exceptions are caught — endpoint stays alive even with invalid credentials/sandbox.",
+    "services/ia_recomendacion.py: Falls back to heuristic recommendations if EMERGENT_LLM_KEY missing or exception. Good resilience.",
+    "ComentarioSemanaSection.jsx: readOnly=true correctly hides edit button and returns null when no comentario exists. No edit affordance leaks to cliente.",
+    "DirectoresAdmin.jsx: Mounted inside UsuariosAdminView.jsx after search input as specified.",
+    "AlertasDesviacionPanel.jsx: Only rendered when !readOnly in DashboardView (verified — cliente sees no panel).",
+    "Note: forzar-alerta-btn label text is 'Probar envío real' (data-testid matches spec). The button uses window.confirm() before posting."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_directores_alertas_comentarios.py (NEW — 15 tests, 14 passed / 1 skipped)"
+  ],
+  "success_rate": {
+    "backend": "100% (14/14 executed passed; 1 skipped due to environment data — no project with programa_semanal+avances available)",
+    "frontend": "Pass — all data-testids visible, CRUD and panel flows verified for admin; cliente role hides correctly"
+  },
+  "test_credentials": {
+    "admin": "admin@dron.mx / admin123",
+    "cliente": "cliente@test.com / cliente123"
+  },
+  "seed_data_creation": "Created TEST_UI_Director (UI) and TEST_Director_*, TEST_DelDir, TEST_Alerta_Dir (pytest) — all cleaned via DELETE /api/directores/{id}. Comentarios sem 998/999 also cleaned. No residual TEST_ data.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend pytest file lives at /app/backend/tests/test_directores_alertas_comentarios.py. Run: pytest /app/backend/tests/test_directores_alertas_comentarios.py -v. To exercise the full forzar+idempotency path, upload V2 cronograma to a project (POST /api/proyectos/importar-cronograma then crear-desde-cronograma) and add ≥1 avance_semanal with metrics < programa to create a desviación ≥10%. Frontend: login via /app — landing page is marketing; click 'Iniciar sesión' top-right. Token stored in localStorage key 'dron_token'. Cliente user has 0 proyectos assigned; to test the cliente-side read-only comentario flow, first assign a proyecto via PUT /api/proyectos/{id} clientes_asignados=[cliente_id], then load AvancesSemanalesModal as cliente — the ComentarioSemanaSection should display existing comments without an Editar button.",
+  "rca_of_the_issue": "N/A — feature works as specified. The single skipped backend test (forzar idempotency) is due to the test DB not containing a project with programa_semanal AND avances; the endpoint correctly responds 400 'El proyecto no tiene programa o no hay avances reales todavía' which is the expected behavior. Code path for idempotency was reviewed and is sound (key='proyecto_id:semana' check on alertas_enviadas)."
+}

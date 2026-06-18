@@ -7,6 +7,7 @@ import { AnalisisFotoIA } from './AnalisisFotoIA';
 import { ComparacionAvanceModal } from './ComparacionAvanceModal';
 import { DEMVolumetrySection } from './DEMVolumetrySection';
 import { ProgresionMetricaChart } from './ProgresionMetricaChart';
+import { ComentarioSemanaSection } from './ComentarioSemanaSection';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -810,6 +811,14 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                   {selectedAvance.descripcion && (
                     <p className="mt-2 text-xs sm:text-sm text-white/60">{selectedAvance.descripcion}</p>
                   )}
+
+                  {/* Comentarios / justificación de la semana */}
+                  <ComentarioSemanaSection
+                    proyectoId={proyecto.id}
+                    semana={selectedAvance.semana}
+                    readOnly={readOnly}
+                    onShowSuccess={onShowSuccess}
+                  />
                   
                   {/* Métricas editables - Dinámicas según tipo de actividad */}
                   <div className="mt-3 space-y-2">

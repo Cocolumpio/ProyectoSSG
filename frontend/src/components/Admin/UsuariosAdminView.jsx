@@ -4,6 +4,7 @@ import {
   Users, Plus, Trash2, UserCheck, UserX, Shield, User,
   X, Eye, EyeOff, Search
 } from 'lucide-react';
+import { DirectoresAdmin } from './DirectoresAdmin';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -156,6 +157,9 @@ export function UsuariosAdminView({ onShowSuccess, currentUserId }) {
           data-testid="search-usuarios-input"
         />
       </div>
+
+      {/* Directores con alertas de WhatsApp */}
+      <DirectoresAdmin />
 
       {/* Modal de crear usuario */}
       {showForm && (
