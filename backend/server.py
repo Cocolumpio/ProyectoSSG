@@ -1203,7 +1203,14 @@ async def crear_avance_semanal(proyecto_id: str, avance: AvanceSemanalCreate):
     
     # Recalcular el porcentaje de avance del proyecto
     await recalcular_avance_proyecto(proyecto_id)
-    
+
+    # Auto-disparar alerta de WhatsApp si la desviación supera el umbral (-10%)
+    try:
+        from routes.alertas import evaluar_y_disparar_si_aplica
+        await evaluar_y_disparar_si_aplica(proyecto_id)
+    except Exception as _e:
+        logger.warning(f"Auto-alerta falló: {_e}")
+
     return nuevo_avance
 
 @api_router.put("/proyectos/{proyecto_id}/avances-semanales/{avance_id}", response_model=AvanceSemanal)
@@ -1233,6 +1240,11 @@ async def actualizar_avance_semanal(proyecto_id: str, avance_id: str, avance: Av
     # Si se actualizó el volumen de excavación o pilas/anclas, recalcular el avance del proyecto
     if any(key in update_data for key in ['volumen_excavacion', 'pilas_completadas', 'anclas_instaladas', 'muros_completados']):
         await recalcular_avance_proyecto(proyecto_id)
+        try:
+            from routes.alertas import evaluar_y_disparar_si_aplica
+            await evaluar_y_disparar_si_aplica(proyecto_id)
+        except Exception as _e:
+            logger.warning(f"Auto-alerta falló: {_e}")
     
     return avance_actualizado
 
@@ -2137,6 +2149,8 @@ from routes import (
     caras_excavacion as routes_caras_excavacion,
     comparativa_semanal as routes_comparativa_semanal,
     google_calendar as routes_google_calendar,
+    directores as routes_directores,
+    alertas as routes_alertas,
 )
 app.include_router(routes_comparaciones.router)
 app.include_router(routes_exportar.router)
@@ -2150,6 +2164,8 @@ app.include_router(routes_presupuesto.router)
 app.include_router(routes_caras_excavacion.router)
 app.include_router(routes_comparativa_semanal.router)
 app.include_router(routes_google_calendar.router)
+app.include_router(routes_directores.router)
+app.include_router(routes_alertas.router)
 
 app.add_middleware(
     CORSMiddleware,

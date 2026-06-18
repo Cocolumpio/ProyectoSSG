@@ -157,3 +157,4 @@ google-api-python-client==2.188.0
 google-auth==2.47.0
 google-auth-httplib2==0.3.0
 google-auth-oauthlib==1.4.0
+twilio==9.10.9
