@@ -30,7 +30,13 @@ Sistema de detección de desviación ≥10% que notifica a directores vía Whats
 - `components/Dashboard/AlertasDesviacionPanel.jsx`: panel del dashboard (sólo admin) con botones Evaluar desviación / Probar envío real (con confirm) / Ver historial. Muestra recomendación IA en `<details>`.
 - `components/Projects/ComentarioSemanaSection.jsx`: textarea por semana dentro de `AvancesSemanalesModal` (admin edita, cliente sólo lee). Persiste autor + timestamp.
 
-**Stack añadido**: `twilio`, `aiohttp-retry` (backend). Variables: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM`.
+**Stack añadido**: `httpx` (ya existente) — backend. **Green API (https://green-api.com)** reemplazó a Twilio (Feb 2026): el remitente es el WhatsApp personal del admin vinculado por QR (+52 1 33 1990 6249, instancia 7107658502 host https://7107.api.greenapi.com). Variables backend: `GREEN_API_HOST`, `GREEN_API_INSTANCE_ID`, `GREEN_API_TOKEN`.
+
+**Endpoints adicionales (Green API)**:
+- `GET /api/whatsapp/estado` — devuelve `{state: authorized|notAuthorized|...}` de la instancia.
+- `POST /api/whatsapp/test` — `{to, message}` envía mensaje individual de prueba.
+
+**UI**: `DirectoresAdmin` muestra badge de estado del bot (verde "authorized") + botón ✈️ "Enviar prueba" por director.
 
 **Testing (iter_21)**: 14/14 pytest backend pasados (1 skipped por falta de proyecto con programa+avances), frontend admin y cliente verificados (cliente no ve panel de alertas ni edita comentarios).
 

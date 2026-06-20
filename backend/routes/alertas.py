@@ -341,3 +341,24 @@ async def borrar_comentario(
 ):
     await db.comentarios_semana.delete_one({"proyecto_id": proyecto_id, "semana": semana})
     return {"deleted": True}
+
+
+# ----------- ESTADO DEL BOT DE WHATSAPP -----------
+
+@router.get("/whatsapp/estado")
+async def estado_whatsapp(current_user: dict = Depends(get_current_admin)):
+    """Devuelve el estado de la instancia Green API (authorized / notAuthorized / etc.)."""
+    return wa_service.get_state_instance()
+
+
+@router.post("/whatsapp/test")
+async def test_whatsapp(
+    payload: dict,
+    current_user: dict = Depends(get_current_admin),
+):
+    """Envía un mensaje de prueba. Body: {to: '+52...', message: 'texto'}"""
+    to = payload.get("to") or ""
+    msg = payload.get("message") or "🧪 Mensaje de prueba desde DrON Topografía."
+    if not to:
+        raise HTTPException(400, "Campo 'to' requerido")
+    return wa_service.enviar_whatsapp(to, msg)

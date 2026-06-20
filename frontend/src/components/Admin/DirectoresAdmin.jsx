@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Users, Plus, Trash2, Pencil, Check, X, Loader2, MessageCircle, Power } from 'lucide-react';
+import { Users, Plus, Trash2, Pencil, Check, X, Loader2, MessageCircle, Power, RefreshCw, Send } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -12,8 +12,45 @@ export function DirectoresAdmin() {
   const [form, setForm] = useState({ nombre: '', whatsapp: '', cargo: 'Director' });
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [estadoBot, setEstadoBot] = useState(null);
+  const [refreshingEstado, setRefreshingEstado] = useState(false);
+  const [testingId, setTestingId] = useState(null);
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => {
+    fetchAll();
+    fetchEstado();
+  }, []);
+
+  const fetchEstado = async () => {
+    setRefreshingEstado(true);
+    try {
+      const r = await axios.get(`${API}/whatsapp/estado`);
+      setEstadoBot(r.data);
+    } catch (e) {
+      setEstadoBot({ configured: false, state: 'error', error: e.message });
+    } finally {
+      setRefreshingEstado(false);
+    }
+  };
+
+  const enviarPrueba = async (d) => {
+    setTestingId(d.id);
+    try {
+      const r = await axios.post(`${API}/whatsapp/test`, {
+        to: d.whatsapp,
+        message: `🧪 Hola ${d.nombre.split(' ')[0]}, esto es una prueba de DrON Topografía. Si lo recibes, tus alertas de obra están configuradas correctamente.`,
+      });
+      if (r.data?.success) {
+        alert(`✅ Mensaje enviado a ${d.nombre}`);
+      } else {
+        alert(`❌ Error: ${r.data?.error || 'No se pudo enviar'}`);
+      }
+    } catch (e) {
+      alert(`❌ ${e?.response?.data?.detail || e.message}`);
+    } finally {
+      setTestingId(null);
+    }
+  };
 
   const fetchAll = async () => {
     setLoading(true);
@@ -77,15 +114,41 @@ export function DirectoresAdmin() {
             <p className="text-xs text-white/50">Reciben alertas automáticas cuando un proyecto se desvía ≥10% del programa.</p>
           </div>
         </div>
-        {!showForm && (
-          <button
-            onClick={() => { setShowForm(true); setEditingId(null); setForm({ nombre: '', whatsapp: '', cargo: 'Director' }); }}
-            className="inline-flex items-center gap-1 bg-cyan-500 hover:bg-cyan-400 text-[#0B0B0F] text-sm font-semibold px-3 py-1.5 rounded-lg"
-            data-testid="add-director-btn"
+        <div className="flex items-center gap-2">
+          {/* Badge estado bot */}
+          <div
+            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+              estadoBot?.state === 'authorized'
+                ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                : estadoBot?.state === 'not_configured'
+                ? 'bg-white/5 text-white/40 border border-white/10'
+                : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+            }`}
+            data-testid="whatsapp-estado-badge"
+            title="Estado de tu WhatsApp vinculado vía Green API"
           >
-            <Plus className="h-4 w-4" /> Agregar
-          </button>
-        )}
+            <span className={`h-2 w-2 rounded-full ${
+              estadoBot?.state === 'authorized' ? 'bg-emerald-400' : 'bg-rose-400'
+            }`} />
+            Bot: {estadoBot?.state || '...'}
+            <button
+              onClick={fetchEstado}
+              className="ml-1 text-white/40 hover:text-white"
+              title="Refrescar"
+            >
+              <RefreshCw className={`h-3 w-3 ${refreshingEstado ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+          {!showForm && (
+            <button
+              onClick={() => { setShowForm(true); setEditingId(null); setForm({ nombre: '', whatsapp: '', cargo: 'Director' }); }}
+              className="inline-flex items-center gap-1 bg-cyan-500 hover:bg-cyan-400 text-[#0B0B0F] text-sm font-semibold px-3 py-1.5 rounded-lg"
+              data-testid="add-director-btn"
+            >
+              <Plus className="h-4 w-4" /> Agregar
+            </button>
+          )}
+        </div>
       </div>
 
       {showForm && (
@@ -148,6 +211,12 @@ export function DirectoresAdmin() {
                 <div className="text-xs text-cyan-300 font-mono mt-1">{d.whatsapp}</div>
               </div>
               <div className="flex items-center gap-1">
+                <button onClick={() => enviarPrueba(d)} disabled={testingId === d.id}
+                  title="Enviar mensaje de prueba"
+                  className="p-1.5 rounded text-white/60 hover:text-cyan-300 hover:bg-white/10 disabled:opacity-50"
+                  data-testid={`director-test-${d.id}`}>
+                  {testingId === d.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </button>
                 <button onClick={() => toggleActivo(d)} title={d.activo ? 'Desactivar' : 'Activar'}
                   className={`p-1.5 rounded hover:bg-white/10 ${d.activo ? 'text-emerald-400' : 'text-white/30'}`}
                   data-testid={`director-toggle-${d.id}`}>
