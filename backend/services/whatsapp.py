@@ -45,6 +45,36 @@ def _chat_id(number: str) -> str:
     return f"{digits}@c.us"
 
 
+def _check_url() -> str:
+    return f"{GREEN_HOST}/waInstance{GREEN_INSTANCE}/checkWhatsapp/{GREEN_TOKEN}"
+
+
+def _resolve_mx_chat_id(digits: str) -> str:
+    """Para números mexicanos prueba ambos formatos vía checkWhatsapp:
+    - 52XXXXXXXXXX (formato nuevo)
+    - 521XXXXXXXXXX (formato viejo, con el "1" de celular)
+    Devuelve el primero que exista en WhatsApp, o "" si ninguno.
+    """
+    candidatos = []
+    if digits.startswith("521") and len(digits) == 13:
+        candidatos = [digits, f"52{digits[3:]}"]
+    elif digits.startswith("52") and len(digits) == 12:
+        candidatos = [digits, f"521{digits[2:]}"]
+    else:
+        return ""
+    try:
+        with httpx.Client(timeout=_TIMEOUT) as client:
+            for cand in candidatos:
+                r = client.post(_check_url(), json={"phoneNumber": int(cand)})
+                if r.status_code == 200:
+                    data = r.json() or {}
+                    if data.get("existsWhatsapp"):
+                        return f"{cand}@c.us"
+    except Exception as e:
+        logger.warning(f"checkWhatsapp falló: {e}")
+    return ""
+
+
 def _send_message_url() -> str:
     return f"{GREEN_HOST}/waInstance{GREEN_INSTANCE}/sendMessage/{GREEN_TOKEN}"
 
@@ -56,6 +86,9 @@ def _state_url() -> str:
 def enviar_whatsapp(to: str, body: str) -> dict:
     """Envía un mensaje individual vía Green API.
 
+    Para números mexicanos resuelve automáticamente el formato correcto
+    (52XXX vs 521XXX) usando checkWhatsapp.
+
     Returns: {success, message_id, error}
     """
     if not is_configured():
@@ -63,6 +96,18 @@ def enviar_whatsapp(to: str, body: str) -> dict:
     chat = _chat_id(to)
     if not chat:
         return {"success": False, "error": "Número destino inválido"}
+
+    # Para MX: confirmar/corregir formato (521 vs 52) usando checkWhatsapp
+    digits_only = chat.split("@")[0]
+    if digits_only.startswith("52") and len(digits_only) in (12, 13):
+        resolved = _resolve_mx_chat_id(digits_only)
+        if resolved:
+            chat = resolved
+        elif resolved == "":
+            # checkWhatsapp explícitamente dijo que no existe en ninguna variante
+            # Intentamos enviar con lo que tenemos, pero advertimos en logs.
+            logger.warning(f"checkWhatsapp: número {digits_only} no parece estar en WhatsApp")
+
     try:
         with httpx.Client(timeout=_TIMEOUT) as client:
             r = client.post(
@@ -75,11 +120,12 @@ def enviar_whatsapp(to: str, body: str) -> dict:
             except Exception:
                 data = {"raw": r.text}
             if r.status_code == 200 and data.get("idMessage"):
-                return {"success": True, "message_id": data["idMessage"]}
+                return {"success": True, "message_id": data["idMessage"], "chat_id": chat}
             return {
                 "success": False,
                 "error": f"HTTP {r.status_code} {data}",
                 "status_code": r.status_code,
+                "chat_id": chat,
             }
     except httpx.HTTPError as e:
         logger.error(f"Green API HTTP error enviando a {to}: {e}")
