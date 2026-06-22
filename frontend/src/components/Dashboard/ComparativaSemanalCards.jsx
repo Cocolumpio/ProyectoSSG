@@ -3,6 +3,7 @@ import axios from 'axios';
 import {
   Calendar, CheckCircle2, AlertTriangle, Clock, TrendingUp,
   Shovel, Columns3, Anchor, Building2, DollarSign, Loader2, ChevronDown, ChevronUp,
+  ShieldCheck,
 } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -132,6 +133,8 @@ function SemanaCard({ sem, expanded, onToggle }) {
       plan: p.pilas, real: r.pilas, pct: pct.pilas },
     { key: 'anclas', label: 'Anclas', unidad: 'pzs', icon: Anchor, color: 'teal',
       plan: p.anclas, real: r.anclas, pct: pct.anclas },
+    { key: 'perfiles', label: 'Reforz. Perfiles', unidad: 'pzs', icon: ShieldCheck, color: 'emerald',
+      plan: p.perfiles, real: r.perfiles, pct: pct.perfiles },
     { key: 'muros_m2', label: 'Muros', unidad: 'm²', icon: Building2, color: 'violet',
       plan: p.muros_m2, real: r.muros_m2, pct: pct.muros },
   ].filter((f) => f.plan > 0);
@@ -237,6 +240,7 @@ function FaseRow({ fase }) {
     blue: { text: 'text-blue-300', bg: 'bg-blue-500' },
     teal: { text: 'text-teal-300', bg: 'bg-teal-500' },
     violet: { text: 'text-violet-300', bg: 'bg-violet-500' },
+    emerald: { text: 'text-emerald-300', bg: 'bg-emerald-500' },
   }[fase.color];
 
   const pctClamped = Math.min(fase.pct, 100);

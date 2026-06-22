@@ -231,6 +231,7 @@ class AvanceSemanal(BaseModel):
     pilas_completadas: Optional[int] = None  # Pilas completadas en esta semana
     anclas_instaladas: Optional[int] = None  # Anclas instaladas en esta semana
     muros_completados: Optional[float] = None  # Área de muros completados en m²
+    perfiles_completados: Optional[float] = None  # Reforzamiento por perfiles completados
     imagenes: List[str] = []  # URLs de las imágenes del vuelo
     # ---- DEM Volumetría ----
     dem_gridfs_id: Optional[str] = None  # GridFS ID del DEM TIFF
@@ -249,6 +250,7 @@ class AvanceSemanalCreate(BaseModel):
     pilas_completadas: Optional[int] = None  # Pilas completadas
     anclas_instaladas: Optional[int] = None  # Anclas instaladas
     muros_completados: Optional[float] = None  # Área de muros completados en m²
+    perfiles_completados: Optional[float] = None  # Reforzamiento por perfiles completados
     imagenes: List[str] = []  # URLs de las imágenes del vuelo
 
 class AvanceSemanalUpdate(BaseModel):
@@ -264,6 +266,7 @@ class AvanceSemanalUpdate(BaseModel):
     pilas_completadas: Optional[int] = None
     anclas_instaladas: Optional[int] = None
     muros_completados: Optional[float] = None
+    perfiles_completados: Optional[float] = None
 
 class CaraExcavacion(BaseModel):
     """Configuración de una de las 4 caras de la excavación.
@@ -298,6 +301,7 @@ class Proyecto(BaseModel):
     pilas_planeadas: float = 0  # Número total de pilas planeadas
     muros_planeados: float = 0  # Área total de muros planeados en m²
     anclas_planeadas: float = 0  # Número total de anclas planeadas
+    perfiles_planeados: float = 0  # Reforzamiento por perfiles - número de piezas planeadas
     # Matriz de pilas/anclas dividida en 4 caras de excavación
     caras_excavacion: List[CaraExcavacion] = []
     # Métricas ejecutadas
@@ -305,6 +309,7 @@ class Proyecto(BaseModel):
     pilas_ejecutadas: float = 0  # Pilas completadas
     muros_ejecutados: float = 0  # Muros completados
     anclas_ejecutadas: float = 0  # Anclas instaladas
+    perfiles_ejecutados: float = 0  # Reforzamiento por perfiles completados
     # Cronograma
     semanas_planeadas: int = 0  # Número de semanas planeadas de trabajo según cronograma
     semanas_excavacion: int = 0  # Semanas dedicadas a excavación
@@ -347,6 +352,7 @@ class ProyectoCreate(BaseModel):
     pilas_planeadas: float = 0
     muros_planeados: float = 0
     anclas_planeadas: float = 0
+    perfiles_planeados: float = 0
     # Matriz de pilas/anclas por 4 caras de excavación
     caras_excavacion: List[CaraExcavacion] = []
     # Cronograma
@@ -383,6 +389,7 @@ class ProyectoUpdate(BaseModel):
     pilas_planeadas: Optional[float] = None
     muros_planeados: Optional[float] = None
     anclas_planeadas: Optional[float] = None
+    perfiles_planeados: Optional[float] = None
     # Matriz de pilas/anclas por 4 caras de excavación
     caras_excavacion: Optional[List[CaraExcavacion]] = None
     # Métricas ejecutadas
@@ -390,6 +397,7 @@ class ProyectoUpdate(BaseModel):
     pilas_ejecutadas: Optional[float] = None
     muros_ejecutados: Optional[float] = None
     anclas_ejecutadas: Optional[float] = None
+    perfiles_ejecutados: Optional[float] = None
     # Cronograma
     semanas_planeadas: Optional[int] = None
     semanas_excavacion: Optional[int] = None

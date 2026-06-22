@@ -43,6 +43,12 @@ _CATEGORIA_PROGRAMA_MAPPING = {
     "PERFILES DE CIMENTACION": "pilas",  # también pilas (perfiles estructurales)
     "PERFILES DE CIMENTACIÓN": "pilas",
     "REFORZAMIENTO DE COLINDANCIAS": "pilas",  # Clemente: pilas de contención
+    # Reforzamiento por perfiles (Torre Mezquitan y similares): nueva fase dedicada
+    "REFORZAMIENTO": "perfiles",
+    "REFORZAMIENTO POR PERFILES": "perfiles",
+    "REFORZAMIENTO ESTRUCTURAL": "perfiles",
+    "PERFILES": "perfiles",
+    "PERFILES DE REFORZAMIENTO": "perfiles",
     "ANCLAJE": "anclas",
     "ANCLAS": "anclas",
     "ANCLAJES": "anclas",
@@ -353,6 +359,7 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
     total_pilas = 0
     total_anclas = 0
     total_muros = 0.0
+    total_perfiles = 0
     tipos_actividades = set()
 
     for cat_data in categorias.values():
@@ -372,6 +379,9 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
             elif fase == "muros" and unidad_up in ("M2", "M²"):
                 total_muros += cant
                 tipos_actividades.add("muros")
+            elif fase == "perfiles" and unidad_up in ("PZA", "PZAS", "PIEZA", "PIEZAS"):
+                total_perfiles += int(round(cant))
+                tipos_actividades.add("perfiles")
 
     if not presupuesto_total:
         presupuesto_total = sum(c["importe"] for c in categorias.values())
@@ -440,6 +450,7 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
             "pilas": 0.0,
             "anclas": 0.0,
             "muros_m2": 0.0,
+            "perfiles": 0.0,
             "presupuesto": 0.0,
             "actividades": [],   # lista de partidas planeadas esta semana
         }
@@ -475,12 +486,15 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
                     sem_data["anclas"] += cant_semana
                 elif fase == "muros" and unidad_up in ("M2", "M²"):
                     sem_data["muros_m2"] += cant_semana
+                elif fase == "perfiles" and unidad_up in ("PZA", "PZAS", "PIEZA", "PIEZAS"):
+                    sem_data["perfiles"] += cant_semana
 
         # Redondear
         sem_data["excavacion_m3"] = round(sem_data["excavacion_m3"], 2)
         sem_data["pilas"] = round(sem_data["pilas"], 2)
         sem_data["anclas"] = round(sem_data["anclas"], 2)
         sem_data["muros_m2"] = round(sem_data["muros_m2"], 2)
+        sem_data["perfiles"] = round(sem_data["perfiles"], 2)
         sem_data["presupuesto"] = round(sem_data["presupuesto"], 2)
         # Solo incluir semanas con actividad planeada (filtra padding del template Excel)
         tiene_actividad = (
@@ -488,6 +502,7 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
             or sem_data["pilas"] > 0
             or sem_data["anclas"] > 0
             or sem_data["muros_m2"] > 0
+            or sem_data["perfiles"] > 0
             or sem_data["presupuesto"] > 0
         )
         if tiene_actividad:
@@ -533,6 +548,7 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
             "total_muros": round(total_muros, 2),
             "total_anclas": total_anclas,
             "total_excavacion": round(total_excavacion, 2),
+            "total_perfiles": total_perfiles,
             "tipos_actividades": list(tipos_actividades),
             "semanas_excavacion": 0,
             "semanas_pilas": 0,

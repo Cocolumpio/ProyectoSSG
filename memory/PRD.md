@@ -59,6 +59,28 @@ Sistema que lee los mensajes del grupo de WhatsApp del proyecto y, cada domingo 
 
 **Validado en vivo (22 Jun 2026)**: Torre Mezquitan auto-matcheó con grupo "| Torre Mezquitan |". Resumen semana 19 procesó 11 mensajes, detectó correctamente "lluvia el sábado 20/06 sin protección de costales" como justificación de atraso.
 
+## 🆕 Reforzamiento por Perfiles (Feb 2026)
+Nueva fase de medición añadida al sistema, integrada con el flujo existente.
+
+**Backend**:
+- Modelos `Proyecto` / Create / Update: nuevos campos `perfiles_planeados`, `perfiles_ejecutados` (float).
+- Modelos `AvanceSemanal` / Create / Update: campo `perfiles_completados` (float).
+- `services/helpers.py`: `recalcular_avance_proyecto` incluye perfiles en el promedio de fase "Cimentación" (junto con pilas y anclas).
+- `services/cronograma_ai.py`: nuevo mapeo `"REFORZAMIENTO"`, `"REFORZAMIENTO POR PERFILES"`, `"PERFILES"`, `"REFORZAMIENTO ESTRUCTURAL"` → fase `perfiles`. Contador `total_perfiles` agregado al resumen y a `programa_semanal[].perfiles`.
+- `routes/cronograma.py`: persiste `perfiles_planeados` cuando `total_perfiles > 0` al subir el Excel.
+- `routes/comparativa_semanal.py`: nueva fase con acumuladores, % por semana, % global y mapping de categorías de presupuesto ("reforzamiento" sin "colindancia" → perfiles).
+
+**Frontend**:
+- `ProjectFormContent.jsx`: input manual "Reforzamiento por Perfiles (pzas)" en la sección Cimentación.
+- `ProyectosView.jsx`: campo en estado inicial, edición, payload de submit, y `actividades_tipo` incluye `'perfiles'` cuando `perfiles_planeados > 0`.
+- `AvancesSemanalesModal.jsx`: input "Reforz. por Perfiles (pzas)" en el formulario de avance semanal (visible si proyecto tiene `perfiles_planeados > 0` o `actividades_tipo` incluye 'perfiles').
+- `ComparativaSemanalCards.jsx`: nueva fila color emerald con icono ShieldCheck en cada tarjeta semanal (solo si la semana tiene perfiles planeados).
+
+**Validado (22 Jun 2026 - Torre Mezquitan)**:
+- Excel detectó **18 perfiles** correctamente desde sección "REFORZAMIENTO" → "COLOCACION Y COLADO DE PILA DE REFORZAMIENTO".
+- Comparativa semanal: acumulado planeado=18 perfiles, real=0.
+- Avance semanal con `perfiles_completados: 3` → `perfiles_ejecutados=3` en proyecto, `avance_actual` recalculado correctamente.
+
 **Testing (iter_21)**: 14/14 pytest backend pasados (1 skipped por falta de proyecto con programa+avances), frontend admin y cliente verificados (cliente no ve panel de alertas ni edita comentarios).
 
 ## Comparativa Semanal — Programa de Obra V2 (Feb 2026)

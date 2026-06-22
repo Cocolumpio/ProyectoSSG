@@ -342,6 +342,22 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
                     data-testid="project-anclas-planeadas-input"
                   />
                 </div>
+                <div>
+                  <label className="text-xs text-emerald-300 font-medium">Reforzamiento por Perfiles (pzas)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={formData.perfiles_planeados || ''}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      perfiles_planeados: parseInt(e.target.value) || 0
+                    }))}
+                    className="w-full mt-1 px-3 py-1.5 text-sm border border-emerald-500/40 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                    placeholder="18"
+                    data-testid="project-perfiles-planeados-input"
+                  />
+                </div>
               </div>
             )}
           </div>

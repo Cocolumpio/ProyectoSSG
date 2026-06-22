@@ -55,7 +55,8 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
     volumen_excavacion: 0,
     pilas_completadas: 0,
     anclas_completadas: 0,
-    muros_completados: 0
+    muros_completados: 0,
+    perfiles_completados: 0
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -73,7 +74,8 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
   const tieneExcavacion = proyecto.fases_activas?.includes('excavacion') || 
     (!proyecto.fases_activas && (proyecto.volumen_total_planeado > 0));
   const tieneCimentacion = proyecto.fases_activas?.includes('cimentacion') || 
-    (!proyecto.fases_activas && (proyecto.pilas_planeadas > 0 || proyecto.anclas_planeadas > 0));
+    (!proyecto.fases_activas && (proyecto.pilas_planeadas > 0 || proyecto.anclas_planeadas > 0 || proyecto.perfiles_planeados > 0));
+  const tienePerfiles = (proyecto.perfiles_planeados || 0) > 0 || proyecto.actividades_tipo?.includes('perfiles');
   const tieneEdificacion = proyecto.fases_activas?.includes('edificacion') || 
     (!proyecto.fases_activas && (proyecto.muros_planeados > 0));
 
@@ -124,7 +126,8 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
         volumen_excavacion: tieneExcavacion ? formData.volumen_excavacion : 0,
         pilas_completadas: tieneCimentacion ? formData.pilas_completadas : 0,
         anclas_instaladas: tieneCimentacion ? formData.anclas_completadas : 0,
-        muros_completados: tieneEdificacion ? formData.muros_completados : 0
+        muros_completados: tieneEdificacion ? formData.muros_completados : 0,
+        perfiles_completados: tienePerfiles ? formData.perfiles_completados : 0
       };
       
       await axios.post(`${API}/proyectos/${proyecto.id}/avances-semanales`, dataToSend);
@@ -136,7 +139,8 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
         volumen_excavacion: 0,
         pilas_completadas: 0,
         anclas_completadas: 0,
-        muros_completados: 0
+        muros_completados: 0,
+        perfiles_completados: 0
       });
       setFotoParaAnalizar(null);
       fetchAvances();
@@ -1761,6 +1765,31 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                           className="w-full px-3 py-2 border border-teal-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-[#15151B]"
                           placeholder="Ej: 30"
                           data-testid="avance-anclas-input"
+                        />
+                      </div>
+                    )}
+
+                    {/* Reforzamiento por Perfiles */}
+                    {tienePerfiles && (
+                      <div className="p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/30">
+                        <label className="flex items-center gap-2 text-sm font-medium text-emerald-300 mb-2">
+                          <Anchor className="h-4 w-4" />
+                          Reforz. por Perfiles (pzas)
+                          {proyecto.perfiles_planeados > 0 && (
+                            <span className="text-xs text-emerald-500 font-normal">
+                              (Meta: {proyecto.perfiles_planeados})
+                            </span>
+                          )}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={formData.perfiles_completados}
+                          onChange={(e) => setFormData(prev => ({ ...prev, perfiles_completados: parseInt(e.target.value) || 0 }))}
+                          className="w-full px-3 py-2 border border-emerald-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-[#15151B]"
+                          placeholder="Ej: 2"
+                          data-testid="avance-perfiles-input"
                         />
                       </div>
                     )}

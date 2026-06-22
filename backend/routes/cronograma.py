@@ -211,6 +211,8 @@ async def actualizar_cronograma_proyecto(proyecto_id: str, file: UploadFile = Fi
             update_data["muros_planeados"] = resumen["total_muros"]
         if resumen.get("total_excavacion", 0) > 0:
             update_data["volumen_total_planeado"] = resumen["total_excavacion"]
+        if resumen.get("total_perfiles", 0) > 0:
+            update_data["perfiles_planeados"] = resumen["total_perfiles"]
         
         # Actualizar fechas si vienen en el cronograma y tienen sentido
         if resumen.get("fecha_inicio"):

@@ -40,6 +40,7 @@ async def recalcular_avance_proyecto(proyecto_id: str) -> float:
     # Calcular totales ejecutados
     volumen_excavado = sum((a.get('volumen_excavacion', 0) or 0) for a in avances)
     muros_completados = sum((a.get('muros_completados', 0) or 0) for a in avances)
+    perfiles_completados = sum((a.get('perfiles_completados', 0) or 0) for a in avances)
 
     # Si hay matriz de caras configurada, las pilas/anclas vienen de las celdas marcadas
     caras = proyecto.get('caras_excavacion') or []
@@ -61,6 +62,7 @@ async def recalcular_avance_proyecto(proyecto_id: str) -> float:
     # Obtener metas restantes
     volumen_planeado = proyecto.get('volumen_total_planeado', 0) or 0
     muros_planeados = proyecto.get('muros_planeados', 0) or 0
+    perfiles_planeados = proyecto.get('perfiles_planeados', 0) or 0
     
     # Calcular porcentajes por fase
     porcentajes = []
@@ -71,13 +73,15 @@ async def recalcular_avance_proyecto(proyecto_id: str) -> float:
             pct_excavacion = min((volumen_excavado / volumen_planeado) * 100, 100)
             porcentajes.append(pct_excavacion)
     
-    # Cimentación (pilas + anclas)
-    if 'pilas' in tipos or 'anclas' in tipos or pilas_planeadas > 0 or anclas_planeadas > 0:
+    # Cimentación (pilas + anclas + perfiles de reforzamiento)
+    if 'pilas' in tipos or 'anclas' in tipos or 'perfiles' in tipos or pilas_planeadas > 0 or anclas_planeadas > 0 or perfiles_planeados > 0:
         pct_cimentacion_parts = []
         if pilas_planeadas > 0:
             pct_cimentacion_parts.append(min((pilas_completadas / pilas_planeadas) * 100, 100))
         if anclas_planeadas > 0:
             pct_cimentacion_parts.append(min((anclas_instaladas / anclas_planeadas) * 100, 100))
+        if perfiles_planeados > 0:
+            pct_cimentacion_parts.append(min((perfiles_completados / perfiles_planeados) * 100, 100))
         if pct_cimentacion_parts:
             porcentajes.append(sum(pct_cimentacion_parts) / len(pct_cimentacion_parts))
     
@@ -103,6 +107,7 @@ async def recalcular_avance_proyecto(proyecto_id: str) -> float:
             "pilas_ejecutadas": pilas_completadas,
             "anclas_ejecutadas": anclas_instaladas,
             "muros_ejecutados": muros_completados,
+            "perfiles_ejecutados": perfiles_completados,
             "pilas_planeadas": pilas_planeadas,
             "anclas_planeadas": anclas_planeadas,
         }}

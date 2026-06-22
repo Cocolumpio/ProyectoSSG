@@ -36,6 +36,8 @@ def _calcular_presupuesto_ejecutado(real_acumulado: Dict[str, float], categorias
             pct = real_acumulado.get("anclas_pct", 0)
         elif "muro" in nombre_lower:
             pct = real_acumulado.get("muros_pct", 0)
+        elif ("reforz" in nombre_lower and "colindanc" not in nombre_lower) or ("perfil" in nombre_lower and "cimentaci" not in nombre_lower):
+            pct = real_acumulado.get("perfiles_pct", 0)
         elif "cimen" in nombre_lower or "pila" in nombre_lower:
             pct = real_acumulado.get("pilas_pct", 0)
         else:
@@ -71,9 +73,9 @@ async def comparativa_semanal(proyecto_id: str, current_user: dict = Depends(get
     avances_por_semana = {int(a.get("semana", 0)): a for a in avances}
 
     # Acumuladores planeados (acumulado hasta semana N)
-    plan_acum = {"excavacion": 0.0, "pilas": 0.0, "anclas": 0.0, "muros": 0.0, "presupuesto": 0.0}
+    plan_acum = {"excavacion": 0.0, "pilas": 0.0, "anclas": 0.0, "muros": 0.0, "perfiles": 0.0, "presupuesto": 0.0}
     # Acumuladores reales
-    real_acum = {"excavacion": 0.0, "pilas": 0.0, "anclas": 0.0, "muros": 0.0}
+    real_acum = {"excavacion": 0.0, "pilas": 0.0, "anclas": 0.0, "muros": 0.0, "perfiles": 0.0}
 
     # Totales del proyecto (para pct)
     plan_total = {
@@ -81,6 +83,7 @@ async def comparativa_semanal(proyecto_id: str, current_user: dict = Depends(get
         "pilas": float(proyecto.get("pilas_planeadas") or 0),
         "anclas": float(proyecto.get("anclas_planeadas") or 0),
         "muros": float(proyecto.get("muros_planeados") or 0),
+        "perfiles": float(proyecto.get("perfiles_planeados") or 0),
     }
     presupuesto_total = float((proyecto.get("presupuesto") or {}).get("total") or 0)
     if not presupuesto_total:
@@ -96,18 +99,23 @@ async def comparativa_semanal(proyecto_id: str, current_user: dict = Depends(get
             return "anclas"
         if "muro" in n:
             return "muros"
+        # "reforzamiento" alone (sin "colindancia") = perfiles
+        if "reforz" in n and "colindanc" not in n:
+            return "perfiles"
+        if "perfil" in n and "cimentaci" not in n:
+            return "perfiles"
         if "cimen" in n or "pila" in n:
             return "pilas"
         return "otros"
 
     # Calcular importe TOTAL por fase a partir del presupuesto del proyecto (APU u otro)
-    importe_total_fase = {"excavacion": 0.0, "pilas": 0.0, "anclas": 0.0, "muros": 0.0, "otros": 0.0}
+    importe_total_fase = {"excavacion": 0.0, "pilas": 0.0, "anclas": 0.0, "muros": 0.0, "perfiles": 0.0, "otros": 0.0}
     for nombre_cat, info in presupuesto_cats.items():
         fase = _cat_a_fase(nombre_cat)
         importe_total_fase[fase] = importe_total_fase.get(fase, 0.0) + float(info.get("total") or 0)
 
     # Contar cuántas semanas tienen actividad planeada por fase
-    sem_activas_fase = {"excavacion": 0, "pilas": 0, "anclas": 0, "muros": 0}
+    sem_activas_fase = {"excavacion": 0, "pilas": 0, "anclas": 0, "muros": 0, "perfiles": 0}
     for sem in programa:
         if float(sem.get("excavacion_m3") or 0) > 0:
             sem_activas_fase["excavacion"] += 1
@@ -117,11 +125,13 @@ async def comparativa_semanal(proyecto_id: str, current_user: dict = Depends(get
             sem_activas_fase["anclas"] += 1
         if float(sem.get("muros_m2") or 0) > 0:
             sem_activas_fase["muros"] += 1
+        if float(sem.get("perfiles") or 0) > 0:
+            sem_activas_fase["perfiles"] += 1
 
     # Importe promedio por semana de cada fase activa
     importe_promedio_semana = {
         f: (importe_total_fase[f] / sem_activas_fase[f]) if sem_activas_fase[f] > 0 else 0.0
-        for f in ("excavacion", "pilas", "anclas", "muros")
+        for f in ("excavacion", "pilas", "anclas", "muros", "perfiles")
     }
     # Generales/Otros se prorratea linealmente por todas las semanas
     total_semanas_programa = max(len(programa), 1)
@@ -134,6 +144,7 @@ async def comparativa_semanal(proyecto_id: str, current_user: dict = Depends(get
         plan_pil = float(sem.get("pilas") or 0)
         plan_anc = float(sem.get("anclas") or 0)
         plan_mur = float(sem.get("muros_m2") or 0)
+        plan_perf = float(sem.get("perfiles") or 0)
         plan_pres_excel = float(sem.get("presupuesto") or 0)
 
         # Presupuesto de la semana: si el archivo de programa de obra ya traía
@@ -151,12 +162,15 @@ async def comparativa_semanal(proyecto_id: str, current_user: dict = Depends(get
                 plan_pres += importe_promedio_semana["anclas"]
             if plan_mur > 0:
                 plan_pres += importe_promedio_semana["muros"]
+            if plan_perf > 0:
+                plan_pres += importe_promedio_semana["perfiles"]
 
         # Acumular planeado
         plan_acum["excavacion"] += plan_exc
         plan_acum["pilas"] += plan_pil
         plan_acum["anclas"] += plan_anc
         plan_acum["muros"] += plan_mur
+        plan_acum["perfiles"] += plan_perf
         plan_acum["presupuesto"] += plan_pres
 
         # Avance real de esta semana (los modelos del dron son acumulativos por evento)
@@ -166,11 +180,13 @@ async def comparativa_semanal(proyecto_id: str, current_user: dict = Depends(get
         real_pil_sem = float(avance.get("pilas_completadas") or 0)
         real_anc_sem = float(avance.get("anclas_instaladas") or 0)
         real_mur_sem = float(avance.get("muros_completados") or 0)
+        real_perf_sem = float(avance.get("perfiles_completados") or 0)
 
         real_acum["excavacion"] += real_exc_sem
         real_acum["pilas"] += real_pil_sem
         real_acum["anclas"] += real_anc_sem
         real_acum["muros"] += real_mur_sem
+        real_acum["perfiles"] += real_perf_sem
 
         # Porcentajes (real vs planeado de la semana)
         pct_sem = {
@@ -178,6 +194,7 @@ async def comparativa_semanal(proyecto_id: str, current_user: dict = Depends(get
             "pilas": _calcular_ejecutado(real_pil_sem, plan_pil),
             "anclas": _calcular_ejecutado(real_anc_sem, plan_anc),
             "muros": _calcular_ejecutado(real_mur_sem, plan_mur),
+            "perfiles": _calcular_ejecutado(real_perf_sem, plan_perf),
         }
 
         # Porcentaje global de la semana (promedio ponderado de las fases activas)
@@ -190,6 +207,8 @@ async def comparativa_semanal(proyecto_id: str, current_user: dict = Depends(get
             fases_activas.append(pct_sem["anclas"])
         if plan_mur > 0:
             fases_activas.append(pct_sem["muros"])
+        if plan_perf > 0:
+            fases_activas.append(pct_sem["perfiles"])
         pct_global_sem = round(sum(fases_activas) / len(fases_activas), 1) if fases_activas else 0.0
 
         # Presupuesto real acumulado a esta semana (% de cada categoría aplicado a su importe)
@@ -198,6 +217,7 @@ async def comparativa_semanal(proyecto_id: str, current_user: dict = Depends(get
             "pilas_pct": (real_acum["pilas"] / plan_total["pilas"] * 100) if plan_total["pilas"] else 0,
             "anclas_pct": (real_acum["anclas"] / plan_total["anclas"] * 100) if plan_total["anclas"] else 0,
             "muros_pct": (real_acum["muros"] / plan_total["muros"] * 100) if plan_total["muros"] else 0,
+            "perfiles_pct": (real_acum["perfiles"] / plan_total["perfiles"] * 100) if plan_total["perfiles"] else 0,
             "general_pct": 0,
         }
         ejecutado_acum = _calcular_presupuesto_ejecutado(real_acumulado_pct, presupuesto_cats)
@@ -210,6 +230,7 @@ async def comparativa_semanal(proyecto_id: str, current_user: dict = Depends(get
             float(avance.get("pilas_completadas") or 0) > 0,
             float(avance.get("anclas_instaladas") or 0) > 0,
             float(avance.get("muros_completados") or 0) > 0,
+            float(avance.get("perfiles_completados") or 0) > 0,
         ])
         if not tiene_avance:
             estado = "pendiente"  # aún no hay avance registrado
@@ -233,6 +254,7 @@ async def comparativa_semanal(proyecto_id: str, current_user: dict = Depends(get
                 "pilas": round(plan_pil, 2),
                 "anclas": round(plan_anc, 2),
                 "muros_m2": round(plan_mur, 2),
+                "perfiles": round(plan_perf, 2),
                 "presupuesto": round(plan_pres, 2),
             },
             "real": {
@@ -240,6 +262,7 @@ async def comparativa_semanal(proyecto_id: str, current_user: dict = Depends(get
                 "pilas": round(real_pil_sem, 2),
                 "anclas": round(real_anc_sem, 2),
                 "muros_m2": round(real_mur_sem, 2),
+                "perfiles": round(real_perf_sem, 2),
             },
             "pct": {
                 **pct_sem,
@@ -251,6 +274,7 @@ async def comparativa_semanal(proyecto_id: str, current_user: dict = Depends(get
                     "pilas": round(plan_acum["pilas"], 2),
                     "anclas": round(plan_acum["anclas"], 2),
                     "muros_m2": round(plan_acum["muros"], 2),
+                    "perfiles": round(plan_acum["perfiles"], 2),
                     "presupuesto": round(plan_acum["presupuesto"], 2),
                 },
                 "real": {
@@ -258,6 +282,7 @@ async def comparativa_semanal(proyecto_id: str, current_user: dict = Depends(get
                     "pilas": round(real_acum["pilas"], 2),
                     "anclas": round(real_acum["anclas"], 2),
                     "muros_m2": round(real_acum["muros"], 2),
+                    "perfiles": round(real_acum["perfiles"], 2),
                     "presupuesto": ejecutado_acum,
                 },
                 "pct_presupuesto": round(min(pct_presupuesto, 999.9), 1),

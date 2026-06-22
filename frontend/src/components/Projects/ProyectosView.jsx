@@ -30,7 +30,7 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
     nombre: '', ubicacion: '', direccion: '', coordenadas: { lat: 0, lng: 0 },
     fecha_inicio: '', fecha_fin_planeada: '', descripcion: '', avance_actual: 0,
     volumen_total_planeado: 0, semanas_planeadas: 0,
-    pilas_planeadas: 0, anclas_planeadas: 0, muros_planeados: 0,
+    pilas_planeadas: 0, anclas_planeadas: 0, muros_planeados: 0, perfiles_planeados: 0,
     capacidad_camion: 25, costo_m3: 150,
     caras_excavacion: [],
     fases: { excavacion: false, cimentacion: false, edificacion: false }
@@ -43,7 +43,7 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
       nombre: '', ubicacion: '', direccion: '', coordenadas: { lat: 0, lng: 0 },
       fecha_inicio: '', fecha_fin_planeada: '', descripcion: '', avance_actual: 0,
       volumen_total_planeado: 0, semanas_planeadas: 0,
-      pilas_planeadas: 0, anclas_planeadas: 0, muros_planeados: 0,
+      pilas_planeadas: 0, anclas_planeadas: 0, muros_planeados: 0, perfiles_planeados: 0,
       capacidad_camion: 25, costo_m3: 150,
       caras_excavacion: [],
       fases: { excavacion: false, cimentacion: false, edificacion: false }
@@ -89,6 +89,7 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
       capacidad_camion: proyecto.capacidad_camion || 25, 
       costo_m3: proyecto.costo_m3 || 150,
       caras_excavacion: Array.isArray(proyecto.caras_excavacion) ? proyecto.caras_excavacion : [],
+      perfiles_planeados: proyecto.perfiles_planeados || 0,
       wa_grupo_chat_id: proyecto.wa_grupo_chat_id || null,
       wa_grupo_nombre: proyecto.wa_grupo_nombre || null,
       fases
@@ -114,6 +115,7 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
         actividades_tipo.push('pilas');
         fases_activas.push('cimentacion');
         if (formData.anclas_planeadas > 0) actividades_tipo.push('anclas');
+        if (formData.perfiles_planeados > 0) actividades_tipo.push('perfiles');
       }
       if (formData.fases?.edificacion) {
         actividades_tipo.push('muros');
@@ -151,6 +153,7 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
       if (formData.fases?.cimentacion) {
         actividades_tipo.push('pilas');
         if (formData.anclas_planeadas > 0) actividades_tipo.push('anclas');
+        if (formData.perfiles_planeados > 0) actividades_tipo.push('perfiles');
       }
       if (formData.fases?.edificacion) actividades_tipo.push('muros');
       
