@@ -72,6 +72,7 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
     }
     
     setFormData({
+      id: proyecto.id,
       nombre: proyecto.nombre || '', 
       ubicacion: proyecto.ubicacion || '',
       direccion: proyecto.direccion || proyecto.ubicacion || '',
@@ -88,6 +89,8 @@ export function ProyectosView({ proyectos, onDelete, onSelect, onRefresh, onShow
       capacidad_camion: proyecto.capacidad_camion || 25, 
       costo_m3: proyecto.costo_m3 || 150,
       caras_excavacion: Array.isArray(proyecto.caras_excavacion) ? proyecto.caras_excavacion : [],
+      wa_grupo_chat_id: proyecto.wa_grupo_chat_id || null,
+      wa_grupo_nombre: proyecto.wa_grupo_nombre || null,
       fases
     });
     setShowEditForm(true);
