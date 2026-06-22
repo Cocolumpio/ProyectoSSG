@@ -818,6 +818,7 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                     semana={selectedAvance.semana}
                     readOnly={readOnly}
                     onShowSuccess={onShowSuccess}
+                    waGrupoVinculado={!!proyecto.wa_grupo_chat_id}
                   />
                   
                   {/* Métricas editables - Dinámicas según tipo de actividad */}

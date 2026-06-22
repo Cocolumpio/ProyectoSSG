@@ -38,6 +38,27 @@ Sistema de detección de desviación ≥10% que notifica a directores vía Whats
 
 **UI**: `DirectoresAdmin` muestra badge de estado del bot (verde "authorized") + botón ✈️ "Enviar prueba" por director.
 
+## 🆕 Resumen Semanal Automático desde Grupos de WhatsApp (Feb 2026)
+Sistema que lee los mensajes del grupo de WhatsApp del proyecto y, cada domingo 22:00 CDMX, genera un resumen IA enfocado en JUSTIFICACIONES DE ATRASO que se guarda en `comentarios_semana`.
+
+**Backend**:
+- `services/whatsapp_groups.py`: `listar_grupos()` (Green API `getContacts` filtrado por `@g.us`), `buscar_grupo_para_proyecto()` (auto-match flexible normalizando acentos/case), `obtener_mensajes_grupo()` (`getChatHistory` con rango temporal), `formatear_mensajes_para_ia()`.
+- `services/resumen_chat_ia.py`: Claude Sonnet 4.5 genera resumen estructurado (RESUMEN EJECUTIVO / JUSTIFICACIONES DE ATRASO / ACTIVIDADES / DECISIONES TÉCNICAS / RIESGOS / PARTICIPANTES). Truncado a 25k chars; correlaciona con avance real/esperado si está disponible.
+- `routes/resumen_whatsapp.py`:
+  - `GET /api/whatsapp/grupos` — lista grupos.
+  - `GET /api/whatsapp/grupos/auto-match/{proyecto_id}` — sugerencia automática.
+  - `PUT /api/proyectos/{id}/whatsapp-grupo` — vincular/desvincular.
+  - `POST /api/proyectos/{id}/resumen-whatsapp-semana/{semana}` — genera manualmente.
+  - `cron_resumen_semanal_dominical()` — hook del scheduler.
+- `server.py`: nuevo cron job `CronTrigger(day_of_week='mon', hour=4, minute=0)` UTC = domingo 22:00 CDMX. Calcula semana actual desde `fecha_inicio` y dispara para todos los proyectos activos.
+- Modelo `Proyecto`: nuevos campos `wa_grupo_chat_id`, `wa_grupo_nombre`.
+
+**Frontend**:
+- `components/Projects/WhatsAppGrupoSelector.jsx`: en el formulario del proyecto (modo edit), botón "Buscar grupos" + sugerencia automática + lista completa para selección manual.
+- `ComentarioSemanaSection`: si `comentario.fuente === 'whatsapp_ia'` muestra badge "🤖 WhatsApp · IA". Botón "Resumir WhatsApp" disponible cuando el proyecto tiene grupo vinculado (admin).
+
+**Validado en vivo (22 Jun 2026)**: Torre Mezquitan auto-matcheó con grupo "| Torre Mezquitan |". Resumen semana 19 procesó 11 mensajes, detectó correctamente "lluvia el sábado 20/06 sin protección de costales" como justificación de atraso.
+
 **Testing (iter_21)**: 14/14 pytest backend pasados (1 skipped por falta de proyecto con programa+avances), frontend admin y cliente verificados (cliente no ve panel de alertas ni edita comentarios).
 
 ## Comparativa Semanal — Programa de Obra V2 (Feb 2026)

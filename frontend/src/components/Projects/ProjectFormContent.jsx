@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { MapPin, Search, Loader2, Shovel, Columns3, Building2, Anchor, Info } from 'lucide-react';
 import { CatalogoMaquinariaSection } from './CatalogoMaquinariaSection';
 import { CarasExcavacionConfig } from './CarasExcavacionConfig';
+import { WhatsAppGrupoSelector } from './WhatsAppGrupoSelector';
 
 export function ProjectFormContent({ formData, setFormData, error, saving, isEdit, onSubmit, onClose, onShowSuccess }) {
   const [searchingAddress, setSearchingAddress] = useState(false);
@@ -420,6 +421,28 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
           <Info className="h-4 w-4 flex-shrink-0 mt-0.5" />
           <span>Si no cuentas con las cantidades exactas del cronograma, el sistema proyectará automáticamente las semanas restantes basándose en el ritmo de avance semanal.</span>
         </div>
+
+        {/* Vinculación de Grupo de WhatsApp (solo al editar un proyecto existente) */}
+        {isEdit && formData.id && (
+          <div className="mt-4">
+            <WhatsAppGrupoSelector
+              proyectoId={formData.id}
+              proyectoNombre={formData.nombre}
+              valor={
+                formData.wa_grupo_chat_id
+                  ? { chat_id: formData.wa_grupo_chat_id, nombre: formData.wa_grupo_nombre }
+                  : null
+              }
+              onChange={(g) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  wa_grupo_chat_id: g?.chat_id || null,
+                  wa_grupo_nombre: g?.nombre || null,
+                }))
+              }
+            />
+          </div>
+        )}
       </div>
 
       {/* Avance calculado automáticamente - Por fase */}

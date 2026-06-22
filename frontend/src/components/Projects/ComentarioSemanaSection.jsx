@@ -1,20 +1,21 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { MessageSquare, Save, Loader2, Trash2, Pencil } from 'lucide-react';
+import { MessageSquare, Save, Loader2, Trash2, Pencil, Sparkles, Bot } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 /**
  * Sección de comentario/justificación para una semana específica del avance.
- * - Admin (readOnly=false): puede crear/editar/borrar.
+ * - Admin (readOnly=false): puede crear/editar/borrar y generar resumen IA del grupo WhatsApp.
  * - Cliente (readOnly=true): solo lectura.
  */
-export function ComentarioSemanaSection({ proyectoId, semana, readOnly = false, onShowSuccess }) {
+export function ComentarioSemanaSection({ proyectoId, semana, readOnly = false, onShowSuccess, waGrupoVinculado = false }) {
   const [loading, setLoading] = useState(true);
   const [comentario, setComentario] = useState(null);
   const [editing, setEditing] = useState(false);
   const [texto, setTexto] = useState('');
   const [saving, setSaving] = useState(false);
+  const [generandoResumen, setGenerandoResumen] = useState(false);
 
   const fetchComentario = async () => {
     if (!proyectoId || semana == null) return;
@@ -68,6 +69,24 @@ export function ComentarioSemanaSection({ proyectoId, semana, readOnly = false, 
     }
   };
 
+  const generarResumenWA = async () => {
+    if (comentario && !window.confirm(
+      'Ya existe un comentario para esta semana. ¿Reemplazarlo con el resumen automático del grupo de WhatsApp?',
+    )) return;
+    setGenerandoResumen(true);
+    try {
+      const r = await axios.post(`${API}/proyectos/${proyectoId}/resumen-whatsapp-semana/${semana}`);
+      // Refrescar para mostrar el comentario generado
+      await fetchComentario();
+      setEditing(false);
+      onShowSuccess?.(`Resumen WhatsApp generado: ${r.data?.mensajes_analizados || 0} mensajes analizados`);
+    } catch (e) {
+      alert(`Error: ${e?.response?.data?.detail || e.message}`);
+    } finally {
+      setGenerandoResumen(false);
+    }
+  };
+
   // Cliente y no hay comentario: no mostrar nada (limpio)
   if (readOnly && !comentario && !loading) return null;
 
@@ -80,16 +99,38 @@ export function ComentarioSemanaSection({ proyectoId, semana, readOnly = false, 
         <div className="flex items-center gap-2 text-amber-300 text-xs font-semibold uppercase tracking-wide">
           <MessageSquare className="h-3.5 w-3.5" />
           Comentarios / Justificación · Semana {semana}
+          {comentario?.fuente === 'whatsapp_ia' && (
+            <span
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 normal-case tracking-normal"
+              title={`Resumen automático del grupo WhatsApp · ${comentario.mensajes_analizados || 0} mensajes analizados`}
+            >
+              <Bot className="h-3 w-3" /> WhatsApp · IA
+            </span>
+          )}
         </div>
         {!readOnly && !editing && (
-          <button
-            onClick={() => { setEditing(true); setTexto(comentario?.texto || ''); }}
-            className="text-xs text-cyan-300 hover:text-cyan-200 inline-flex items-center gap-1"
-            data-testid={`comentario-edit-btn-${semana}`}
-          >
-            <Pencil className="h-3 w-3" />
-            {comentario ? 'Editar' : 'Agregar'}
-          </button>
+          <div className="flex items-center gap-2">
+            {waGrupoVinculado && (
+              <button
+                onClick={generarResumenWA}
+                disabled={generandoResumen}
+                className="text-xs text-emerald-300 hover:text-emerald-200 inline-flex items-center gap-1 disabled:opacity-50"
+                title="Generar resumen automático del grupo de WhatsApp para esta semana"
+                data-testid={`comentario-resumen-wa-btn-${semana}`}
+              >
+                {generandoResumen ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                Resumir WhatsApp
+              </button>
+            )}
+            <button
+              onClick={() => { setEditing(true); setTexto(comentario?.texto || ''); }}
+              className="text-xs text-cyan-300 hover:text-cyan-200 inline-flex items-center gap-1"
+              data-testid={`comentario-edit-btn-${semana}`}
+            >
+              <Pencil className="h-3 w-3" />
+              {comentario ? 'Editar' : 'Agregar'}
+            </button>
+          </div>
         )}
       </div>
 

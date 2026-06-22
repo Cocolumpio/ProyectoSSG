@@ -325,6 +325,9 @@ class Proyecto(BaseModel):
     analisis_maquinaria_ia: Optional[dict] = None
     parametros_proyecto: Optional[dict] = None
     clientes_asignados: List[str] = []  # Lista de IDs de clientes asignados
+    # Vinculación a grupo de WhatsApp (Green API) para resumen semanal IA
+    wa_grupo_chat_id: Optional[str] = None
+    wa_grupo_nombre: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ProyectoCreate(BaseModel):
@@ -2151,6 +2154,7 @@ from routes import (
     google_calendar as routes_google_calendar,
     directores as routes_directores,
     alertas as routes_alertas,
+    resumen_whatsapp as routes_resumen_whatsapp,
 )
 app.include_router(routes_comparaciones.router)
 app.include_router(routes_exportar.router)
@@ -2166,6 +2170,7 @@ app.include_router(routes_comparativa_semanal.router)
 app.include_router(routes_google_calendar.router)
 app.include_router(routes_directores.router)
 app.include_router(routes_alertas.router)
+app.include_router(routes_resumen_whatsapp.router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -2620,9 +2625,18 @@ async def startup_event():
         id='analisis_desviaciones',
         replace_existing=True
     )
-    
+
+    # Resumen dominical del chat de WhatsApp por proyecto — domingo 22:00 CDMX (= 04:00 UTC lunes)
+    from routes.resumen_whatsapp import cron_resumen_semanal_dominical
+    scheduler.add_job(
+        cron_resumen_semanal_dominical,
+        CronTrigger(day_of_week='mon', hour=4, minute=0),  # lunes 04:00 UTC = domingo 22:00 CDMX
+        id='resumen_whatsapp_dominical',
+        replace_existing=True
+    )
+
     scheduler.start()
-    logging.info("Scheduler iniciado - Reporte semanal (viernes 18:00) y Análisis de desviaciones (lunes 9:00)")
+    logging.info("Scheduler iniciado - Reporte semanal (viernes 18:00), Análisis desviaciones (lunes 9:00), Resumen WhatsApp dominical (domingo 22:00 CDMX)")
 
 
 @app.on_event("shutdown")
