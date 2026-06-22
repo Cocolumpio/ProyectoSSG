@@ -39,15 +39,15 @@ async def _calcular_desviacion(proyecto_id: str) -> Optional[dict]:
         n = int(sem.get("semana") or 0)
         av = avances_por_sem.get(n) or {}
         if any(float(av.get(k, 0) or 0) > 0 for k in
-               ("volumen_excavacion", "pilas_completadas", "anclas_instaladas", "muros_completados")):
+               ("volumen_excavacion", "pilas_completadas", "anclas_instaladas", "muros_completados", "perfiles_completados")):
             ultima_con_avance = sem
     if not ultima_con_avance:
         return None
     n_eval = int(ultima_con_avance["semana"])
 
     # Calcular acumulado planeado y real hasta n_eval
-    plan_acum = {"excavacion": 0.0, "pilas": 0.0, "anclas": 0.0, "muros": 0.0}
-    real_acum = {"excavacion": 0.0, "pilas": 0.0, "anclas": 0.0, "muros": 0.0}
+    plan_acum = {"excavacion": 0.0, "pilas": 0.0, "anclas": 0.0, "muros": 0.0, "perfiles": 0.0}
+    real_acum = {"excavacion": 0.0, "pilas": 0.0, "anclas": 0.0, "muros": 0.0, "perfiles": 0.0}
     for sem in programa:
         if int(sem.get("semana") or 0) > n_eval:
             break
@@ -55,26 +55,31 @@ async def _calcular_desviacion(proyecto_id: str) -> Optional[dict]:
         plan_acum["pilas"] += float(sem.get("pilas") or 0)
         plan_acum["anclas"] += float(sem.get("anclas") or 0)
         plan_acum["muros"] += float(sem.get("muros_m2") or 0)
+        plan_acum["perfiles"] += float(sem.get("perfiles") or 0)
         av = avances_por_sem.get(int(sem.get("semana") or 0)) or {}
         real_acum["excavacion"] += float(av.get("volumen_excavacion") or 0)
         real_acum["pilas"] += float(av.get("pilas_completadas") or 0)
         real_acum["anclas"] += float(av.get("anclas_instaladas") or 0)
         real_acum["muros"] += float(av.get("muros_completados") or 0)
+        real_acum["perfiles"] += float(av.get("perfiles_completados") or 0)
 
     tot = {
         "excavacion": float(proyecto.get("volumen_total_planeado") or 0),
         "pilas": float(proyecto.get("pilas_planeadas") or 0),
         "anclas": float(proyecto.get("anclas_planeadas") or 0),
         "muros": float(proyecto.get("muros_planeados") or 0),
+        "perfiles": float(proyecto.get("perfiles_planeados") or 0),
     }
 
     pcts_esperado, pcts_real = [], []
     fases_desviadas: List[dict] = []
+    fase_critica_individual = False  # True si alguna fase tiene desviación ≤ -10%
     mapping = {
         "excavacion": ("Excavación", "m³"),
         "pilas": ("Pilas", "pzs"),
         "anclas": ("Anclas", "pzs"),
         "muros": ("Muros", "m²"),
+        "perfiles": ("Reforz. por Perfiles", "pzs"),
     }
     for key, (label, unidad) in mapping.items():
         if tot[key] <= 0 or plan_acum[key] <= 0:
@@ -84,6 +89,8 @@ async def _calcular_desviacion(proyecto_id: str) -> Optional[dict]:
         pcts_esperado.append(esp)
         pcts_real.append(rl)
         desv = rl - esp
+        if desv <= UMBRAL_DESVIACION:
+            fase_critica_individual = True
         if desv <= -5:
             fases_desviadas.append({
                 "nombre": label,
@@ -107,6 +114,7 @@ async def _calcular_desviacion(proyecto_id: str) -> Optional[dict]:
         "desviacion_pct": round(desviacion_pct, 1),
         "semana_evaluada": n_eval,
         "fases_desviadas": fases_desviadas,
+        "fase_critica_individual": fase_critica_individual,
     }
 
 
@@ -149,10 +157,10 @@ async def disparar_alerta(
     if not info:
         raise HTTPException(400, "El proyecto no tiene programa o no hay avances reales todavía")
 
-    if info["desviacion_pct"] > UMBRAL_DESVIACION and not forzar:
+    if info["desviacion_pct"] > UMBRAL_DESVIACION and not info.get("fase_critica_individual") and not forzar:
         return {
             "alerta_enviada": False,
-            "razon": f"Desviación de {info['desviacion_pct']:.1f}% no supera umbral ({UMBRAL_DESVIACION}%)",
+            "razon": f"Desviación de {info['desviacion_pct']:.1f}% no supera umbral ({UMBRAL_DESVIACION}%) y ninguna fase está atrasada ≥10%",
             **info,
         }
 
@@ -245,7 +253,11 @@ async def evaluar_y_disparar_si_aplica(proyecto_id: str) -> Optional[dict]:
     """
     try:
         info = await _calcular_desviacion(proyecto_id)
-        if not info or info["desviacion_pct"] > UMBRAL_DESVIACION:
+        if not info:
+            return None
+        # Dispara si la desviación global supera el umbral O si alguna fase individual
+        # (incluyendo "Reforz. por Perfiles") está atrasada ≥10% respecto a su programa.
+        if info["desviacion_pct"] > UMBRAL_DESVIACION and not info.get("fase_critica_individual"):
             return None
         key = f"{proyecto_id}:{info['semana_evaluada']}"
         if await db.alertas_enviadas.find_one({"key": key}):
