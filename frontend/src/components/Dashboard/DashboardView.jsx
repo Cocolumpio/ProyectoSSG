@@ -12,6 +12,7 @@ import { MatrizCarasExcavacion } from './MatrizCarasExcavacion';
 import { ComparativaSemanalCards } from './ComparativaSemanalCards';
 import { GoogleCalendarPanel } from './GoogleCalendarPanel';
 import { AlertasDesviacionPanel } from './AlertasDesviacionPanel';
+import { HistorialProgramaPanel } from './HistorialProgramaPanel';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -843,6 +844,14 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                 />
               </div>
             )}
+
+            {/* Historial de cambios al programa (admin y cliente del proyecto) */}
+            <div className="mt-6">
+              <HistorialProgramaPanel
+                proyectoId={selectedProyecto.id}
+                isAdmin={!readOnly}
+              />
+            </div>
 
             {/* Botón para ver Comparación de Planes */}
             {selectedProyecto?.analisis_maquinaria_ia && (

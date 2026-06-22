@@ -8,7 +8,9 @@ from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 
-from core.config import get_db, UPLOAD_DIR
+from core.config import get_db, UPLOAD_DIR, get_current_admin
+from fastapi import Depends
+from routes.programa_historial import guardar_snapshot
 from services import cronograma_ai
 from services.notifications import crear_notificacion_sistema
 
@@ -161,7 +163,11 @@ async def crear_proyecto_desde_cronograma(data: dict):
 
 
 @router.post("/proyectos/{proyecto_id}/actualizar-cronograma")
-async def actualizar_cronograma_proyecto(proyecto_id: str, file: UploadFile = File(...)):
+async def actualizar_cronograma_proyecto(
+    proyecto_id: str,
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_admin),
+):
     """
     Actualiza el cronograma de un proyecto existente desde un archivo Excel.
     Permite subir o actualizar el programa de obra.
@@ -250,7 +256,18 @@ async def actualizar_cronograma_proyecto(proyecto_id: str, file: UploadFile = Fi
                 "created_at": datetime.now(timezone.utc)
             }
             await db.frentes.insert_one(frente)
-        
+
+        # Snapshot del programa para historial de cambios
+        try:
+            await guardar_snapshot(
+                proyecto_id,
+                current_user,
+                fuente="excel",
+                motivo=f"Subida de archivo Excel: {file.filename}",
+            )
+        except Exception as snap_err:
+            logging.error(f"Error guardando snapshot programa: {snap_err}")
+
         return {
             "success": True,
             "mensaje": f"Cronograma actualizado: {len(frentes_data)} frentes, {resumen.get('semanas_estimadas', 0)} semanas",

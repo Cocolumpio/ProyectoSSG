@@ -844,8 +844,18 @@ async def actualizar_avance(proyecto_id: str, avance: float):
     return {"message": "Avance actualizado", "avance": avance}
 
 @api_router.put("/proyectos/{proyecto_id}", response_model=Proyecto)
-async def actualizar_proyecto(proyecto_id: str, proyecto_update: ProyectoUpdate):
+async def actualizar_proyecto(
+    proyecto_id: str,
+    proyecto_update: ProyectoUpdate,
+    current_user: dict = Depends(get_current_admin),
+):
     """Actualizar un proyecto existente con todos sus campos"""
+    # Obtener snapshot ANTES de la actualización para detectar si cambian
+    # campos relevantes al programa de obra.
+    proyecto_antes = await db.proyectos.find_one({"id": proyecto_id}, {"_id": 0})
+    if not proyecto_antes:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+
     # Obtener solo los campos que se proporcionaron (no None)
     update_data = {k: v for k, v in proyecto_update.model_dump().items() if v is not None}
     
@@ -867,7 +877,17 @@ async def actualizar_proyecto(proyecto_id: str, proyecto_update: ProyectoUpdate)
     # Recalcular el avance si se actualizó el volumen planeado
     if 'volumen_total_planeado' in update_data:
         await recalcular_avance_proyecto(proyecto_id)
-    
+
+    # Si cambió cualquier campo de programa (cantidades planeadas o semanas),
+    # guardar snapshot de auditoría
+    try:
+        from routes.programa_historial import detectar_cambio_metricas, guardar_snapshot
+        proyecto_despues = await db.proyectos.find_one({"id": proyecto_id}, {"_id": 0})
+        if detectar_cambio_metricas(proyecto_antes, proyecto_despues):
+            await guardar_snapshot(proyecto_id, current_user, fuente="manual")
+    except Exception as snap_err:
+        logging.error(f"Snapshot programa (manual) error: {snap_err}")
+
     # Retornar el proyecto actualizado
     proyecto = await db.proyectos.find_one({"id": proyecto_id}, {"_id": 0})
     if isinstance(proyecto.get('created_at'), str):
@@ -2163,6 +2183,7 @@ from routes import (
     directores as routes_directores,
     alertas as routes_alertas,
     resumen_whatsapp as routes_resumen_whatsapp,
+    programa_historial as routes_programa_historial,
 )
 app.include_router(routes_comparaciones.router)
 app.include_router(routes_exportar.router)
@@ -2179,6 +2200,7 @@ app.include_router(routes_google_calendar.router)
 app.include_router(routes_directores.router)
 app.include_router(routes_alertas.router)
 app.include_router(routes_resumen_whatsapp.router)
+app.include_router(routes_programa_historial.router)
 
 app.add_middleware(
     CORSMiddleware,
