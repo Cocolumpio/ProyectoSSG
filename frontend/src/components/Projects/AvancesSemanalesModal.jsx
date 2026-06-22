@@ -34,6 +34,10 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
   const [editingMuros, setEditingMuros] = useState(false);
   const [editMurosValue, setEditMurosValue] = useState(0);
   const [savingMuros, setSavingMuros] = useState(false);
+  // Editar perfiles (reforzamiento)
+  const [editingPerfiles, setEditingPerfiles] = useState(false);
+  const [editPerfilesValue, setEditPerfilesValue] = useState(0);
+  const [savingPerfiles, setSavingPerfiles] = useState(false);
   const [uploadingModel, setUploadingModel] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ 
     percent: 0, 
@@ -408,6 +412,39 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
   const handleCancelEditMuros = () => {
     setEditingMuros(false);
     setEditMurosValue(0);
+  };
+
+  // Funciones para editar perfiles (reforzamiento por perfiles)
+  const handleEditPerfilesClick = () => {
+    setEditPerfilesValue(selectedAvance?.perfiles_completados || 0);
+    setEditingPerfiles(true);
+  };
+
+  const handleSavePerfiles = async () => {
+    if (!selectedAvance) return;
+    setSavingPerfiles(true);
+    try {
+      await axios.put(`${API}/proyectos/${proyecto.id}/avances-semanales/${selectedAvance.id}`, {
+        perfiles_completados: editPerfilesValue,
+      });
+      const updatedAvance = { ...selectedAvance, perfiles_completados: editPerfilesValue };
+      setSelectedAvance(updatedAvance);
+      setAvances(avances.map((a) => (a.id === selectedAvance.id ? updatedAvance : a)));
+      setEditingPerfiles(false);
+      if (onShowSuccess) {
+        onShowSuccess(`Perfiles completados actualizados para Semana ${selectedAvance.semana}`);
+      }
+    } catch (err) {
+      console.error('Error actualizando perfiles:', err);
+      alert('Error al actualizar perfiles completados');
+    } finally {
+      setSavingPerfiles(false);
+    }
+  };
+
+  const handleCancelEditPerfiles = () => {
+    setEditingPerfiles(false);
+    setEditPerfilesValue(0);
   };
 
   const handleModel3DUpload = async (e) => {
@@ -941,6 +978,68 @@ export function AvancesSemanalesModal({ proyecto, onClose, onShowSuccess, readOn
                                   className="p-1.5 text-teal-500 hover:text-teal-300 hover:bg-teal-500/15 rounded transition-colors"
                                   title="Editar anclas"
                                   data-testid="edit-anclas-btn"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Reforzamiento por Perfiles - Solo si el proyecto los tiene */}
+                    {(proyecto.actividades_tipo?.includes('perfiles') || proyecto.perfiles_planeados > 0) && (
+                      <div className="p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/30">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Anchor className="h-4 w-4 text-emerald-400" />
+                            <span className="text-sm font-medium text-emerald-300">Reforz. por Perfiles:</span>
+                          </div>
+                          {editingPerfiles ? (
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={editPerfilesValue}
+                                onChange={(e) => setEditPerfilesValue(parseInt(e.target.value) || 0)}
+                                className="w-24 px-2 py-1 text-sm border border-emerald-300 rounded focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                data-testid="edit-perfiles-input"
+                              />
+                              <button
+                                onClick={handleSavePerfiles}
+                                disabled={savingPerfiles}
+                                className="p-1.5 bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                                title="Guardar"
+                                data-testid="save-perfiles-btn"
+                              >
+                                {savingPerfiles ? (
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <Check className="h-4 w-4" />
+                                )}
+                              </button>
+                              <button
+                                onClick={handleCancelEditPerfiles}
+                                className="p-1.5 bg-[#1F1F26] text-white/80 rounded hover:bg-[#2A2A33] transition-colors"
+                                title="Cancelar"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center space-x-2">
+                              <span className="text-lg font-bold text-emerald-300" data-testid="perfiles-value">
+                                {(selectedAvance.perfiles_completados || 0).toLocaleString()}
+                              </span>
+                              <span className="text-sm text-emerald-500">/ {(proyecto.perfiles_planeados || 0).toLocaleString()}</span>
+                              {!readOnly && (
+                                <button
+                                  onClick={handleEditPerfilesClick}
+                                  className="p-1.5 text-emerald-500 hover:text-emerald-300 hover:bg-emerald-500/15 rounded transition-colors"
+                                  title="Editar perfiles"
+                                  data-testid="edit-perfiles-btn"
                                 >
                                   <Pencil className="h-4 w-4" />
                                 </button>

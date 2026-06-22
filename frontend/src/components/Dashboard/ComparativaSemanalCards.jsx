@@ -124,20 +124,44 @@ function SemanaCard({ sem, expanded, onToggle }) {
   const p = sem.planeado;
   const r = sem.real;
   const pct = sem.pct;
+  const acumP = sem.acumulado?.planeado || {};
+  const acumR = sem.acumulado?.real || {};
 
-  // Detectar qué fases tienen plan en esta semana (no mostrar fases con planeado=0)
-  const fasesActivas = [
+  // Helper para clasificar avance fuera de programa: rojo si recuperando atraso,
+  // verde si está adelantado al programa.
+  const fuera = (acumPlan, acumReal) => {
+    if (acumPlan <= 0) return 'adelantada'; // nunca fue planeado → adelantada
+    return acumReal >= acumPlan ? 'adelantada' : 'atrasada';
+  };
+
+  const fasesRaw = [
     { key: 'excavacion_m3', label: 'Excavación', unidad: 'm³', icon: Shovel, color: 'amber',
-      plan: p.excavacion_m3, real: r.excavacion_m3, pct: pct.excavacion },
+      plan: p.excavacion_m3, real: r.excavacion_m3, pct: pct.excavacion,
+      acumPlan: acumP.excavacion_m3 || 0, acumReal: acumR.excavacion_m3 || 0 },
     { key: 'pilas', label: 'Pilas', unidad: 'pzs', icon: Columns3, color: 'blue',
-      plan: p.pilas, real: r.pilas, pct: pct.pilas },
+      plan: p.pilas, real: r.pilas, pct: pct.pilas,
+      acumPlan: acumP.pilas || 0, acumReal: acumR.pilas || 0 },
     { key: 'anclas', label: 'Anclas', unidad: 'pzs', icon: Anchor, color: 'teal',
-      plan: p.anclas, real: r.anclas, pct: pct.anclas },
+      plan: p.anclas, real: r.anclas, pct: pct.anclas,
+      acumPlan: acumP.anclas || 0, acumReal: acumR.anclas || 0 },
     { key: 'perfiles', label: 'Reforz. Perfiles', unidad: 'pzs', icon: ShieldCheck, color: 'emerald',
-      plan: p.perfiles, real: r.perfiles, pct: pct.perfiles },
+      plan: p.perfiles, real: r.perfiles, pct: pct.perfiles,
+      acumPlan: acumP.perfiles || 0, acumReal: acumR.perfiles || 0 },
     { key: 'muros_m2', label: 'Muros', unidad: 'm²', icon: Building2, color: 'violet',
-      plan: p.muros_m2, real: r.muros_m2, pct: pct.muros },
-  ].filter((f) => f.plan > 0);
+      plan: p.muros_m2, real: r.muros_m2, pct: pct.muros,
+      acumPlan: acumP.muros_m2 || 0, acumReal: acumR.muros_m2 || 0 },
+  ];
+
+  // Mostramos la fase si:
+  //  • tiene plan en esta semana (comportamiento original), o
+  //  • tiene real en esta semana aunque no estuviera planeada (fuera de programa).
+  const fasesActivas = fasesRaw
+    .filter((f) => f.plan > 0 || f.real > 0)
+    .map((f) => ({
+      ...f,
+      fueraPrograma: f.plan === 0 && f.real > 0,
+      tipo: f.plan === 0 && f.real > 0 ? fuera(f.acumPlan, f.acumReal) : null,
+    }));
 
   return (
     <div
@@ -245,23 +269,63 @@ function FaseRow({ fase }) {
 
   const pctClamped = Math.min(fase.pct, 100);
 
+  // Avance fuera de programa: ofrecemos visual de alerta o "adelantada"
+  const fueraConfig = fase.fueraPrograma
+    ? fase.tipo === 'atrasada'
+      ? {
+          icon: AlertTriangle,
+          label: 'Atrasada',
+          wrapper: 'border-l-2 border-rose-500/70 pl-2 bg-rose-500/5 rounded-r',
+          badge: 'bg-rose-500/20 text-rose-300 border border-rose-500/40',
+        }
+      : {
+          icon: TrendingUp,
+          label: 'Adelantada',
+          wrapper: 'border-l-2 border-emerald-500/70 pl-2 bg-emerald-500/5 rounded-r',
+          badge: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40',
+        }
+    : null;
+  const FueraIcon = fueraConfig?.icon;
+
+  // Si está fuera de programa, no usamos el plan original como denominador (es 0).
+  // Mostramos sólo el real con badge informativo.
   return (
-    <div>
-      <div className="flex items-center justify-between text-xs mb-0.5">
-        <span className={`flex items-center gap-1 ${colorClasses.text} font-medium`}>
+    <div className={fueraConfig?.wrapper || ''}>
+      <div className="flex items-center justify-between text-xs mb-0.5 gap-2">
+        <span className={`flex items-center gap-1 ${colorClasses.text} font-medium flex-shrink-0`}>
           <Icon className="h-3 w-3" /> {fase.label}
         </span>
-        <span className="text-white/70 font-mono">
+        <span className="text-white/70 font-mono text-right flex items-center gap-1 flex-wrap justify-end">
+          {fueraConfig && (
+            <span
+              className={`inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[9px] font-semibold ${fueraConfig.badge}`}
+              data-testid={`fase-${fase.key}-${fueraConfig.label.toLowerCase()}`}
+              title={
+                fueraConfig.label === 'Atrasada'
+                  ? `Actividad no planeada esta semana, ejecutándose para recuperar atraso (acumulado real ${fase.acumReal} < planeado ${fase.acumPlan})`
+                  : `Actividad no planeada esta semana, ejecutada por adelanto al programa (acumulado real ${fase.acumReal} ≥ planeado ${fase.acumPlan})`
+              }
+            >
+              <FueraIcon className="h-2.5 w-2.5" /> {fueraConfig.label}
+            </span>
+          )}
           <span className="text-white">{fase.real}</span>
-          <span className="text-white/30 mx-1">/</span>
-          <span className="text-white/50">{fase.plan} {fase.unidad}</span>
-          <span className={`ml-1 font-bold ${colorClasses.text}`}>{fase.pct}%</span>
+          {!fueraConfig && (
+            <>
+              <span className="text-white/30 mx-1">/</span>
+              <span className="text-white/50">{fase.plan} {fase.unidad}</span>
+              <span className={`ml-1 font-bold ${colorClasses.text}`}>{fase.pct}%</span>
+            </>
+          )}
+          {fueraConfig && <span className="text-white/40">{fase.unidad}</span>}
         </span>
       </div>
-      <div className="w-full bg-[#1F1F26] rounded-full h-1 overflow-hidden">
-        <div className={`${colorClasses.bg} h-1 rounded-full transition-all duration-500`}
-             style={{ width: `${pctClamped}%` }} />
-      </div>
+      {!fueraConfig && (
+        <div className="w-full bg-[#1F1F26] rounded-full h-1 overflow-hidden">
+          <div className={`${colorClasses.bg} h-1 rounded-full transition-all duration-500`}
+               style={{ width: `${pctClamped}%` }} />
+        </div>
+      )}
     </div>
   );
 }
