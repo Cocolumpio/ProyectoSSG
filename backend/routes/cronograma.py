@@ -257,6 +257,13 @@ async def actualizar_cronograma_proyecto(
             }
             await db.frentes.insert_one(frente)
 
+        # Recalcular avance global del proyecto (las planeadas pudieron cambiar)
+        try:
+            from services.helpers import recalcular_avance_proyecto
+            await recalcular_avance_proyecto(proyecto_id)
+        except Exception as recalc_err:
+            logging.error(f"Error recalculando avance tras subir cronograma: {recalc_err}")
+
         # Snapshot del programa para historial de cambios
         try:
             await guardar_snapshot(

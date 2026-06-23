@@ -824,8 +824,39 @@ async def listar_proyectos(
             p['clientes_asignados'] = []
     return proyectos
 
+
+@api_router.post("/admin/recalcular-avances")
+async def admin_recalcular_avances(current_user: dict = Depends(get_current_admin)):
+    """Recalcula `avance_actual` para TODOS los proyectos. Útil tras un deploy
+    con cambios en la fórmula o para corregir valores desfasados.
+    """
+    proyectos = await db.proyectos.find({}, {"id": 1, "nombre": 1, "avance_actual": 1, "_id": 0}).to_list(500)
+    cambios = []
+    for p in proyectos:
+        antes = p.get("avance_actual")
+        try:
+            await recalcular_avance_proyecto(p["id"])
+            doc = await db.proyectos.find_one({"id": p["id"]}, {"avance_actual": 1, "_id": 0})
+            despues = (doc or {}).get("avance_actual")
+            cambios.append({
+                "id": p["id"],
+                "nombre": p.get("nombre"),
+                "antes": antes,
+                "despues": despues,
+                "cambio": antes != despues,
+            })
+        except Exception as e:
+            logging.error(f"Error recalculando {p['id']}: {e}")
+    return {"total": len(cambios), "cambios": cambios}
+
 @api_router.get("/proyectos/{proyecto_id}", response_model=Proyecto)
 async def obtener_proyecto(proyecto_id: str):
+    # Recalcular avance al cargar el detalle del proyecto para evitar valores
+    # obsoletos cuando se editan cantidades planeadas o se sube nuevo cronograma.
+    try:
+        await recalcular_avance_proyecto(proyecto_id)
+    except Exception as e:
+        logging.warning(f"recalcular_avance_proyecto en GET fallback: {e}")
     proyecto = await db.proyectos.find_one({"id": proyecto_id}, {"_id": 0})
     if not proyecto:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
@@ -874,8 +905,12 @@ async def actualizar_proyecto(
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
     
-    # Recalcular el avance si se actualizó el volumen planeado
-    if 'volumen_total_planeado' in update_data:
+    # Recalcular el avance si cambia cualquier campo que afecte el cálculo
+    campos_que_disparan_recalculo = {
+        'volumen_total_planeado', 'pilas_planeadas', 'anclas_planeadas',
+        'muros_planeados', 'perfiles_planeados', 'caras_excavacion'
+    }
+    if campos_que_disparan_recalculo & set(update_data.keys()):
         await recalcular_avance_proyecto(proyecto_id)
 
     # Si cambió cualquier campo de programa (cantidades planeadas o semanas),

@@ -152,9 +152,15 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
     }
     
     // Avance total: promedio de todas las fases activas
-    const avanceTotal = porcentajesFases.length > 0 
-      ? porcentajesFases.reduce((a, b) => a + b, 0) / porcentajesFases.length 
-      : 0;
+    // Avance total = valor canónico de DB (recalculado por el backend al cargar
+    // el proyecto). Esto garantiza que la barra lateral y el banner principal
+    // muestren EXACTAMENTE lo mismo y que tome en cuenta la matriz de caras
+    // cuando esté configurada.
+    const avanceTotal = selectedProyecto.avance_actual != null
+      ? Number(selectedProyecto.avance_actual)
+      : (porcentajesFases.length > 0
+          ? porcentajesFases.reduce((a, b) => a + b, 0) / porcentajesFases.length
+          : 0);
     
     // Proyección de semanas restantes (sin cronograma)
     let semanasProyectadas = null;
