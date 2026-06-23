@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { Building2, Plane, TrendingUp, Database, Map as MapIcon, Box, Calendar, Truck, DollarSign, BarChart3, Layers, ExternalLink, Maximize2, Columns3, Anchor, Shovel, Mail, Loader2, GitCompare } from 'lucide-react';
+import { Building2, Plane, TrendingUp, Database, Map as MapIcon, Box, Calendar, Truck, DollarSign, BarChart3, Layers, ExternalLink, Maximize2, Columns3, Anchor, Shovel, Mail, Loader2, GitCompare, ShieldCheck } from 'lucide-react';
 import { KPICard } from '../common/KPICard';
 import { MapRecenter } from '../common/MapRecenter';
 import { PointCloudViewer } from '../Projects/PointCloudViewer';
@@ -105,16 +105,19 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
     const pilasPlaneadas = selectedProyecto.pilas_planeadas || 0;
     const murosPlaneados = selectedProyecto.muros_planeados || 0;
     const anclasPlaneadas = selectedProyecto.anclas_planeadas || 0;
+    const perfilesPlaneados = selectedProyecto.perfiles_planeados || 0;
     
     // Calcular ejecutados de los avances semanales
     const pilasEjecutadas = avancesSemanales.reduce((sum, a) => sum + (a.pilas_completadas || 0), 0);
     const murosEjecutados = avancesSemanales.reduce((sum, a) => sum + (a.muros_completados || 0), 0);
     const anclasEjecutadas = avancesSemanales.reduce((sum, a) => sum + (a.anclas_instaladas || 0), 0);
+    const perfilesEjecutados = avancesSemanales.reduce((sum, a) => sum + (a.perfiles_completados || 0), 0);
     
     // Calcular porcentajes por fase
     const porcentajePilas = pilasPlaneadas > 0 ? Math.min((pilasEjecutadas / pilasPlaneadas) * 100, 100) : 0;
     const porcentajeMuros = murosPlaneados > 0 ? Math.min((murosEjecutados / murosPlaneados) * 100, 100) : 0;
     const porcentajeAnclas = anclasPlaneadas > 0 ? Math.min((anclasEjecutadas / anclasPlaneadas) * 100, 100) : 0;
+    const porcentajePerfiles = perfilesPlaneados > 0 ? Math.min((perfilesEjecutados / perfilesPlaneados) * 100, 100) : 0;
     
     // Calcular avance TOTAL como promedio de las fases activas
     const fasesActivas = [];
@@ -125,16 +128,21 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
       fasesActivas.push('excavacion');
       porcentajesFases.push(porcentajeExcavacion);
     }
-    // Cimentación (pilas + anclas)
-    if (tiposActividades.includes('pilas') || pilasPlaneadas > 0) {
+    // Cimentación (pilas + anclas + perfiles)
+    if (
+      tiposActividades.includes('pilas') ||
+      tiposActividades.includes('perfiles') ||
+      pilasPlaneadas > 0 ||
+      anclasPlaneadas > 0 ||
+      perfilesPlaneados > 0
+    ) {
       fasesActivas.push('cimentacion');
-      // Promedio de pilas y anclas si ambas tienen metas
-      if (pilasPlaneadas > 0 && anclasPlaneadas > 0) {
-        porcentajesFases.push((porcentajePilas + porcentajeAnclas) / 2);
-      } else if (pilasPlaneadas > 0) {
-        porcentajesFases.push(porcentajePilas);
-      } else if (anclasPlaneadas > 0) {
-        porcentajesFases.push(porcentajeAnclas);
+      const parts = [];
+      if (pilasPlaneadas > 0) parts.push(porcentajePilas);
+      if (anclasPlaneadas > 0) parts.push(porcentajeAnclas);
+      if (perfilesPlaneados > 0) parts.push(porcentajePerfiles);
+      if (parts.length > 0) {
+        porcentajesFases.push(parts.reduce((a, b) => a + b, 0) / parts.length);
       }
     }
     // Edificación (muros)
@@ -210,12 +218,15 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
       pilasPlaneadas,
       murosPlaneados,
       anclasPlaneadas,
+      perfilesPlaneados,
       pilasEjecutadas,
       murosEjecutados,
       anclasEjecutadas,
+      perfilesEjecutados,
       porcentajePilas,
       porcentajeMuros,
       porcentajeAnclas,
+      porcentajePerfiles,
       // Avance total del proyecto
       avanceTotal,
       semanasProyectadas,
@@ -719,6 +730,18 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                           </div>
                           <div className="text-lg font-bold text-teal-300">{stats.anclasEjecutadas.toLocaleString()}</div>
                           <div className="text-xs text-teal-600">/ {stats.anclasPlaneadas.toLocaleString()}</div>
+                        </div>
+                      )}
+
+                      {/* Reforz. por Perfiles */}
+                      {stats.perfilesPlaneados > 0 && (
+                        <div className="bg-emerald-500/10 rounded-lg p-3 border border-emerald-500/30" data-testid="kpi-perfiles">
+                          <div className="flex items-center gap-2 mb-1">
+                            <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                            <span className="text-xs font-medium text-emerald-300">Reforz. Perfiles</span>
+                          </div>
+                          <div className="text-lg font-bold text-emerald-300">{stats.perfilesEjecutados.toLocaleString()}</div>
+                          <div className="text-xs text-emerald-600">/ {stats.perfilesPlaneados.toLocaleString()}</div>
                         </div>
                       )}
                       
