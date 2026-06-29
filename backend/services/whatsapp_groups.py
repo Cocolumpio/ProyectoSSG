@@ -106,13 +106,7 @@ def buscar_grupo_para_proyecto(nombre_proyecto: str, grupos: Optional[List[dict]
 def obtener_mensajes_grupo(chat_id: str, desde_ts: int, hasta_ts: int, max_count: int = 500) -> List[dict]:
     """Obtiene mensajes del grupo filtrados por rango de timestamps Unix.
 
-    Args:
-        chat_id: ID del chat (xxx@g.us)
-        desde_ts, hasta_ts: límites temporales (epoch seconds)
-        max_count: máximo de mensajes a pedir a la API (Green API limita a 100 por llamada,
-                   pero pedimos varios lotes)
-
-    Returns: lista de mensajes con {timestamp, senderName, textMessage, type, ...}
+    Implementa paginación real con `idMessage` como offset (más histórico).
     """
     if not is_configured() or not chat_id:
         return []
@@ -121,40 +115,62 @@ def obtener_mensajes_grupo(chat_id: str, desde_ts: int, hasta_ts: int, max_count
         with httpx.Client(timeout=_TIMEOUT) as client:
             count_por_lote = 100
             total_pedidos = 0
-            # Green API getChatHistory devuelve del más reciente al más antiguo
+            ultimo_id = None
             while total_pedidos < max_count:
-                r = client.post(
-                    _url("getChatHistory"),
-                    json={"chatId": chat_id, "count": count_por_lote},
-                )
+                payload = {"chatId": chat_id, "count": count_por_lote}
+                if ultimo_id:
+                    payload["idMessage"] = ultimo_id  # paginar hacia mensajes más viejos
+                r = client.post(_url("getChatHistory"), json=payload)
                 if r.status_code != 200:
                     logger.error(f"getChatHistory {r.status_code}: {r.text[:200]}")
                     break
                 lote = r.json() or []
                 if not lote:
                     break
-                # Filtra y termina si vemos mensajes anteriores al rango
-                mas_viejo_del_lote = lote[-1].get("timestamp", 0) if lote else 0
+                # Filtra dentro del rango
                 for m in lote:
                     ts = m.get("timestamp", 0)
                     if desde_ts <= ts <= hasta_ts:
                         mensajes_filtrados.append(m)
+                # Si todos los del lote son más viejos que el rango, paramos
+                mas_viejo = lote[-1].get("timestamp", 0)
                 total_pedidos += len(lote)
-                # Si el más viejo del lote ya es anterior a desde_ts, podemos parar
-                if mas_viejo_del_lote and mas_viejo_del_lote < desde_ts:
+                ultimo_id = lote[-1].get("idMessage")
+                if not ultimo_id:
                     break
-                # Green API no soporta paginación nativa fácilmente; con un solo lote de 100
-                # cubrimos típicamente una semana de actividad. Si quieres más, sube count.
+                if mas_viejo and mas_viejo < desde_ts:
+                    break
                 if len(lote) < count_por_lote:
                     break
-                # Para simplicidad cortamos aquí (un solo lote). Más adelante implementar paginación.
-                break
-        # Orden cronológico ascendente
         mensajes_filtrados.sort(key=lambda m: m.get("timestamp", 0))
         return mensajes_filtrados
     except Exception as e:
         logger.exception(f"Error obteniendo mensajes del grupo {chat_id}: {e}")
         return []
+
+
+def obtener_mensajes_grupo_diagnostico(chat_id: str, desde_ts: int, hasta_ts: int) -> dict:
+    """Versión con diagnóstico: regresa info de qué devolvió Green API."""
+    if not is_configured() or not chat_id:
+        return {"filtrados": [], "total_obtenidos": 0, "mas_nuevo_ts": None, "mas_viejo_ts": None, "error": "Sin chat_id o no configurado"}
+    try:
+        with httpx.Client(timeout=_TIMEOUT) as client:
+            r = client.post(_url("getChatHistory"), json={"chatId": chat_id, "count": 100})
+            if r.status_code != 200:
+                return {"filtrados": [], "total_obtenidos": 0, "mas_nuevo_ts": None, "mas_viejo_ts": None,
+                        "error": f"HTTP {r.status_code}: {r.text[:150]}"}
+            lote = r.json() or []
+            filtrados = [m for m in lote if desde_ts <= m.get("timestamp", 0) <= hasta_ts]
+            ts_list = [m.get("timestamp", 0) for m in lote if m.get("timestamp")]
+            return {
+                "filtrados": sorted(filtrados, key=lambda m: m.get("timestamp", 0)),
+                "total_obtenidos": len(lote),
+                "mas_nuevo_ts": max(ts_list) if ts_list else None,
+                "mas_viejo_ts": min(ts_list) if ts_list else None,
+                "error": None,
+            }
+    except Exception as e:
+        return {"filtrados": [], "total_obtenidos": 0, "mas_nuevo_ts": None, "mas_viejo_ts": None, "error": str(e)}
 
 
 def formatear_mensajes_para_ia(mensajes: List[dict]) -> str:

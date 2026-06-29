@@ -116,7 +116,8 @@ async def _generar_y_guardar_resumen(
         proyecto.get("fecha_inicio") or proyecto.get("fecha_fin_planeada") or "",
         semana,
     )
-    mensajes = wa_groups.obtener_mensajes_grupo(chat_id, desde_ts, hasta_ts)
+    diag = wa_groups.obtener_mensajes_grupo_diagnostico(chat_id, desde_ts, hasta_ts)
+    mensajes = diag["filtrados"]
     transcript = wa_groups.formatear_mensajes_para_ia(mensajes)
 
     # Buscar avance real/esperado de esa semana para dar contexto a la IA
@@ -141,6 +142,30 @@ async def _generar_y_guardar_resumen(
         avance_esperado_pct=avance_esperado_pct,
     )
 
+    # Si no hubo mensajes en el rango, anexar diagnóstico para el usuario
+    if not mensajes:
+        from datetime import datetime as _dt
+        info_diag_lines = [f"\n\n_📋 Diagnóstico Green API:_"]
+        info_diag_lines.append(f"_• Mensajes obtenidos del grupo: {diag['total_obtenidos']}_")
+        if diag.get("mas_nuevo_ts"):
+            info_diag_lines.append(
+                f"_• Mensaje más reciente: {_dt.fromtimestamp(diag['mas_nuevo_ts']).strftime('%d/%m/%Y %H:%M')}_"
+            )
+            info_diag_lines.append(
+                f"_• Mensaje más antiguo: {_dt.fromtimestamp(diag['mas_viejo_ts']).strftime('%d/%m/%Y %H:%M')}_"
+            )
+        if diag.get("error"):
+            info_diag_lines.append(f"_• Error: {diag['error']}_")
+        if diag["total_obtenidos"] == 0:
+            info_diag_lines.append(
+                "_• Posible causa: el bot fue agregado recientemente al grupo; Green API solo guarda historial DESPUÉS de habilitar `enableMessagesHistory`. Asegúrate de que la configuración esté activa en console.green-api.com → Settings → 'Enable saving messages history'._"
+            )
+        elif diag["total_obtenidos"] > 0:
+            info_diag_lines.append(
+                f"_• Esos {diag['total_obtenidos']} mensajes están fuera del rango {fini} – {ffin}. Probablemente son anteriores._"
+            )
+        resumen += "\n".join(info_diag_lines)
+
     doc = {
         "proyecto_id": proyecto["id"],
         "semana": semana,
@@ -150,6 +175,12 @@ async def _generar_y_guardar_resumen(
         "fuente": "whatsapp_ia",
         "wa_chat_id": chat_id,
         "mensajes_analizados": len(mensajes),
+        "diagnostico_wa": {
+            "total_obtenidos": diag["total_obtenidos"],
+            "mas_nuevo_ts": diag.get("mas_nuevo_ts"),
+            "mas_viejo_ts": diag.get("mas_viejo_ts"),
+            "error": diag.get("error"),
+        },
         "actualizado_en": datetime.now(timezone.utc).isoformat(),
     }
     await db.comentarios_semana.update_one(
@@ -160,6 +191,8 @@ async def _generar_y_guardar_resumen(
     return {
         "ok": True,
         "mensajes_analizados": len(mensajes),
+        "mensajes_totales_obtenidos": diag["total_obtenidos"],
+        "diagnostico_wa": doc["diagnostico_wa"],
         "fecha_inicio": fini,
         "fecha_fin": ffin,
         "resumen": resumen,
