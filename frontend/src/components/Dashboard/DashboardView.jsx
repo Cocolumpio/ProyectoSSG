@@ -174,6 +174,10 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
     let avanceEsperado = null;
     let ultimaSemanaConAvance = null;
     let desviacion = null;
+    // Acumulados planeados por fase hasta la semana de referencia (para mostrar "debería llevar")
+    const acumEsperadoPorFase = {
+      excavacion_m3: 0, pilas: 0, anclas: 0, perfiles: 0, muros_m2: 0,
+    };
     if (comparativaSemanal?.semanas?.length > 0) {
       // Encontrar la última semana con avance (real > 0 en alguna fase)
       const semanasComp = comparativaSemanal.semanas;
@@ -184,8 +188,15 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
 
       ultimaSemanaConAvance = refSem.semana;
 
-      // Calcular % esperado: acumulado planeado / total planeado por fase, promediado por fases activas
+      // Acumulados esperados hasta esa semana (los expondremos en las tarjetas KPI)
       const acumPlan = refSem.acumulado?.planeado || {};
+      acumEsperadoPorFase.excavacion_m3 = acumPlan.excavacion_m3 || 0;
+      acumEsperadoPorFase.pilas = acumPlan.pilas || 0;
+      acumEsperadoPorFase.anclas = acumPlan.anclas || 0;
+      acumEsperadoPorFase.perfiles = acumPlan.perfiles || 0;
+      acumEsperadoPorFase.muros_m2 = acumPlan.muros_m2 || 0;
+
+      // Calcular % esperado: acumulado planeado / total planeado por fase, promediado por fases activas
       const porcentajesEsperados = [];
       if (volumenPlaneado > 0) {
         porcentajesEsperados.push(Math.min((acumPlan.excavacion_m3 || 0) / volumenPlaneado * 100, 100));
@@ -195,6 +206,9 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
       }
       if (anclasPlaneadas > 0) {
         porcentajesEsperados.push(Math.min((acumPlan.anclas || 0) / anclasPlaneadas * 100, 100));
+      }
+      if (perfilesPlaneados > 0) {
+        porcentajesEsperados.push(Math.min((acumPlan.perfiles || 0) / perfilesPlaneados * 100, 100));
       }
       if (murosPlaneados > 0) {
         porcentajesEsperados.push(Math.min((acumPlan.muros_m2 || 0) / murosPlaneados * 100, 100));
@@ -233,6 +247,8 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
       porcentajeMuros,
       porcentajeAnclas,
       porcentajePerfiles,
+      // Acumulado planeado hasta la última semana con avance ("debería llevar")
+      acumEsperadoPorFase,
       // Avance total del proyecto
       avanceTotal,
       semanasProyectadas,
@@ -705,37 +721,52 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {/* Excavación */}
                       {stats.volumenPlaneado > 0 && (
-                        <div className="bg-amber-500/10 rounded-lg p-3 border border-amber-500/30">
+                        <div className="bg-amber-500/10 rounded-lg p-3 border border-amber-500/30" data-testid="kpi-excavacion">
                           <div className="flex items-center gap-2 mb-1">
                             <Shovel className="h-4 w-4 text-amber-600" />
                             <span className="text-xs font-medium text-amber-300">Excavación</span>
                           </div>
                           <div className="text-lg font-bold text-amber-300">{stats.volumenExcavado.toLocaleString()}</div>
                           <div className="text-xs text-amber-600">/ {stats.volumenPlaneado.toLocaleString()} m³</div>
+                          <FaseVsPrograma
+                            real={stats.volumenExcavado}
+                            deberia={stats.acumEsperadoPorFase?.excavacion_m3 || 0}
+                            unidad="m³"
+                          />
                         </div>
                       )}
                       
                       {/* Pilas */}
                       {stats.pilasPlaneadas > 0 && (
-                        <div className="bg-blue-500/10 rounded-lg p-3 border border-blue-500/30">
+                        <div className="bg-blue-500/10 rounded-lg p-3 border border-blue-500/30" data-testid="kpi-pilas">
                           <div className="flex items-center gap-2 mb-1">
                             <Columns3 className="h-4 w-4 text-blue-600" />
                             <span className="text-xs font-medium text-blue-300">Pilas</span>
                           </div>
                           <div className="text-lg font-bold text-blue-300">{stats.pilasEjecutadas.toLocaleString()}</div>
                           <div className="text-xs text-blue-600">/ {stats.pilasPlaneadas.toLocaleString()}</div>
+                          <FaseVsPrograma
+                            real={stats.pilasEjecutadas}
+                            deberia={stats.acumEsperadoPorFase?.pilas || 0}
+                            unidad="pzs"
+                          />
                         </div>
                       )}
                       
                       {/* Anclas */}
                       {stats.anclasPlaneadas > 0 && (
-                        <div className="bg-teal-500/10 rounded-lg p-3 border border-teal-500/30">
+                        <div className="bg-teal-500/10 rounded-lg p-3 border border-teal-500/30" data-testid="kpi-anclas">
                           <div className="flex items-center gap-2 mb-1">
                             <Anchor className="h-4 w-4 text-teal-600" />
                             <span className="text-xs font-medium text-teal-300">Anclas</span>
                           </div>
                           <div className="text-lg font-bold text-teal-300">{stats.anclasEjecutadas.toLocaleString()}</div>
                           <div className="text-xs text-teal-600">/ {stats.anclasPlaneadas.toLocaleString()}</div>
+                          <FaseVsPrograma
+                            real={stats.anclasEjecutadas}
+                            deberia={stats.acumEsperadoPorFase?.anclas || 0}
+                            unidad="pzs"
+                          />
                         </div>
                       )}
 
@@ -748,18 +779,28 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
                           </div>
                           <div className="text-lg font-bold text-emerald-300">{stats.perfilesEjecutados.toLocaleString()}</div>
                           <div className="text-xs text-emerald-600">/ {stats.perfilesPlaneados.toLocaleString()}</div>
+                          <FaseVsPrograma
+                            real={stats.perfilesEjecutados}
+                            deberia={stats.acumEsperadoPorFase?.perfiles || 0}
+                            unidad="pzs"
+                          />
                         </div>
                       )}
                       
                       {/* Muros */}
                       {stats.murosPlaneados > 0 && (
-                        <div className="bg-purple-500/10 rounded-lg p-3 border border-purple-500/30">
+                        <div className="bg-purple-500/10 rounded-lg p-3 border border-purple-500/30" data-testid="kpi-muros">
                           <div className="flex items-center gap-2 mb-1">
                             <Building2 className="h-4 w-4 text-purple-600" />
                             <span className="text-xs font-medium text-purple-300">Muros</span>
                           </div>
                           <div className="text-lg font-bold text-purple-300">{stats.murosEjecutados.toLocaleString()}</div>
                           <div className="text-xs text-purple-600">/ {stats.murosPlaneados.toLocaleString()}</div>
+                          <FaseVsPrograma
+                            real={stats.murosEjecutados}
+                            deberia={stats.acumEsperadoPorFase?.muros_m2 || 0}
+                            unidad="m²"
+                          />
                         </div>
                       )}
                     </div>
@@ -972,3 +1013,39 @@ export function DashboardView({ estadisticas, proyectos, vuelos, selectedProyect
     </div>
   );
 }
+
+/**
+ * Muestra "Debería llevar: X" con delta contra lo real. Verde si va al día
+ * o por encima, ámbar si está atrasado ≤10%, rojo si atrasado >10%.
+ */
+function FaseVsPrograma({ real, deberia, unidad }) {
+  if (!deberia || deberia <= 0) {
+    return (
+      <div className="mt-1 text-[10px] text-white/40 italic">
+        Sin plan a esta semana
+      </div>
+    );
+  }
+  const delta = Number(real) - Number(deberia);
+  const pctDelta = (delta / Number(deberia)) * 100;
+  let colorClass = 'text-emerald-300';
+  let icon = '✓';
+  if (pctDelta < -10) {
+    colorClass = 'text-rose-300';
+    icon = '⚠';
+  } else if (pctDelta < 0) {
+    colorClass = 'text-amber-300';
+    icon = '↓';
+  }
+  const nDeberia = Number(deberia).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  const abs = Math.abs(delta).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  return (
+    <div className="mt-1 flex items-center justify-between gap-1 text-[10px]">
+      <span className="text-white/50">Debería: <span className="text-white/70 font-medium">{nDeberia} {unidad}</span></span>
+      <span className={`${colorClass} font-semibold`} title={`Delta: ${delta > 0 ? '+' : ''}${delta.toFixed(1)} ${unidad}`}>
+        {icon} {delta >= 0 ? '+' : '-'}{abs}
+      </span>
+    </div>
+  );
+}
+
