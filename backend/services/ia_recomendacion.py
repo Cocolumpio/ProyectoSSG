@@ -38,7 +38,18 @@ async def generar_recomendacion(
                 "Eres un experto Gerente de Proyectos de Construcción Civil en México con 20 años "
                 "de experiencia en obras de excavación, anclajes, pilas de cimentación y muros "
                 "Milán. Tu rol es identificar la raíz de las desviaciones y proponer planes de "
-                "recuperación CONCRETOS y ACCIONABLES. Habla directo y profesional, en español."
+                "recuperación CONCRETOS y ACCIONABLES. Habla directo y profesional, en español.\n\n"
+                "⛔ RESTRICCIONES ESTRICTAS DE JORNADA LABORAL — NO NEGOCIABLES:\n"
+                "• Jornada única: Lunes a Viernes de 8:00 a 18:00. Sábados de 8:00 a 14:00.\n"
+                "• Domingos: NO SE TRABAJA.\n"
+                "• PROHIBIDO recomendar turnos nocturnos, dobles turnos, jornadas extendidas más "
+                "allá de las horas indicadas, trabajo en domingo o horas extras fuera del rango.\n"
+                "• En lugar de aumentar horas, enfoca la recuperación en: paralelizar frentes, "
+                "sumar cuadrillas adicionales dentro del horario permitido, subcontratar tramos, "
+                "optimizar rendimiento diario, mejorar logística de materiales, agregar equipo, "
+                "y aprovechar al máximo los sábados hasta las 14:00.\n"
+                "Si vas a recomendar reforzar el ritmo, hazlo siempre con MÁS RECURSOS EN PARALELO "
+                "dentro del horario laboral vigente, nunca con horas extras."
             ),
         ).with_model("anthropic", "claude-sonnet-4-5-20250929")
 
@@ -69,13 +80,13 @@ Estructura tu respuesta así, sin Markdown (texto plano para WhatsApp):
 (3-4 preguntas específicas y técnicas — no genéricas — que el director debe hacer hoy mismo)
 
 🛠️ ACCIONES INMEDIATAS (esta semana)
-(2-3 acciones concretas, ej: revisar rendimiento de maquinaria específica, contratar segundo turno, validar suministro de material X)
+(2-3 acciones concretas dentro del HORARIO PERMITIDO L-V 8-18h, Sáb 8-14h. Ej: agregar cuadrilla adicional, revisar rendimiento de maquinaria específica, validar suministro de material X. NUNCA propongas turnos nocturnos, dobles turnos, domingos ni horas extras.)
 
 📋 REVISAR EN EL PROGRAMA DE OBRA
 (¿hay algo en la planeación original que pudiera estar mal calculado? Sé específico — ej: rendimiento de excavación m³/día asumido, tiempos de fraguado, ventana climática)
 
 💡 PLAN DE RECUPERACIÓN
-(propuesta concreta para recuperar el atraso — ej: trabajar sábado, paralelizar X con Y)
+(propuesta concreta para recuperar el atraso DENTRO DE JORNADA — ej: aprovechar sábados hasta 14h, paralelizar excavación con anclas, sumar una segunda cuadrilla en horario diurno, subcontratar un frente. PROHIBIDO recomendar turnos nocturnos, dobles turnos o trabajo en domingo.)
 
 Sé directo, técnico y específico. No uses lenguaje genérico. Mantén toda la respuesta bajo 1200 caracteres."""
 
@@ -139,6 +150,9 @@ def _fallback_recomendacion(fases_desviadas: List[Dict], desviacion_pct: float) 
         lineas.append("Considerar re-baselinear el cronograma si la desviación supera el 20%.")
     lineas.append("")
     lineas.append("💡 PLAN DE RECUPERACIÓN")
-    lineas.append("Evaluar segundo turno o trabajo sabatino en la fase crítica para recuperar el atraso.")
+    lineas.append(
+        "Aprovechar los sábados 8:00-14:00 y sumar una cuadrilla adicional en horario diurno "
+        "(L-V 8-18h) en la fase crítica. NO usar turnos nocturnos ni dobles turnos."
+    )
 
     return "\n".join(lineas)
