@@ -42,7 +42,7 @@ _CATEGORIA_PROGRAMA_MAPPING = {
     "PILAS": "pilas",
     "PERFILES DE CIMENTACION": "pilas",  # también pilas (perfiles estructurales)
     "PERFILES DE CIMENTACIÓN": "pilas",
-    "REFORZAMIENTO DE COLINDANCIAS": "pilas",  # Clemente: pilas de contención
+    "REFORZAMIENTO DE COLINDANCIAS": "perfiles",  # pilas de estabilización de colindancias (no cimentación)
     # Reforzamiento por perfiles (Torre Mezquitan y similares): nueva fase dedicada
     "REFORZAMIENTO": "perfiles",
     "REFORZAMIENTO POR PERFILES": "perfiles",
@@ -388,10 +388,11 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
             elif unidad_mayor in ("M2", "M²"):
                 cat_data["fase"] = "muros"
             elif unidad_mayor in ("PZA", "PZAS", "PIEZA", "PIEZAS"):
-                # Heurística: si el nombre menciona "pila" o "colindancia", es pila;
-                # de lo contrario, es ancla.
+                # Heurística: colindancia/reforzamiento/perfil → perfiles; pila → pilas; resto → anclas
                 nombre_up = cat_data["nombre"].upper()
-                if "PILA" in nombre_up or "COLINDANCIA" in nombre_up or "PERFIL" in nombre_up:
+                if "COLINDANCIA" in nombre_up or "REFORZ" in nombre_up or "PERFIL" in nombre_up:
+                    cat_data["fase"] = "perfiles"
+                elif "PILA" in nombre_up:
                     cat_data["fase"] = "pilas"
                 else:
                     cat_data["fase"] = "anclas"

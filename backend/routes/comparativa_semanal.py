@@ -36,7 +36,7 @@ def _calcular_presupuesto_ejecutado(real_acumulado: Dict[str, float], categorias
             pct = real_acumulado.get("anclas_pct", 0)
         elif "muro" in nombre_lower:
             pct = real_acumulado.get("muros_pct", 0)
-        elif ("reforz" in nombre_lower and "colindanc" not in nombre_lower) or ("perfil" in nombre_lower and "cimentaci" not in nombre_lower):
+        elif "reforz" in nombre_lower or ("perfil" in nombre_lower and "cimentaci" not in nombre_lower):
             pct = real_acumulado.get("perfiles_pct", 0)
         elif "cimen" in nombre_lower or "pila" in nombre_lower:
             pct = real_acumulado.get("pilas_pct", 0)

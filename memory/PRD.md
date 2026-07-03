@@ -401,3 +401,13 @@ DELETE /api/notificaciones/{id} - Eliminar notificación
 - Clientes solo ven proyectos asignados a ellos
 - Frontend muestra vista de solo lectura para clientes
 - Navegación adaptada: oculta opciones de administración
+
+### Clasificación de Pilas: Cimentación vs Reforzamiento (2026-06)
+- Al subir un programa de obra Excel (importar o actualizar), selector `tipo_pilas`: "auto" | "cimentacion" | "reforzamiento".
+  - "reforzamiento": todas las pilas parseadas se reclasifican como Reforz. Perfiles (totales, tarjetas semanales, % esperado).
+  - Backend: `aplicar_tipo_pilas()` en services/cronograma_ai.py; Form param en importar-cronograma y actualizar-cronograma; persistido en proyecto.tipo_pilas.
+- Mapeo por defecto: "REFORZAMIENTO DE COLINDANCIAS" ahora → perfiles (antes pilas).
+- Nuevo endpoint admin: POST /api/proyectos/{id}/reclasificar-pilas — migra pilas planeadas/ejecutadas → perfiles (programa_semanal, cronograma_resumen, avances, frentes, caras) y recalcula avance. Botón "Convertir a Reforzamiento" en CronogramaProyectoModal (panel data-testid=reclasificar-pilas-panel).
+- USO PARA CLEMENTE 70 (producción): tras Redeploy, abrir Programa de Obra del proyecto → botón "Convertir a Reforzamiento" (1 clic).
+- Fix: crear-desde-cronograma ahora persiste tipo_pilas, perfiles_planeados, cronograma_archivo/resumen/fecha_carga.
+- Testeado: iteration_22 (frontend 100%) + curl e2e backend.

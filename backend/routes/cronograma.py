@@ -80,17 +80,23 @@ async def crear_proyecto_desde_cronograma(data: dict):
             "avance_actual": 0.0,
             # Tipos de actividades detectadas
             "actividades_tipo": resumen.get("tipos_actividades", ["pilas"]),
+            "tipo_pilas": data.get("tipo_pilas", "auto"),
             # Métricas planeadas
             "volumen_total_planeado": resumen.get("total_excavacion", 0),
             "pilas_planeadas": resumen.get("total_pilas", 0),
             "muros_planeados": resumen.get("total_muros", 0),
             "anclas_planeadas": resumen.get("total_anclas", 0),
+            "perfiles_planeados": resumen.get("total_perfiles", 0),
             # Métricas ejecutadas (inician en 0)
             "volumen_ejecutado": 0,
             "pilas_ejecutadas": 0,
             "muros_ejecutados": 0,
             "anclas_ejecutadas": 0,
+            "perfiles_ejecutados": 0,
             # Cronograma
+            "cronograma_archivo": data.get("cronograma_archivo") or "importado-desde-excel.xlsx",
+            "cronograma_fecha_carga": datetime.now(timezone.utc).isoformat(),
+            "cronograma_resumen": resumen,
             "semanas_planeadas": resumen.get("semanas_estimadas", 0),
             "semanas_excavacion": resumen.get("semanas_excavacion", 0),
             "semanas_pilas": resumen.get("semanas_pilas", 0),

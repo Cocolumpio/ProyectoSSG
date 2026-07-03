@@ -107,6 +107,7 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
         presupuesto: parsedData.presupuesto, // V2: incluye presupuesto detectado
         programa_semanal: parsedData.programa_semanal, // V2: desglose por semana
         tipo_pilas: tipoPilas,
+        cronograma_archivo: file?.name,
         descripcion: descripcionParts.join(', ')
       });
       
