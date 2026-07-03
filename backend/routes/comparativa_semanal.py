@@ -99,8 +99,8 @@ async def comparativa_semanal(proyecto_id: str, current_user: dict = Depends(get
             return "anclas"
         if "muro" in n:
             return "muros"
-        # "reforzamiento" alone (sin "colindancia") = perfiles
-        if "reforz" in n and "colindanc" not in n:
+        # reforzamiento (incluye colindancias = pilas de estabilización) = perfiles
+        if "reforz" in n:
             return "perfiles"
         if "perfil" in n and "cimentaci" not in n:
             return "perfiles"

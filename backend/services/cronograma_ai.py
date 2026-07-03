@@ -76,6 +76,48 @@ def _normalizar_categoria(nombre: str) -> str:
     return re.sub(r"\s+", " ", str(nombre)).strip().upper()
 
 
+def aplicar_tipo_pilas(resultado: Optional[Dict[str, Any]], tipo_pilas: str) -> Optional[Dict[str, Any]]:
+    """
+    Reclasifica las pilas del cronograma parseado según la elección del usuario:
+    - "reforzamiento": todas las pilas → perfiles (estabilización de colindancias)
+    - "cimentacion": todos los perfiles → pilas de cimentación
+    - "auto"/"ambas": se respeta la detección automática
+    """
+    if not resultado or tipo_pilas not in ("reforzamiento", "cimentacion"):
+        return resultado
+    origen, destino = ("pilas", "perfiles") if tipo_pilas == "reforzamiento" else ("perfiles", "pilas")
+
+    resumen = resultado.get("resumen") or {}
+    key_o, key_d = f"total_{origen}", f"total_{destino}"
+    if resumen.get(key_o):
+        resumen[key_d] = int(resumen.get(key_d) or 0) + int(resumen[key_o])
+        resumen[key_o] = 0
+    tipos = set(resumen.get("tipos_actividades") or [])
+    if origen in tipos:
+        tipos.discard(origen)
+        tipos.add(destino)
+        resumen["tipos_actividades"] = list(tipos)
+
+    for sem in resultado.get("programa_semanal") or []:
+        if sem.get(origen):
+            sem[destino] = round(float(sem.get(destino) or 0) + float(sem[origen]), 2)
+            sem[origen] = 0.0
+        for act in sem.get("actividades") or []:
+            if act.get("fase") == origen:
+                act["fase"] = destino
+
+    for frente in resultado.get("frentes") or []:
+        for act in frente.get("actividades") or []:
+            if act.get("tipo") == origen:
+                act["tipo"] = destino
+
+    for cat in resultado.get("categorias_detalle") or []:
+        if cat.get("fase") == origen:
+            cat["fase"] = destino
+
+    return resultado
+
+
 def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
     """
     Parser para programas de obra estilo "Avance por Actividades" (formato V2).
@@ -338,7 +380,7 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
         cat_norm_local = _normalizar_categoria(cat_data["nombre"])
         # Solo refinar si la categoría no tiene mapping explícito fuerte
         if cat_data["fase"] == "otros" or cat_norm_local in (
-            "ESTABILIZACION", "ESTABILIZACIÓN", "REFORZAMIENTO DE COLINDANCIAS"
+            "ESTABILIZACION", "ESTABILIZACIÓN"
         ):
             unidad_mayor = max(set(unidades), key=unidades.count)
             if unidad_mayor in ("M3", "M³"):
@@ -414,6 +456,7 @@ def parse_excel_programa_obra(file_content: bytes) -> Optional[Dict[str, Any]]:
         "pilas": "Cimentación",
         "anclas": "Anclas",
         "muros": "Muros",
+        "perfiles": "Reforzamiento",
         "cimentacion": "Cimentación",
         "generales": "Generales",
         "otros": "Otros",

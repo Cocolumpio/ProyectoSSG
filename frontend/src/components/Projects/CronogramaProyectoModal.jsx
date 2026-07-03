@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Upload, FileSpreadsheet, Check, AlertCircle, Loader2, Calendar, Layers, RefreshCw, X, Shovel, Anchor, Columns3, Building2, Clock, Download, TrendingDown, TrendingUp, Mail, AlertTriangle } from 'lucide-react';
+import { Upload, FileSpreadsheet, Check, AlertCircle, Loader2, Calendar, Layers, RefreshCw, X, Shovel, Anchor, Columns3, Building2, Clock, Download, TrendingDown, TrendingUp, Mail, AlertTriangle, Shield, ArrowRightLeft } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -14,6 +14,8 @@ export function CronogramaProyectoModal({ proyecto, onClose, onSuccess }) {
   const [downloadingTemplate, setDownloadingTemplate] = useState(false);
   const [analizandoDesviacion, setAnalizandoDesviacion] = useState(false);
   const [analisisDesviacion, setAnalisisDesviacion] = useState(null);
+  const [tipoPilas, setTipoPilas] = useState('auto');
+  const [reclasificando, setReclasificando] = useState(false);
 
   // Ocultar el mapa de Leaflet cuando el modal está abierto
   useEffect(() => {
@@ -67,6 +69,21 @@ export function CronogramaProyectoModal({ proyecto, onClose, onSuccess }) {
     }
   };
 
+  const handleReclasificarPilas = async () => {
+    if (!window.confirm('¿Convertir todas las pilas de este proyecto a Reforzamiento (estabilización de colindancias)?\n\nEl plan de las tarjetas semanales, las metas y el % esperado se recalcularán a partir de las pilas de reforzamiento.')) return;
+    setReclasificando(true);
+    setError(null);
+    try {
+      const response = await axios.post(`${API}/proyectos/${proyecto.id}/reclasificar-pilas`);
+      onSuccess && onSuccess(response.data.mensaje);
+      await fetchCronogramaInfo();
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Error al reclasificar las pilas');
+    } finally {
+      setReclasificando(false);
+    }
+  };
+
   const fetchCronogramaInfo = async () => {
     try {
       setLoading(true);
@@ -98,6 +115,7 @@ export function CronogramaProyectoModal({ proyecto, onClose, onSuccess }) {
     try {
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('tipo_pilas', tipoPilas);
       
       const response = await axios.post(
         `${API}/proyectos/${proyecto.id}/actualizar-cronograma`,
@@ -207,7 +225,16 @@ export function CronogramaProyectoModal({ proyecto, onClose, onSuccess }) {
                             <p className="text-2xl font-bold text-blue-300">
                               {cronogramaInfo.cronograma_resumen.total_pilas}
                             </p>
-                            <p className="text-xs text-blue-600">Pilas</p>
+                            <p className="text-xs text-blue-600">Pilas Cimentación</p>
+                          </div>
+                        )}
+
+                        {cronogramaInfo.cronograma_resumen.total_perfiles > 0 && (
+                          <div className="bg-emerald-500/10 rounded-lg p-3 text-center">
+                            <p className="text-2xl font-bold text-emerald-300">
+                              {cronogramaInfo.cronograma_resumen.total_perfiles}
+                            </p>
+                            <p className="text-xs text-emerald-600">Reforz. Perfiles</p>
                           </div>
                         )}
                         
@@ -249,6 +276,34 @@ export function CronogramaProyectoModal({ proyecto, onClose, onSuccess }) {
                           Fin: {formatDate(cronogramaInfo.fecha_fin_planeada)}
                         </span>
                       </div>
+                    </div>
+                  )}
+
+                  {/* Reclasificar pilas existentes → Reforzamiento */}
+                  {((cronogramaInfo?.cronograma_resumen?.total_pilas > 0) || (cronogramaInfo?.pilas_planeadas > 0)) && (
+                    <div className="bg-[#15151B] rounded-xl p-5 border border-amber-500/30" data-testid="reclasificar-pilas-panel">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium text-white flex items-center gap-2">
+                          <ArrowRightLeft className="h-5 w-5 text-amber-500" />
+                          Reclasificar Pilas del Programa
+                        </h4>
+                        <button
+                          onClick={handleReclasificarPilas}
+                          disabled={reclasificando}
+                          className="flex items-center gap-2 px-3 py-1.5 text-sm bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 transition-colors"
+                          data-testid="btn-reclasificar-pilas"
+                        >
+                          {reclasificando ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Shield className="h-4 w-4" />
+                          )}
+                          Convertir a Reforzamiento
+                        </button>
+                      </div>
+                      <p className="text-sm text-white/50">
+                        Si las pilas detectadas en el programa son de <span className="text-amber-300 font-medium">reforzamiento de colindancias (estabilización)</span> y no de cimentación, usa este botón. El plan semanal, las metas y el % esperado se recalcularán como Reforz. Perfiles.
+                      </p>
                     </div>
                   )}
 
@@ -388,9 +443,10 @@ export function CronogramaProyectoModal({ proyecto, onClose, onSuccess }) {
                                       act.tipo === 'excavacion' ? 'bg-amber-500/15 text-amber-300' :
                                       act.tipo === 'anclas' ? 'bg-teal-500/15 text-teal-300' :
                                       act.tipo === 'muros' ? 'bg-purple-500/15 text-purple-300' :
+                                      act.tipo === 'perfiles' ? 'bg-emerald-500/15 text-emerald-300' :
                                       'bg-[#15151B] text-white/60'
                                     }`}>
-                                      {act.tipo || 'otro'}
+                                      {act.tipo === 'perfiles' ? 'reforz.' : (act.tipo || 'otro')}
                                     </span>
                                   </div>
                                 ))}
@@ -498,6 +554,31 @@ export function CronogramaProyectoModal({ proyecto, onClose, onSuccess }) {
                     <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
                       <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
                       <p className="text-red-300 text-sm">{error}</p>
+                    </div>
+                  )}
+
+                  {/* Selector tipo de pilas */}
+                  {file && (
+                    <div className="p-4 bg-[#1A1A22] border border-white/10 rounded-xl space-y-3" data-testid="tipo-pilas-selector">
+                      <p className="text-sm font-medium text-white">¿Las pilas del programa son de cimentación o de reforzamiento?</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        {[
+                          { v: 'auto', t: 'Ambas / Automático', d: 'La IA clasifica cada partida por su nombre' },
+                          { v: 'cimentacion', t: 'Pilas de Cimentación', d: 'Todas son pilas estructurales' },
+                          { v: 'reforzamiento', t: 'Pilas de Reforzamiento', d: 'Estabilización de colindancias' },
+                        ].map(o => (
+                          <button
+                            key={o.v}
+                            type="button"
+                            onClick={() => setTipoPilas(o.v)}
+                            data-testid={`tipo-pilas-${o.v}`}
+                            className={`text-left p-3 rounded-lg border transition-colors ${tipoPilas === o.v ? 'border-purple-500 bg-purple-500/15' : 'border-white/10 hover:border-white/25'}`}
+                          >
+                            <p className="text-sm font-medium text-white">{o.t}</p>
+                            <p className="text-xs text-white/50 mt-0.5">{o.d}</p>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
 

@@ -11,6 +11,7 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
   const [error, setError] = useState(null);
   const [creating, setCreating] = useState(false);
   const [downloadingTemplate, setDownloadingTemplate] = useState(false);
+  const [tipoPilas, setTipoPilas] = useState('auto');
   
   // Datos adicionales del proyecto
   const [nombreProyecto, setNombreProyecto] = useState('');
@@ -39,17 +40,13 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
     }
   };
 
-  const handleFileChange = async (e) => {
-    const selectedFile = e.target.files[0];
-    if (!selectedFile) return;
-    
-    setFile(selectedFile);
+  const parseFile = async (selectedFile, tipo) => {
     setError(null);
     setParsing(true);
-    
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
+      formData.append('tipo_pilas', tipo);
       
       const response = await axios.post(`${API}/proyectos/importar-cronograma`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -60,13 +57,27 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
       // Si el parser V2 detectó el nombre del proyecto, usarlo; sino el nombre del archivo
       const detectedName = response.data?.nombre_proyecto || response.data?.resumen?.nombre_proyecto;
       const fileName = selectedFile.name.replace(/\.(xlsx|xls)$/i, '');
-      setNombreProyecto(detectedName || fileName);
+      setNombreProyecto((prev) => prev || detectedName || fileName);
       
     } catch (err) {
       setError(err.response?.data?.detail || 'Error al procesar el archivo');
       setParsedData(null);
     } finally {
       setParsing(false);
+    }
+  };
+
+  const handleFileChange = async (e) => {
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) return;
+    setFile(selectedFile);
+    await parseFile(selectedFile, tipoPilas);
+  };
+
+  const handleTipoPilasChange = async (nuevoTipo) => {
+    setTipoPilas(nuevoTipo);
+    if (file) {
+      await parseFile(file, nuevoTipo);
     }
   };
 
@@ -81,6 +92,7 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
       const tipos = parsedData.resumen.tipos_actividades || [];
       let descripcionParts = [`Proyecto con ${parsedData.resumen.total_frentes} frentes`];
       if (tipos.includes('pilas')) descripcionParts.push(`${parsedData.resumen.total_pilas} pilas`);
+      if (tipos.includes('perfiles')) descripcionParts.push(`${parsedData.resumen.total_perfiles} pilas de reforzamiento`);
       if (tipos.includes('muros')) descripcionParts.push(`${parsedData.resumen.total_muros} muros`);
       if (tipos.includes('anclas')) descripcionParts.push(`${parsedData.resumen.total_anclas} anclas`);
       if (tipos.includes('excavacion')) descripcionParts.push(`${parsedData.resumen.total_excavacion}m³ excavación`);
@@ -94,6 +106,7 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
         resumen: parsedData.resumen,
         presupuesto: parsedData.presupuesto, // V2: incluye presupuesto detectado
         programa_semanal: parsedData.programa_semanal, // V2: desglose por semana
+        tipo_pilas: tipoPilas,
         descripcion: descripcionParts.join(', ')
       });
       
@@ -222,6 +235,7 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
                         tipo === 'excavacion' ? 'bg-amber-500/15 text-amber-300' :
                         tipo === 'muros' ? 'bg-purple-500/15 text-purple-300' :
                         tipo === 'anclas' ? 'bg-teal-500/15 text-teal-300' :
+                        tipo === 'perfiles' ? 'bg-emerald-500/15 text-emerald-300' :
                         'bg-[#15151B] text-white/80'
                       }`}
                     >
@@ -229,11 +243,43 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
                       {tipo === 'excavacion' && <Shovel className="h-4 w-4" />}
                       {tipo === 'muros' && <Building2 className="h-4 w-4" />}
                       {tipo === 'anclas' && <Anchor className="h-4 w-4" />}
+                      {tipo === 'perfiles' && <Drill className="h-4 w-4" />}
                       {tipo === 'cimentacion' && <Drill className="h-4 w-4" />}
-                      {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
+                      {tipo === 'perfiles' ? 'Reforz. Perfiles' : tipo.charAt(0).toUpperCase() + tipo.slice(1)}
                     </span>
                   ))}
                 </div>
+              </div>
+            )}
+            
+            {/* Selector: tipo de pilas */}
+            {(parsedData.resumen.total_pilas > 0 || parsedData.resumen.total_perfiles > 0 || tipoPilas !== 'auto') && (
+              <div className="mb-4 p-4 bg-[#1A1A22] border border-white/10 rounded-xl space-y-3" data-testid="tipo-pilas-selector">
+                <p className="text-sm font-medium text-white">¿Las pilas del programa son de cimentación o de reforzamiento?</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {[
+                    { v: 'auto', t: 'Ambas / Automático', d: 'La IA clasifica cada partida por su nombre' },
+                    { v: 'cimentacion', t: 'Pilas de Cimentación', d: 'Todas son pilas estructurales' },
+                    { v: 'reforzamiento', t: 'Pilas de Reforzamiento', d: 'Estabilización de colindancias' },
+                  ].map(o => (
+                    <button
+                      key={o.v}
+                      type="button"
+                      onClick={() => handleTipoPilasChange(o.v)}
+                      disabled={parsing}
+                      data-testid={`tipo-pilas-${o.v}`}
+                      className={`text-left p-3 rounded-lg border transition-colors disabled:opacity-50 ${tipoPilas === o.v ? 'border-[#994B49] bg-[#994B49]/15' : 'border-white/10 hover:border-white/25'}`}
+                    >
+                      <p className="text-sm font-medium text-white">{o.t}</p>
+                      <p className="text-xs text-white/50 mt-0.5">{o.d}</p>
+                    </button>
+                  ))}
+                </div>
+                {parsing && (
+                  <p className="text-xs text-white/50 flex items-center gap-2">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Reclasificando programa...
+                  </p>
+                )}
               </div>
             )}
             
@@ -246,7 +292,13 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
               {parsedData.resumen.tipos_actividades?.includes('pilas') && (
                 <div className="bg-[#15151B] rounded-lg p-4 shadow-sm">
                   <p className="text-2xl font-bold text-blue-600">{parsedData.resumen.total_pilas}</p>
-                  <p className="text-sm text-white/50">Pilas Totales</p>
+                  <p className="text-sm text-white/50">Pilas Cimentación</p>
+                </div>
+              )}
+              {parsedData.resumen.tipos_actividades?.includes('perfiles') && (
+                <div className="bg-[#15151B] rounded-lg p-4 shadow-sm">
+                  <p className="text-2xl font-bold text-emerald-500">{parsedData.resumen.total_perfiles}</p>
+                  <p className="text-sm text-white/50">Reforz. Perfiles</p>
                 </div>
               )}
               {parsedData.resumen.tipos_actividades?.includes('muros') && (
@@ -323,9 +375,10 @@ export function ImportarCronograma({ onProyectoCreado, onClose }) {
                             act.tipo === 'excavacion' ? 'bg-amber-500/15 text-amber-300' :
                             act.tipo === 'muros' ? 'bg-purple-500/15 text-purple-300' :
                             act.tipo === 'anclas' ? 'bg-teal-500/15 text-teal-300' :
+                            act.tipo === 'perfiles' ? 'bg-emerald-500/15 text-emerald-300' :
                             'bg-[#15151B] text-white/60'
                           }`}>
-                            {act.tipo || 'otro'}
+                            {act.tipo === 'perfiles' ? 'reforz.' : (act.tipo || 'otro')}
                           </span>
                           <span className="text-[#994B49] font-medium">{act.cantidad}</span>
                         </div>

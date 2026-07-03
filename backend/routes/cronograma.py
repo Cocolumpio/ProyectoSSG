@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import FileResponse
 
 from core.config import get_db, UPLOAD_DIR, get_current_admin
@@ -19,12 +19,13 @@ router = APIRouter(prefix="/api")
 
 # --- Cronograma y Frentes ---
 @router.post("/proyectos/importar-cronograma")
-async def importar_cronograma(file: UploadFile = File(...)):
+async def importar_cronograma(file: UploadFile = File(...), tipo_pilas: str = Form("auto")):
     """
     Importa un archivo Excel con el cronograma del proyecto.
     Parsea automáticamente los frentes y actividades.
+    tipo_pilas: "cimentacion" | "reforzamiento" | "auto" (clasificación de las pilas del programa)
     """
-    from services.cronograma_ai import parse_excel_cronograma
+    from services.cronograma_ai import parse_excel_cronograma, aplicar_tipo_pilas
     
     # Verificar extensión
     if not file.filename.endswith(('.xlsx', '.xls')):
@@ -39,6 +40,8 @@ async def importar_cronograma(file: UploadFile = File(...)):
     if not resultado.get("success"):
         raise HTTPException(status_code=400, detail=resultado.get("error", "Error parseando archivo"))
     
+    resultado = aplicar_tipo_pilas(resultado, tipo_pilas)
+    resultado["tipo_pilas"] = tipo_pilas
     return resultado
 
 
@@ -166,13 +169,15 @@ async def crear_proyecto_desde_cronograma(data: dict):
 async def actualizar_cronograma_proyecto(
     proyecto_id: str,
     file: UploadFile = File(...),
+    tipo_pilas: str = Form("auto"),
     current_user: dict = Depends(get_current_admin),
 ):
     """
     Actualiza el cronograma de un proyecto existente desde un archivo Excel.
     Permite subir o actualizar el programa de obra.
+    tipo_pilas: "cimentacion" | "reforzamiento" | "auto"
     """
-    from services.cronograma_ai import parse_excel_cronograma
+    from services.cronograma_ai import parse_excel_cronograma, aplicar_tipo_pilas
     
     # Verificar que el proyecto existe
     proyecto = await db.proyectos.find_one({"id": proyecto_id}, {"_id": 0})
@@ -192,6 +197,7 @@ async def actualizar_cronograma_proyecto(
         if resultado.get("error"):
             raise HTTPException(status_code=400, detail=resultado["error"])
         
+        resultado = aplicar_tipo_pilas(resultado, tipo_pilas)
         resumen = resultado.get("resumen", {})
         frentes_data = resultado.get("frentes", [])
         
@@ -199,6 +205,7 @@ async def actualizar_cronograma_proyecto(
         update_data = {
             "cronograma_archivo": file.filename,
             "cronograma_fecha_carga": datetime.now(timezone.utc).isoformat(),
+            "tipo_pilas": tipo_pilas,
             "actividades_tipo": resumen.get("tipos_actividades", proyecto.get("actividades_tipo", [])),
             "semanas_planeadas": resumen.get("semanas_estimadas", proyecto.get("semanas_planeadas", 0)),
             "semanas_excavacion": resumen.get("semanas_excavacion", 0),
@@ -219,6 +226,12 @@ async def actualizar_cronograma_proyecto(
             update_data["volumen_total_planeado"] = resumen["total_excavacion"]
         if resumen.get("total_perfiles", 0) > 0:
             update_data["perfiles_planeados"] = resumen["total_perfiles"]
+        
+        # Reclasificación explícita elegida por el usuario
+        if tipo_pilas == "reforzamiento":
+            update_data["pilas_planeadas"] = 0
+        elif tipo_pilas == "cimentacion":
+            update_data["perfiles_planeados"] = 0
         
         # Actualizar fechas si vienen en el cronograma y tienen sentido
         if resumen.get("fecha_inicio"):
@@ -291,13 +304,120 @@ async def actualizar_cronograma_proyecto(
         raise HTTPException(status_code=500, detail=f"Error procesando archivo: {str(e)}")
 
 
+@router.post("/proyectos/{proyecto_id}/reclasificar-pilas")
+async def reclasificar_pilas_proyecto(
+    proyecto_id: str,
+    current_user: dict = Depends(get_current_admin),
+):
+    """
+    Convierte todas las pilas del proyecto (plan semanal, metas y avances) a
+    Reforzamiento por Perfiles (pilas de estabilización de colindancias).
+    Recalcula el avance global y el % esperado.
+    """
+    proyecto = await db.proyectos.find_one({"id": proyecto_id}, {"_id": 0})
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+
+    pilas_plan = int(proyecto.get("pilas_planeadas") or 0)
+    update_data = {
+        "tipo_pilas": "reforzamiento",
+        "pilas_planeadas": 0,
+        "perfiles_planeados": int(proyecto.get("perfiles_planeados") or 0) + pilas_plan,
+        "updated_at": datetime.now(timezone.utc),
+    }
+
+    tipos = set(proyecto.get("actividades_tipo") or [])
+    tipos.discard("pilas")
+    tipos.add("perfiles")
+    update_data["actividades_tipo"] = list(tipos)
+
+    # Programa semanal: mover plan de pilas a perfiles (tarjetas de semana)
+    programa = proyecto.get("programa_semanal") or []
+    semanas_movidas = 0
+    for sem in programa:
+        if sem.get("pilas"):
+            sem["perfiles"] = round(float(sem.get("perfiles") or 0) + float(sem["pilas"]), 2)
+            sem["pilas"] = 0.0
+            semanas_movidas += 1
+        for act in sem.get("actividades") or []:
+            if act.get("fase") == "pilas":
+                act["fase"] = "perfiles"
+    if programa:
+        update_data["programa_semanal"] = programa
+
+    # Resumen del cronograma
+    resumen = proyecto.get("cronograma_resumen") or {}
+    if resumen:
+        if resumen.get("total_pilas"):
+            resumen["total_perfiles"] = int(resumen.get("total_perfiles") or 0) + int(resumen["total_pilas"])
+            resumen["total_pilas"] = 0
+        tipos_res = set(resumen.get("tipos_actividades") or [])
+        if "pilas" in tipos_res:
+            tipos_res.discard("pilas")
+            tipos_res.add("perfiles")
+            resumen["tipos_actividades"] = list(tipos_res)
+        update_data["cronograma_resumen"] = resumen
+
+    # Matriz de caras: las pilas dejan de contarse como cimentación
+    caras = proyecto.get("caras_excavacion") or []
+    if caras and any(c.get("pilas") for c in caras):
+        for c in caras:
+            c["pilas"] = 0
+            c["pilas_estados"] = []
+        update_data["caras_excavacion"] = caras
+
+    await db.proyectos.update_one({"id": proyecto_id}, {"$set": update_data})
+
+    # Avances semanales: mover ejecutado de pilas a perfiles
+    avances_movidos = 0
+    async for av in db.avances_semanales.find({"proyecto_id": proyecto_id, "pilas_completadas": {"$gt": 0}}):
+        await db.avances_semanales.update_one(
+            {"_id": av["_id"]},
+            {"$set": {
+                "perfiles_completados": (av.get("perfiles_completados") or 0) + av["pilas_completadas"],
+                "pilas_completadas": 0,
+            }}
+        )
+        avances_movidos += 1
+
+    # Frentes: retipar actividades
+    async for fr in db.frentes.find({"proyecto_id": proyecto_id}):
+        acts = fr.get("actividades") or []
+        if any(a.get("tipo") == "pilas" for a in acts):
+            for a in acts:
+                if a.get("tipo") == "pilas":
+                    a["tipo"] = "perfiles"
+            await db.frentes.update_one({"_id": fr["_id"]}, {"$set": {"actividades": acts}})
+
+    from services.helpers import recalcular_avance_proyecto
+    nuevo_avance = await recalcular_avance_proyecto(proyecto_id)
+
+    try:
+        await guardar_snapshot(
+            proyecto_id,
+            current_user,
+            fuente="reclasificacion",
+            motivo="Reclasificación de pilas: cimentación → reforzamiento (estabilización de colindancias)",
+        )
+    except Exception as snap_err:
+        logging.error(f"Error guardando snapshot reclasificación: {snap_err}")
+
+    return {
+        "success": True,
+        "mensaje": f"Pilas reclasificadas como Reforzamiento: {pilas_plan} pzs planeadas movidas, {semanas_movidas} semanas del programa y {avances_movidos} avances actualizados",
+        "perfiles_planeados": update_data["perfiles_planeados"],
+        "avance_actual": nuevo_avance,
+    }
+
+
 @router.get("/proyectos/{proyecto_id}/cronograma")
 async def obtener_cronograma_proyecto(proyecto_id: str):
     """Obtiene información del cronograma cargado para un proyecto"""
     proyecto = await db.proyectos.find_one(
         {"id": proyecto_id}, 
         {"_id": 0, "cronograma_archivo": 1, "cronograma_fecha_carga": 1, "cronograma_resumen": 1, 
-         "semanas_planeadas": 1, "fecha_inicio": 1, "fecha_fin_planeada": 1, "nombre": 1}
+         "semanas_planeadas": 1, "fecha_inicio": 1, "fecha_fin_planeada": 1, "nombre": 1,
+         "tipo_pilas": 1, "pilas_planeadas": 1, "perfiles_planeados": 1}
     )
     if not proyecto:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
@@ -315,6 +435,9 @@ async def obtener_cronograma_proyecto(proyecto_id: str):
         "semanas_planeadas": proyecto.get("semanas_planeadas", 0),
         "fecha_inicio": proyecto.get("fecha_inicio"),
         "fecha_fin_planeada": proyecto.get("fecha_fin_planeada"),
+        "tipo_pilas": proyecto.get("tipo_pilas", "auto"),
+        "pilas_planeadas": proyecto.get("pilas_planeadas", 0),
+        "perfiles_planeados": proyecto.get("perfiles_planeados", 0),
         "frentes": frentes
     }
 

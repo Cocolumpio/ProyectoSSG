@@ -1,0 +1,48 @@
+{
+  "summary": "Frontend E2E testing of tipo_pilas + reclasificar-pilas feature. CronogramaProyectoModal reclassify flow on 'Torre Corporativa Demo' works end-to-end: panel + button render (data-testid='reclasificar-pilas-panel' / 'btn-reclasificar-pilas'), window.confirm() → success toast 'Pilas reclasificadas como Reforzamiento: 576 pzs planeadas movidas, 0 semanas del programa y 4 avances actualizados', UI refreshes with 'Reforz. Perfiles' card replacing 'Pilas Cimentación', backend confirms tipo_pilas='reforzamiento', pilas_planeadas=0, perfiles_planeados=576, total_pilas=0, total_perfiles=576, frentes actividades tag='reforz.'. Update-cronograma modal: after selecting file, tipo-pilas-selector with all 3 options (auto/cimentacion/reforzamiento) renders correctly. ImportarCronograma (create from Excel): parse OK, tipo-pilas-selector renders with all 3 options, clicking 'tipo-pilas-reforzamiento' re-parses and 'Pilas Cimentación' card disappears, 'Reforz. Perfiles' card appears with total 255, actividades tagged 'reforz.'. HOWEVER creating the project via 'Crear Proyecto' persists the project WITHOUT tipo_pilas / perfiles_planeados fields — see backend bug below.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/proyectos/crear-desde-cronograma",
+        "issue": "Does not persist tipo_pilas, perfiles_planeados, cronograma_resumen, cronograma_archivo, or cronograma_fecha_carga on the new proyecto document. Verified: after uploading cronograma_tipos_test.xlsx with tipo_pilas='reforzamiento' via UI (which correctly reparses pilas→perfiles and passes tipo_pilas + resumen.total_perfiles=255 in request body), the resulting project has pilas_planeadas=0 (OK), perfiles_planeados=0 (WRONG, should be 255), tipo_pilas=null (WRONG, should be 'reforzamiento'), tiene_cronograma=false, cronograma_resumen=null. Only anclas_planeadas/muros_planeados/volumen_total_planeado are populated from resumen, and frentes are stored with tipo='perfiles' correctly. Root cause: /app/backend/routes/cronograma.py:62-165 builds the proyecto dict without reading data.get('tipo_pilas') or resumen.get('total_perfiles'); it only sets pilas_planeadas/muros_planeados/anclas_planeadas/volumen_total_planeado. Also never stores cronograma_archivo/cronograma_resumen/cronograma_fecha_carga, so tiene_cronograma comes back false and the reclasificar-pilas-panel won't appear on newly-created projects even though the panel's fallback pilas_planeadas>0 also fails (both are 0). Fix: add proyecto['perfiles_planeados'] = resumen.get('total_perfiles', 0), proyecto['tipo_pilas'] = data.get('tipo_pilas', 'auto'), and set cronograma_archivo='importado-desde-excel' + cronograma_resumen=resumen + cronograma_fecha_carga=now — mirroring the update endpoint pattern (see line 208, 228).",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Create project from Excel with tipo_pilas='reforzamiento'",
+        "issue": "UI correctly re-parses and shows 'Reforz. Perfiles' (255) preview, sends tipo_pilas + resumen to backend, but resulting project has perfiles_planeados=0 and tipo_pilas=null due to backend bug above. UI itself is correct.",
+        "affected_selectors": ["[data-testid='tipo-pilas-reforzamiento']"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "BACKEND: Fix /app/backend/routes/cronograma.py crear_proyecto_desde_cronograma to persist tipo_pilas (from data.get('tipo_pilas','auto')) AND perfiles_planeados (from resumen.get('total_perfiles',0)) on the new proyecto doc.",
+    "BACKEND: Same endpoint should also persist cronograma_archivo (e.g. 'importado.xlsx'), cronograma_resumen=resumen, cronograma_fecha_carga=now so that the created project shows tiene_cronograma=true and the Programa de Obra modal opens on the info view instead of jumping straight to upload."
+  ],
+  "critical_code_review_comments": [
+    "/app/backend/routes/cronograma.py:62-165 crear_proyecto_desde_cronograma is out of sync with the new feature: it accepts tipo_pilas in the request body (frontend sends it, line 109 of ImportarCronograma.jsx) but never writes it. Also missing perfiles_planeados from resumen even though aplicar_tipo_pilas correctly zeros total_pilas and sets total_perfiles.",
+    "CronogramaProyectoModal.jsx panel condition `((cronograma_resumen?.total_pilas > 0) || (pilas_planeadas > 0))` only shows inside the tiene_cronograma&&!showUpload branch. Combined with the backend bug above, newly-created projects from Excel never expose the reclassify panel. Once backend is fixed, this becomes moot.",
+    "ImportarCronograma.jsx uses `parsedData.resumen.total_perfiles > 0` in selector-visibility check (line 256), which correctly re-shows the selector after switching to reforzamiento even though total_pilas becomes 0. Nice.",
+    "aplicar_tipo_pilas('reforzamiento') on the existing endpoint /reclasificar-pilas works flawlessly — success toast text confirms full mutation including avances_semanales rewrite."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "Not fully re-tested; existing reclasificar-pilas endpoint verified working via UI (E2E). One HIGH bug found in crear-desde-cronograma (missing persistence fields).",
+    "frontend": "100% of UI elements and interactions verified working. All data-testids (reclasificar-pilas-panel, btn-reclasificar-pilas, tipo-pilas-selector, tipo-pilas-auto/cimentacion/reforzamiento) present and functional. Re-parse on tipo change works. Toasts show. Refresh works."
+  },
+  "test_credentials": {
+    "admin": "admin@dron.mx / admin123"
+  },
+  "seed_data_creation": "Created TEST_ReforzImp and TEST_AutoRegression via Importar Excel flow for inspection; both cleaned up via DELETE /api/proyectos/{id}. Also mutated 'Torre Corporativa Demo' via reclasificar-pilas (now tipo_pilas='reforzamiento', 576 perfiles_planeados) — per review request this demo project is safe to mutate.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Torre Corporativa Demo has been reclassified to reforzamiento (576 perfiles) — main agent may want to reclassify it back or leave as demo of the reforz state. To reproduce the crear-desde-cronograma bug: POST /api/proyectos/importar-cronograma with cronograma_tipos_test.xlsx + tipo_pilas=reforzamiento (returns resumen.total_perfiles=255, total_pilas=0), then POST /api/proyectos/crear-desde-cronograma with that resumen + tipo_pilas='reforzamiento' → GET /api/proyectos/{id} shows tipo_pilas=null, perfiles_planeados=0. Landing page is marketing; click 'Iniciar sesión' link then login.",
+  "rca_of_the_issue": "crear_proyecto_desde_cronograma (routes/cronograma.py:62) was built before the tipo_pilas feature and never updated. The importar-cronograma parse endpoint and actualizar-cronograma update endpoint were updated (they handle tipo_pilas + perfiles_planeados correctly per lines 200-234), but the create-from-cronograma sibling endpoint at line 62 was missed. Frontend sends the fields correctly; backend silently drops them."
+}
