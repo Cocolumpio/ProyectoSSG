@@ -164,7 +164,56 @@ async def generar_reporte_ejecutivo(proyecto_id: str):
     
     # Contenido del PDF
     story = []
-    
+
+    # --- LOGO DE CONSTRUCTORA (si el proyecto tiene una asignada) ---
+    constructora = None
+    constructora_id = proyecto.get("constructora_id")
+    if constructora_id:
+        try:
+            constructora = await db.constructoras.find_one({"id": constructora_id}, {"_id": 0})
+        except Exception as e:
+            logging.warning(f"[reporte-pdf] Error leyendo constructora {constructora_id}: {e}")
+
+    if constructora and constructora.get("logo_gridfs_id"):
+        try:
+            from services.storage import get_storage
+            storage = get_storage(db)
+            logo_bytes, _meta = await storage.get_file(constructora["logo_gridfs_id"])
+            if logo_bytes:
+                from PIL import Image as PILImage
+                logo_buf = io.BytesIO(logo_bytes)
+                # Convertir SVG u otros formatos no soportados por ReportLab a PNG
+                try:
+                    pil_img = PILImage.open(logo_buf)
+                    if pil_img.mode not in ("RGB", "RGBA"):
+                        pil_img = pil_img.convert("RGBA")
+                    logo_out = io.BytesIO()
+                    pil_img.save(logo_out, format="PNG")
+                    logo_out.seek(0)
+                    w, h = pil_img.size
+                    max_w = 140
+                    max_h = 60
+                    ratio = min(max_w / w, max_h / h)
+                    story.append(RLImage(logo_out, width=w * ratio, height=h * ratio))
+                    nombre_c = constructora.get("nombre", "")
+                    if nombre_c:
+                        story.append(Paragraph(
+                            f"<i>Cliente: {nombre_c}</i>",
+                            ParagraphStyle(
+                                'ClienteHeader',
+                                parent=styles['Normal'],
+                                fontSize=9,
+                                textColor=colors.HexColor('#64748B'),
+                                alignment=TA_CENTER,
+                                spaceAfter=4,
+                            ),
+                        ))
+                    story.append(Spacer(1, 10))
+                except Exception as e:
+                    logging.warning(f"[reporte-pdf] No se pudo procesar logo constructora: {e}")
+        except Exception as e:
+            logging.warning(f"[reporte-pdf] Error insertando logo constructora: {e}")
+
     # --- ENCABEZADO ---
     story.append(Paragraph("REPORTE EJECUTIVO", title_style))
     story.append(Paragraph("Gestión de Construcción con Drones", subtitle_style))
@@ -175,12 +224,16 @@ async def generar_reporte_ejecutivo(proyecto_id: str):
     
     proyecto_info = [
         ["Nombre del Proyecto:", proyecto.get('nombre', 'N/A')],
+    ]
+    if constructora and constructora.get("nombre"):
+        proyecto_info.append(["Constructora / Cliente:", constructora["nombre"]])
+    proyecto_info.extend([
         ["Ubicación:", proyecto.get('ubicacion', 'N/A')],
         ["Coordenadas:", f"Lat: {proyecto.get('coordenadas', {}).get('lat', 'N/A')}, Lng: {proyecto.get('coordenadas', {}).get('lng', 'N/A')}"],
         ["Fecha de Inicio:", proyecto.get('fecha_inicio', 'N/A')],
         ["Fecha Fin Planeada:", proyecto.get('fecha_fin_planeada', 'N/A')],
         ["Descripción:", proyecto.get('descripcion', 'Sin descripción')[:100] + '...' if proyecto.get('descripcion') and len(proyecto.get('descripcion', '')) > 100 else proyecto.get('descripcion', 'Sin descripción')],
-    ]
+    ])
     
     info_table = Table(proyecto_info, colWidths=[150, 350])
     info_table.setStyle(TableStyle([

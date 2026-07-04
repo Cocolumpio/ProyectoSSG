@@ -1,0 +1,22 @@
+{
+  "summary": "Validado backend feature: logo de constructora embebido en /api/proyectos/{id}/reporte-ejecutivo. 3 tests pytest cubren: (a) con logo -> +1 imagen page1, texto 'Cliente: <nombre>' y fila tabla 'Constructora / Cliente:', (b) regresión sin constructora, (c) edge case constructora sin logo -> PDF OK, fila presente pero sin header italic ni imagen extra. Todos pasan (3/3).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_reporte_ejecutivo_logo_constructora.py",
+    "/app/test_reports/pytest/logo_constructora.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "reporte_ejecutivo.py:196 divide max_w/w y max_h/h sin verificar que w o h no sean 0 (PIL siempre devuelve >0, pero conviene un guard). Bajo riesgo.",
+    "El bloque de logo captura excepciones amplias con logging.warning; adecuado para fallback silencioso pedido en la feature."
+  ],
+  "updated_files": ["/app/backend/tests/test_reporte_ejecutivo_logo_constructora.py"],
+  "success_rate": {"backend": "100%", "frontend": "n/a"},
+  "test_credentials": "admin@dron.mx / admin123 (from request)",
+  "seed_data_creation": "Constructoras temporales TEST_ConstructoraLogo_RE y TEST_ConstructoraSinLogo_RE creadas/eliminadas dentro de cada test (cascade limpia constructora_id del proyecto Torre Mezquitan).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "El proyecto Torre Mezquitan (2e38ce19-...) se usa como baseline porque no tiene modelo 3D (PDF más liviano y rápido). El endpoint PUT /api/proyectos filtra values None, así que para desasignar constructora se depende del cascade delete de /api/constructoras/{id} DELETE (server.py verifica en constructoras.py:184-188).",
+  "rca of the issue": "N/A - solo verificación de feature nueva."
+}

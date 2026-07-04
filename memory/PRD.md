@@ -440,3 +440,18 @@ DELETE /api/notificaciones/{id} - Eliminar notificación
   5. Si TODOS los candidatos fallan, el PDF muestra un mensaje explícito con el detalle técnico (en lugar de omitir la sección silenciosamente).
 - **Testeado**: iteration_23.json — 4/4 pytest cases PASS. Hotel Marriott (270MB), E2E 3 Fases (192MB), Torre Corporativa (disco local) y Torre Mezquitan (sin modelo, regression) todos generan PDFs correctos con o sin sección 3D según corresponda.
 - **NOTA producción**: si Acuarela sigue sin renderizar tras redeploy, revisar logs backend por `[ply_render] plyfile también falló` — indicaría PLY corrupto/inparseable, no un bug de código.
+
+
+### Constructoras / Clientes con logos en Landing (2026-02-21)
+- **Objetivo**: reemplazar los logos placeholder de constructoras en la landing (ICA, GIA+A, CARSO, CICSA, MARHNOS, COCONAL) por logos reales gestionados por el admin.
+- **Modelo de datos**: nueva colección `db.constructoras` con `{id, nombre, activo, orden, logo_gridfs_id, logo_content_type, logo_filename, created_at}`.
+- **Endpoints nuevos** (`/app/backend/routes/constructoras.py`):
+  - `GET /api/public/constructoras` (público, sin auth): lista solo constructoras activas con logo para la landing.
+  - `GET /api/constructoras/{id}/logo` (público): stream binario del PNG/JPG/WEBP/SVG con Cache-Control 1h.
+  - `GET/POST/PUT/DELETE /api/constructoras` (admin, multipart/form-data): CRUD completo con validación de MIME/extensión y tamaño ≤3MB. Al eliminar, hace cascade `constructora_id → null` en todos los proyectos vinculados.
+- **Nuevo campo** en `Proyecto/ProyectoCreate/ProyectoUpdate`: `constructora_id: Optional[str]`.
+- **UI Admin** (`/app/frontend/src/components/Admin/ConstructorasAdmin.jsx`): embebido en `UsuariosAdminView` justo debajo de `DirectoresAdmin`. CRUD con preview del logo antes de subir, toggle activo/inactivo, edición del logo y del orden.
+- **UI Landing** (`/app/frontend/src/components/Landing/LandingPage.jsx`): nueva sección `data-testid=landing-clientes-section` con encabezado "Constructoras que confían en nosotros". Consume `/api/public/constructoras`, renderiza logos con efecto grayscale que desaparece al hover. Fallback "Próximamente publicaremos a nuestros clientes." si aún no hay.
+- **UI Proyectos** (`/app/frontend/src/components/Projects/ProjectFormContent.jsx`): nuevo `<select>` "Constructora / Cliente" (data-testid=project-constructora-select) que consume `/api/constructoras` y bindea `formData.constructora_id`.
+- **Testeado**: iteration_24.json — 11/11 backend pytest PASS + flows frontend (landing + admin + modal proyecto) PASS.
+- **Nota menor** (no bloqueante): `PUT /api/proyectos/{id}` con SOLO `{constructora_id: null}` devuelve 400 "Sin cambios" porque el endpoint filtra values=None. En el frontend NO ocurre porque siempre se envía el formulario completo. Se puede refactorar más adelante para permitir clear explícito con `model_dump(exclude_unset=True)`.
