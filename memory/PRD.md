@@ -424,3 +424,19 @@ DELETE /api/notificaciones/{id} - Eliminar notificación
 - Nueva sección "📈 Avance Semanal por Concepto: Esperado vs Ejecutado": una tabla por concepto (Excavación, Pilas, Anclas, Muros, Reforz. Perfiles) con columnas Semana | Periodo | Esperado | Ejecutado | % Semana | Acum. Esp. | Acum. Ejec. y fila TOTAL con acumulados y % de cumplimiento. Avances sin plan se marcan "Fuera de programa". Plan de proyecto.programa_semanal; real de avances_semanales.
 - Nueva sección "💬 Resumen del Chat de Obra (WhatsApp · IA)": muestra hasta 4 resúmenes de db.comentarios_semana (fuente=whatsapp_ia), priorizando semanas con mensajes analizados > 0; convierte markdown de WA a formato reportlab y recorta el bloque de diagnóstico Green API.
 - Testeado por curl + inspección visual (Torre Mezquitan con resumen WA real de semana 19; Torre Corporativa Demo con avances fuera de programa).
+
+
+### Bugfix: Modelo 3D no aparece en Reporte Ejecutivo PDF (2026-02-21)
+- **Problema reportado**: usuario descargó reporte del proyecto "Acuarela" (producción) y no vio las imágenes del modelo 3D aunque el proyecto sí tiene modelo.
+- **Root causes identificadas**:
+  1. `_obtener_bytes_modelo` en `routes/reporte_ejecutivo.py` saltaba silenciosamente el modelo si `modelo_3d_size_mb > 300` y no había preview_id → modelos grandes sin preview quedaban invisibles en el PDF.
+  2. Solo se intentaba el avance más reciente con modelo; si su render fallaba, no había fallback a semanas anteriores.
+  3. `_cargar_nube` en `services/ply_render.py` usaba solo open3d; PLYs con headers no estándar fallaban silenciosamente.
+- **Fixes**:
+  1. Removido el skip por 300MB (render_vistas_ply submuestrea a 300k puntos, así que modelos grandes no son un problema).
+  2. Nueva iteración `candidatos_modelo` (reversed) que prueba TODOS los avances con modelo hasta encontrar uno renderizable.
+  3. Fallback a `plyfile` cuando open3d falla en `_cargar_nube` (extrae x,y,z + red/green/blue).
+  4. Logs detallados `[reporte-pdf]` y `[ply_render]` para debug en producción.
+  5. Si TODOS los candidatos fallan, el PDF muestra un mensaje explícito con el detalle técnico (en lugar de omitir la sección silenciosamente).
+- **Testeado**: iteration_23.json — 4/4 pytest cases PASS. Hotel Marriott (270MB), E2E 3 Fases (192MB), Torre Corporativa (disco local) y Torre Mezquitan (sin modelo, regression) todos generan PDFs correctos con o sin sección 3D según corresponda.
+- **NOTA producción**: si Acuarela sigue sin renderizar tras redeploy, revisar logs backend por `[ply_render] plyfile también falló` — indicaría PLY corrupto/inparseable, no un bug de código.
