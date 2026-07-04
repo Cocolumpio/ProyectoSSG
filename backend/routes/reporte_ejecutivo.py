@@ -61,6 +61,16 @@ def _imagen_pdf(buf: io.BytesIO, width: float) -> RLImage:
     buf.seek(0)
     return RLImage(buf, width=width, height=width * h / w)
 
+
+def _texto_wa_pdf(texto: str) -> str:
+    """Convierte el texto del resumen de WhatsApp a formato seguro para reportlab."""
+    import re
+    t = (texto or "").split("📋 Diagnóstico Green API")[0].strip()
+    t = t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    t = re.sub(r"\*([^*\n]+)\*", r"<b>\1</b>", t)
+    t = re.sub(r"_([^_\n]+)_", r"<i>\1</i>", t)
+    return t.replace("\n", "<br/>")
+
 # --- Reporte Ejecutivo PDF ---
 @router.get("/proyectos/{proyecto_id}/reporte-ejecutivo")
 async def generar_reporte_ejecutivo(proyecto_id: str):
@@ -315,6 +325,102 @@ async def generar_reporte_ejecutivo(proyecto_id: str):
         story.append(Paragraph("No hay datos de volumetría registrados.", normal_style))
     
     story.append(Spacer(1, 20))
+    
+    # --- AVANCE SEMANAL POR CONCEPTO: PROGRAMA vs EJECUTADO ---
+    programa = proyecto.get("programa_semanal") or []
+    plan_por_semana = {int(s.get("semana") or 0): s for s in programa}
+    avances_por_semana = {int(a.get("semana") or 0): a for a in avances}
+    conceptos_def = [
+        ("Excavación", "excavacion_m3", "volumen_excavacion", "m³", "#D97706"),
+        ("Pilas de Cimentación", "pilas", "pilas_completadas", "pzs", "#2563EB"),
+        ("Anclas", "anclas", "anclas_instaladas", "pzs", "#0D9488"),
+        ("Muros", "muros_m2", "muros_completados", "m²", "#9333EA"),
+        ("Reforzamiento por Perfiles", "perfiles", "perfiles_completados", "pzs", "#059669"),
+    ]
+
+    tablas_conceptos = []
+    for nombre, key_plan, key_real, unidad, color_hex in conceptos_def:
+        semanas_con_dato = sorted(
+            {w for w, s in plan_por_semana.items() if float(s.get(key_plan) or 0) > 0}
+            | {w for w, a in avances_por_semana.items() if float(a.get(key_real) or 0) > 0}
+        )
+        if not semanas_con_dato:
+            continue
+
+        filas = [["Semana", "Periodo", f"Esperado ({unidad})", f"Ejecutado ({unidad})", "% Semana", "Acum. Esp.", "Acum. Ejec."]]
+        acum_plan = 0.0
+        acum_real = 0.0
+        for w in semanas_con_dato:
+            sem_plan = plan_por_semana.get(w) or {}
+            sem_real = avances_por_semana.get(w) or {}
+            plan_v = float(sem_plan.get(key_plan) or 0)
+            real_v = float(sem_real.get(key_real) or 0)
+            acum_plan += plan_v
+            acum_real += real_v
+            periodo = sem_plan.get("fecha_inicio") or sem_real.get("fecha") or "—"
+            if plan_v > 0:
+                pct_txt = f"{(real_v / plan_v * 100):.0f}%"
+            elif real_v > 0:
+                pct_txt = "Fuera de programa"
+            else:
+                pct_txt = "—"
+            filas.append([
+                f"Sem {w}",
+                str(periodo),
+                f"{plan_v:,.1f}" if plan_v else "—",
+                f"{real_v:,.1f}" if real_v else "0",
+                pct_txt,
+                f"{acum_plan:,.1f}",
+                f"{acum_real:,.1f}",
+            ])
+        pct_total = (acum_real / acum_plan * 100) if acum_plan > 0 else 0
+        filas.append([
+            "TOTAL", "—",
+            f"{acum_plan:,.1f}",
+            f"{acum_real:,.1f}",
+            f"{pct_total:.1f}%" if acum_plan > 0 else "—",
+            f"{acum_plan:,.1f}",
+            f"{acum_real:,.1f}",
+        ])
+        tablas_conceptos.append((nombre, color_hex, filas))
+
+    if tablas_conceptos:
+        story.append(Paragraph("📈 AVANCE SEMANAL POR CONCEPTO: ESPERADO vs EJECUTADO", section_style))
+        story.append(Paragraph(
+            "Para cada concepto se compara lo esperado según el programa de obra de cada semana contra lo "
+            "realmente ejecutado (medido por dron), y al final el acumulado esperado vs el acumulado ejecutado.",
+            normal_style
+        ))
+        story.append(Spacer(1, 6))
+        concepto_style = ParagraphStyle(
+            'ConceptoTitle',
+            parent=styles['Heading3'],
+            fontSize=11,
+            textColor=colors.HexColor('#334155'),
+            spaceBefore=10,
+            spaceAfter=6,
+        )
+        for nombre, color_hex, filas in tablas_conceptos:
+            story.append(Paragraph(nombre, concepto_style))
+            tabla = Table(filas, colWidths=[48, 88, 82, 82, 74, 68, 68])
+            tabla.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(color_hex)),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#F1F5F9')),
+                ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+                ('TEXTCOLOR', (0, -1), (-1, -1), colors.HexColor(color_hex)),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E5E7EB')),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#FAFAFA')]),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('PADDING', (0, 0), (-1, -1), 4),
+            ]))
+            story.append(tabla)
+            story.append(Spacer(1, 8))
+        story.append(Spacer(1, 12))
     
     # --- RESUMEN PARA LOGÍSTICA DE TRANSPORTE ---
     story.append(Paragraph("🚚 RESUMEN PARA LOGÍSTICA DE TRANSPORTE", section_style))
@@ -702,6 +808,62 @@ async def generar_reporte_ejecutivo(proyecto_id: str):
         ]))
         story.append(cat_table)
         story.append(Spacer(1, 20))
+
+    # --- RESUMEN DEL CHAT DE OBRA (WHATSAPP · IA) ---
+    try:
+        todos_wa = await db.comentarios_semana.find(
+            {"proyecto_id": proyecto_id, "fuente": "whatsapp_ia"},
+            {"_id": 0},
+        ).sort("semana", -1).to_list(20)
+        con_mensajes = [c for c in todos_wa if (c.get("mensajes_analizados") or 0) > 0]
+        comentarios_wa = con_mensajes[:4] if con_mensajes else todos_wa[:2]
+    except Exception as e:
+        logging.error(f"Error leyendo comentarios de WhatsApp: {e}")
+        comentarios_wa = []
+
+    if comentarios_wa:
+        comentarios_wa = sorted(comentarios_wa, key=lambda c: c.get("semana", 0))
+        story.append(Paragraph("💬 RESUMEN DEL CHAT DE OBRA (WHATSAPP · IA)", section_style))
+        story.append(Paragraph(
+            "Resumen generado por IA a partir de los mensajes del grupo de WhatsApp de la obra, "
+            "con las posibles justificaciones de retrasos reportadas por el equipo en campo.",
+            normal_style
+        ))
+        story.append(Spacer(1, 6))
+        wa_semana_style = ParagraphStyle(
+            'WaSemana',
+            parent=styles['Heading3'],
+            fontSize=11,
+            textColor=colors.HexColor('#128C7E'),
+            spaceBefore=8,
+            spaceAfter=4,
+        )
+        wa_texto_style = ParagraphStyle(
+            'WaTexto',
+            parent=styles['Normal'],
+            fontSize=9,
+            leading=13,
+            textColor=colors.HexColor('#334155'),
+            spaceAfter=6,
+        )
+        for c in comentarios_wa:
+            texto = _texto_wa_pdf(c.get("texto") or "")
+            if not texto:
+                continue
+            n_msgs = c.get("mensajes_analizados") or 0
+            encabezado = f"Semana {c.get('semana', '?')}"
+            if n_msgs:
+                encabezado += f" · {n_msgs} mensajes analizados"
+            story.append(Paragraph(encabezado, wa_semana_style))
+            wa_box = Table([[Paragraph(texto, wa_texto_style)]], colWidths=[500])
+            wa_box.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#F0FDF4')),
+                ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor('#BBF7D0')),
+                ('PADDING', (0, 0), (-1, -1), 8),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]))
+            story.append(wa_box)
+        story.append(Spacer(1, 10))
 
     story.append(Spacer(1, 30))
     

@@ -419,3 +419,8 @@ DELETE /api/notificaciones/{id} - Eliminar notificación
 - Render en executor (no bloquea el event loop); ~8-10s por reporte con modelos de 200MB.
 - Testeado por curl: proyecto con modelo local (202MB), con GridFS+preview (243MB) y sin modelo (sección se omite).
 - NOTA: se detectó corrupción espuria al final de reporte_ejecutivo.py y cronograma_ai.py en ediciones previas (líneas duplicadas) — ya corregido, vigilar en futuros edits.
+
+### Reporte Ejecutivo PDF: Avance por Concepto + Resumen WhatsApp (2026-06)
+- Nueva sección "📈 Avance Semanal por Concepto: Esperado vs Ejecutado": una tabla por concepto (Excavación, Pilas, Anclas, Muros, Reforz. Perfiles) con columnas Semana | Periodo | Esperado | Ejecutado | % Semana | Acum. Esp. | Acum. Ejec. y fila TOTAL con acumulados y % de cumplimiento. Avances sin plan se marcan "Fuera de programa". Plan de proyecto.programa_semanal; real de avances_semanales.
+- Nueva sección "💬 Resumen del Chat de Obra (WhatsApp · IA)": muestra hasta 4 resúmenes de db.comentarios_semana (fuente=whatsapp_ia), priorizando semanas con mensajes analizados > 0; convierte markdown de WA a formato reportlab y recorta el bloque de diagnóstico Green API.
+- Testeado por curl + inspección visual (Torre Mezquitan con resumen WA real de semana 19; Torre Corporativa Demo con avances fuera de programa).
