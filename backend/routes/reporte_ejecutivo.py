@@ -1,6 +1,8 @@
 """Rutas de Reporte Ejecutivo PDF - DrON Topografía"""
 import os
 import io
+import asyncio
+import logging
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
@@ -23,6 +25,41 @@ from services.helpers import obtener_metricas_proyecto
 
 db = get_db()
 router = APIRouter(prefix="/api")
+
+
+async def _obtener_bytes_modelo(avance: dict):
+    """Obtiene los bytes del PLY del avance: prefiere la versión preview de GridFS, luego el original, luego disco local."""
+    from services.storage import get_storage
+    storage = get_storage(db)
+    for key in ("modelo_3d_preview_id", "modelo_3d_gridfs_id"):
+        fid = avance.get(key)
+        if not fid:
+            continue
+        if key == "modelo_3d_gridfs_id" and (avance.get("modelo_3d_size_mb") or 0) > 300:
+            continue
+        try:
+            content, _ = await storage.get_file(fid)
+            if content:
+                return content
+        except Exception as e:
+            logging.warning(f"Error leyendo modelo de GridFS {fid}: {e}")
+    # Modelos antiguos guardados en disco local
+    url = avance.get("modelo_3d_url") or ""
+    if url.startswith("/api/modelos3d/") and "/gridfs/" not in url:
+        from core.config import UPLOAD_DIR
+        path = UPLOAD_DIR / "modelos3d" / url.replace("/api/modelos3d/", "")
+        if path.exists():
+            return path.read_bytes()
+    return None
+
+
+def _imagen_pdf(buf: io.BytesIO, width: float) -> RLImage:
+    """Crea una RLImage con altura proporcional al PNG (sin distorsión)."""
+    from PIL import Image as PILImage
+    im = PILImage.open(buf)
+    w, h = im.size
+    buf.seek(0)
+    return RLImage(buf, width=width, height=width * h / w)
 
 # --- Reporte Ejecutivo PDF ---
 @router.get("/proyectos/{proyecto_id}/reporte-ejecutivo")
@@ -167,6 +204,60 @@ async def generar_reporte_ejecutivo(proyecto_id: str):
     ]))
     story.append(avance_table)
     story.append(Spacer(1, 20))
+    
+    # --- MODELO 3D DEL SITIO (planta + 2 isométricas) ---
+    avance_modelo = next(
+        (a for a in reversed(avances)
+         if a.get("modelo_3d_gridfs_id") or a.get("modelo_3d_preview_id") or a.get("modelo_3d_url")),
+        None,
+    )
+    if avance_modelo:
+        try:
+            ply_bytes = await _obtener_bytes_modelo(avance_modelo)
+            if ply_bytes:
+                from services.ply_render import render_vistas_ply
+                loop = asyncio.get_event_loop()
+                vistas = await loop.run_in_executor(None, render_vistas_ply, ply_bytes)
+                if vistas:
+                    story.append(Paragraph("🛰️ MODELO 3D DEL SITIO (LEVANTAMIENTO CON DRON)", section_style))
+                    puntos = avance_modelo.get("modelo_3d_points") or 0
+                    detalle = f"Levantamiento más reciente: Semana {avance_modelo.get('semana', '?')} ({avance_modelo.get('fecha', 'N/D')})"
+                    if puntos:
+                        detalle += f" · {puntos:,} puntos"
+                    story.append(Paragraph(detalle, normal_style))
+                    story.append(Spacer(1, 6))
+
+                    caption_style = ParagraphStyle(
+                        'Caption3D',
+                        parent=styles['Normal'],
+                        fontSize=9,
+                        textColor=colors.HexColor('#64748B'),
+                        alignment=TA_CENTER,
+                        spaceAfter=4,
+                    )
+                    titulo_top, buf_top = vistas[0]
+                    story.append(_imagen_pdf(buf_top, width=460))
+                    story.append(Paragraph(titulo_top, caption_style))
+                    story.append(Spacer(1, 10))
+                    if len(vistas) >= 3:
+                        (t1, b1), (t2, b2) = vistas[1], vistas[2]
+                        iso_table = Table(
+                            [
+                                [_imagen_pdf(b1, width=235), _imagen_pdf(b2, width=235)],
+                                [Paragraph(t1, caption_style), Paragraph(t2, caption_style)],
+                            ],
+                            colWidths=[245, 245],
+                        )
+                        iso_table.setStyle(TableStyle([
+                            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                        ]))
+                        story.append(iso_table)
+                    story.append(Spacer(1, 20))
+        except Exception as e:
+            logging.error(f"Error renderizando modelo 3D en reporte: {e}")
+            story.append(Paragraph("<i>No se pudo renderizar el modelo 3D del sitio.</i>", normal_style))
+            story.append(Spacer(1, 10))
     
     # --- VOLUMETRÍA POR SEMANA ---
     story.append(Paragraph("🚛 VOLUMETRÍA DE EXCAVACIÓN POR SEMANA", section_style))

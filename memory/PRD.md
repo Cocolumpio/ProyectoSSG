@@ -411,3 +411,11 @@ DELETE /api/notificaciones/{id} - Eliminar notificación
 - USO PARA CLEMENTE 70 (producción): tras Redeploy, abrir Programa de Obra del proyecto → botón "Convertir a Reforzamiento" (1 clic).
 - Fix: crear-desde-cronograma ahora persiste tipo_pilas, perfiles_planeados, cronograma_archivo/resumen/fecha_carga.
 - Testeado: iteration_22 (frontend 100%) + curl e2e backend.
+
+### Modelo 3D en Reporte Ejecutivo PDF (2026-06)
+- El PDF de reporte ejecutivo ahora incluye sección "MODELO 3D DEL SITIO" con 3 imágenes renderizadas de la nube de puntos PLY del avance más reciente: Vista Superior (Planta) + Vista Isométrica Noreste + Vista Isométrica Suroeste.
+- Servicio: /app/backend/services/ply_render.py (open3d para carga/submuestreo a 300k pts, matplotlib 3D con colores RGB reales, dpi 180, recorte automático de bordes blancos).
+- Fuente del modelo: prefiere modelo_3d_preview_id (GridFS), luego modelo_3d_gridfs_id (≤300MB), luego archivos locales antiguos en uploads/modelos3d/.
+- Render en executor (no bloquea el event loop); ~8-10s por reporte con modelos de 200MB.
+- Testeado por curl: proyecto con modelo local (202MB), con GridFS+preview (243MB) y sin modelo (sección se omite).
+- NOTA: se detectó corrupción espuria al final de reporte_ejecutivo.py y cronograma_ai.py en ediciones previas (líneas duplicadas) — ya corregido, vigilar en futuros edits.
