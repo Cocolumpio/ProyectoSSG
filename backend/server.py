@@ -330,6 +330,8 @@ class Proyecto(BaseModel):
     analisis_maquinaria_ia: Optional[dict] = None
     parametros_proyecto: Optional[dict] = None
     clientes_asignados: List[str] = []  # Lista de IDs de clientes asignados
+    # Constructora / cliente empresarial dueño de la obra (para landing y branding)
+    constructora_id: Optional[str] = None
     # Vinculación a grupo de WhatsApp (Green API) para resumen semanal IA
     wa_grupo_chat_id: Optional[str] = None
     wa_grupo_nombre: Optional[str] = None
@@ -373,6 +375,7 @@ class ProyectoCreate(BaseModel):
     analisis_maquinaria_ia: Optional[dict] = None
     parametros_proyecto: Optional[dict] = None
     clientes_asignados: List[str] = []
+    constructora_id: Optional[str] = None
 
 class ProyectoUpdate(BaseModel):
     nombre: Optional[str] = None
@@ -417,6 +420,7 @@ class ProyectoUpdate(BaseModel):
     analisis_maquinaria_ia: Optional[dict] = None
     parametros_proyecto: Optional[dict] = None
     clientes_asignados: Optional[List[str]] = None
+    constructora_id: Optional[str] = None
 
 # Modelo para solicitud de vuelo programado
 class SolicitudVuelo(BaseModel):
@@ -2219,6 +2223,7 @@ from routes import (
     alertas as routes_alertas,
     resumen_whatsapp as routes_resumen_whatsapp,
     programa_historial as routes_programa_historial,
+    constructoras as routes_constructoras,
 )
 app.include_router(routes_comparaciones.router)
 app.include_router(routes_exportar.router)
@@ -2236,6 +2241,7 @@ app.include_router(routes_directores.router)
 app.include_router(routes_alertas.router)
 app.include_router(routes_resumen_whatsapp.router)
 app.include_router(routes_programa_historial.router)
+app.include_router(routes_constructoras.router)
 
 app.add_middleware(
     CORSMiddleware,

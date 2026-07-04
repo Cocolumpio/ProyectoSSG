@@ -1,0 +1,38 @@
+{
+  "summary": "End-to-end testing of the 'Constructoras (clientes)' feature (backend CRUD + public endpoints + Proyecto.constructora_id persistence + Admin UI + Landing UI + New Project modal select). 11/11 backend pytest cases PASS. Frontend Playwright flow confirms: landing section renders with the heading 'Constructoras que confían en nosotros', admin login → Usuarios shows the Constructoras block, adding a constructora with PNG logo persists and appears in both the admin list and the public landing (with a working logo <img> src), and the ProjectFormContent modal exposes the project-constructora-select populated with the newly created constructora. All test-ids from the request are present and working.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "PUT /api/proyectos/{id}", "issue": "Sending only {constructora_id: null} returns 400 (endpoint requires additional fields to consider it an update). Non-blocking: null-unlink is still handled via DELETE-constructora cascade which works correctly."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_constructoras.py",
+    "/app/test_reports/pytest/constructoras.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "routes/constructoras.py is clean and well-scoped (~190 lines). Uses GridFS via services.storage abstraction; excludes _id in projections/responses; delete cascades constructora_id → null on proyectos as required.",
+    "MIME/extension validation uses both content_type and filename extension (defensive). MAX 3MB enforced.",
+    "LandingPage.jsx builds logo URL as `${REACT_APP_BACKEND_URL}${c.logo_url}` where c.logo_url already starts with '/api/...'. Works but could be simplified.",
+    "ProjectFormContent select correctly binds formData.constructora_id and includes an empty option (— Sin constructora asignada —).",
+    "Non-blocking: PUT /api/proyectos rejects {constructora_id: null} alone with 400 'Sin cambios'-style validation upstream; if a user un-links a constructora from the UI they need at least one other field change. Consider allowing partial patch with explicit null."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_constructoras.py (new)"
+  ],
+  "success_rate": {
+    "backend": "100% (11/11 pytest cases)",
+    "frontend": "100% (all critical flows: landing, admin CRUD add, list appearance, landing render, project modal select populated)"
+  },
+  "test_credentials": "admin@dron.mx / admin123 (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "Created and then cleaned up: TEST_Constructora_Auto, TEST_UI_Constructora, TEST_ToDelete constructoras and TEST_Proj_Constructora, TEST_Proj_Unlink projects.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "test_constructoras.py covers full CRUD + validations (large logo >3MB, bad format pdf, empty name) + public endpoint + logo binary + proyecto.constructora_id persistence + delete cascade. Uses PIL to generate PNGs; multipart/form-data for POST/PUT. Auth via /api/auth/login returning access_token. Project creation requires: nombre, tipo, ubicacion, coordenadas{lat,lng}, fecha_inicio, fecha_fin_planeada."
+}

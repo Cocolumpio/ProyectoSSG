@@ -5,6 +5,7 @@ import {
   X, Eye, EyeOff, Search
 } from 'lucide-react';
 import { DirectoresAdmin } from './DirectoresAdmin';
+import { ConstructorasAdmin } from './ConstructorasAdmin';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -160,6 +161,9 @@ export function UsuariosAdminView({ onShowSuccess, currentUserId }) {
 
       {/* Directores con alertas de WhatsApp */}
       <DirectoresAdmin />
+
+      {/* Constructoras (clientes) con logos para la landing */}
+      <ConstructorasAdmin />
 
       {/* Modal de crear usuario */}
       {showForm && (

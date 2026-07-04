@@ -86,11 +86,18 @@ export function LandingPage() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState(null);
+  const [constructoras, setConstructoras] = useState([]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    axios.get(`${API}/public/constructoras`)
+      .then((r) => setConstructoras(r.data?.constructoras || []))
+      .catch(() => setConstructoras([]));
   }, []);
 
   const handleSubmit = async (e) => {
@@ -333,16 +340,37 @@ export function LandingPage() {
       </section>
 
       {/* ============================== LOGOS ============================== */}
-      <section className="border-y border-white/5 py-10">
+      <section className="border-y border-white/5 py-14" data-testid="landing-clientes-section">
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
-          <p className="text-center text-xs uppercase tracking-[0.3em] text-white/30 mb-6">
-            Tecnología de confianza para constructoras mexicanas
+          <p className="text-center text-xs uppercase tracking-[0.3em] text-white/30 mb-8">
+            Constructoras que confían en nosotros
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 opacity-50">
-            {['ICA', 'GIA+A', 'CARSO', 'CICSA', 'MARHNOS', 'COCONAL'].map((n) => (
-              <span key={n} className="text-white/40 font-bold tracking-widest text-sm">{n}</span>
-            ))}
-          </div>
+          {constructoras.length === 0 ? (
+            <div className="text-center text-white/25 text-sm italic">
+              Próximamente publicaremos a nuestros clientes.
+            </div>
+          ) : (
+            <div
+              className="flex flex-wrap items-center justify-center gap-x-14 gap-y-8"
+              data-testid="landing-clientes-logos"
+            >
+              {constructoras.map((c) => (
+                <div
+                  key={c.id}
+                  className="group flex items-center justify-center"
+                  title={c.nombre}
+                >
+                  <img
+                    src={`${process.env.REACT_APP_BACKEND_URL}${c.logo_url}`}
+                    alt={c.nombre}
+                    loading="lazy"
+                    className="h-12 sm:h-14 w-auto max-w-[180px] object-contain grayscale opacity-70 hover:opacity-100 hover:grayscale-0 transition-all duration-300"
+                    data-testid={`landing-cliente-logo-${c.id}`}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

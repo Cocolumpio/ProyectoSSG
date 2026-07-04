@@ -1,16 +1,26 @@
 import { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import { MapPin, Search, Loader2, Shovel, Columns3, Building2, Anchor, Info } from 'lucide-react';
 import { CatalogoMaquinariaSection } from './CatalogoMaquinariaSection';
 import { CarasExcavacionConfig } from './CarasExcavacionConfig';
 import { WhatsAppGrupoSelector } from './WhatsAppGrupoSelector';
+
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 export function ProjectFormContent({ formData, setFormData, error, saving, isEdit, onSubmit, onClose, onShowSuccess }) {
   const [searchingAddress, setSearchingAddress] = useState(false);
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [addressInput, setAddressInput] = useState(formData.direccion || formData.ubicacion || '');
+  const [constructoras, setConstructoras] = useState([]);
   const searchTimeout = useRef(null);
   const suggestionsRef = useRef(null);
+
+  useEffect(() => {
+    axios.get(`${API}/constructoras`)
+      .then((r) => setConstructoras(r.data?.constructoras || []))
+      .catch(() => setConstructoras([]));
+  }, []);
 
   useEffect(() => {
     if (formData.direccion) {
@@ -125,6 +135,30 @@ export function ProjectFormContent({ formData, setFormData, error, saving, isEdi
             data-testid="project-start-date-input"
           />
         </div>
+      </div>
+
+      {/* Selector de Constructora (cliente empresarial) */}
+      <div>
+        <label className="block text-sm font-medium text-white/80 mb-1">
+          <Building2 className="inline h-4 w-4 mr-1" />
+          Constructora / Cliente
+        </label>
+        <select
+          value={formData.constructora_id || ''}
+          onChange={(e) => setFormData((prev) => ({ ...prev, constructora_id: e.target.value || null }))}
+          className="w-full px-4 py-2 border border-white/15 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994B49] bg-transparent"
+          data-testid="project-constructora-select"
+        >
+          <option value="" className="bg-[#15151B]">— Sin constructora asignada —</option>
+          {constructoras.map((c) => (
+            <option key={c.id} value={c.id} className="bg-[#15151B]">
+              {c.nombre}{!c.activo ? ' (inactiva)' : ''}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-white/40 mt-1">
+          Asocia esta obra a una constructora. Sus logos se muestran en la landing pública.
+        </p>
       </div>
 
       {/* Address Search Field */}
