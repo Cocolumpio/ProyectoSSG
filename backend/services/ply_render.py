@@ -18,21 +18,57 @@ VISTAS = [
 
 
 def _cargar_nube(ply_bytes: bytes):
-    """Carga puntos y colores desde bytes PLY usando open3d (maneja archivos grandes)."""
-    import open3d as o3d
+    """Carga puntos y colores desde bytes PLY.
+
+    Intenta primero con open3d (rápido, maneja binary y ascii); si falla,
+    hace fallback a plyfile (más tolerante con headers no estándar).
+    """
     with tempfile.NamedTemporaryFile(suffix='.ply', delete=False) as tmp:
         tmp.write(ply_bytes)
         tmp_path = tmp.name
     try:
-        pcd = o3d.io.read_point_cloud(tmp_path)
-        n = len(pcd.points)
-        if n == 0:
+        # Intento 1: open3d
+        try:
+            import open3d as o3d
+            pcd = o3d.io.read_point_cloud(tmp_path)
+            n = len(pcd.points)
+            if n > 0:
+                if n > MAX_RENDER_POINTS:
+                    pcd = pcd.uniform_down_sample(every_k_points=max(1, n // MAX_RENDER_POINTS))
+                pts = np.asarray(pcd.points, dtype=np.float64)
+                cols = np.asarray(pcd.colors, dtype=np.float64) if pcd.has_colors() else None
+                logger.info(f"[ply_render] open3d cargó {n:,} puntos")
+                return pts, cols
+            logger.warning("[ply_render] open3d devolvió 0 puntos, intentando fallback plyfile")
+        except Exception as e:
+            logger.warning(f"[ply_render] open3d falló: {e}. Intentando fallback con plyfile")
+
+        # Intento 2: plyfile (fallback)
+        try:
+            from plyfile import PlyData
+            plydata = PlyData.read(tmp_path)
+            vertex = plydata['vertex']
+            pts = np.stack([vertex['x'], vertex['y'], vertex['z']], axis=1).astype(np.float64)
+            n = len(pts)
+            if n == 0:
+                return None, None
+            cols = None
+            names = set(vertex.data.dtype.names or [])
+            if {'red', 'green', 'blue'}.issubset(names):
+                r = np.asarray(vertex['red'], dtype=np.float64) / 255.0
+                g = np.asarray(vertex['green'], dtype=np.float64) / 255.0
+                b = np.asarray(vertex['blue'], dtype=np.float64) / 255.0
+                cols = np.stack([r, g, b], axis=1)
+            if n > MAX_RENDER_POINTS:
+                step = max(1, n // MAX_RENDER_POINTS)
+                pts = pts[::step]
+                if cols is not None:
+                    cols = cols[::step]
+            logger.info(f"[ply_render] plyfile cargó {len(pts):,} puntos")
+            return pts, cols
+        except Exception as e:
+            logger.error(f"[ply_render] plyfile también falló: {e}")
             return None, None
-        if n > MAX_RENDER_POINTS:
-            pcd = pcd.uniform_down_sample(every_k_points=max(1, n // MAX_RENDER_POINTS))
-        pts = np.asarray(pcd.points, dtype=np.float64)
-        cols = np.asarray(pcd.colors, dtype=np.float64) if pcd.has_colors() else None
-        return pts, cols
     finally:
         try:
             os.unlink(tmp_path)

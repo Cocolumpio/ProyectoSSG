@@ -1,0 +1,37 @@
+{
+  "summary": "Backend testing of GET /api/proyectos/{id}/reporte-ejecutivo PDF generation with embedded 3D model views. All 4 pytest cases PASS in 24.65s. The 3 projects with 3D models (Hotel Marriott GDL, Proyecto E2E 3 Fases Test, Torre Corporativa Demo) all return HTTP 200 with valid PDF containing 'MODELO 3D DEL SITIO' section, all 3 view captions (Vista Superior, Isométrica Noreste, Isométrica Suroeste), and >=3 embedded images. The regression case (Torre Mezquitan, no 3D model) also returns HTTP 200 with a valid PDF that correctly OMITS the 3D model section. Fallback logic (iterate candidates from most-recent to oldest) was code-reviewed in /app/backend/routes/reporte_ejecutivo.py lines 233-259 and confirmed correct: candidatos_modelo is built via reversed(avances) filtering any avance with modelo_3d_gridfs_id/preview_id/url, then loops try/except until one renders vistas successfully; failure reasons are collected in intentos_fallidos for user-visible fallback message.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_reporte_ejecutivo_pdf.py",
+    "/app/test_reports/pytest/reporte_ejecutivo_pdf.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "reporte_ejecutivo.py:230-310 fallback loop is correct and adds visible failure evidence to the PDF when all candidates fail — good UX.",
+    "_obtener_bytes_modelo prefers modelo_3d_preview_id (submuestreado) over modelo_3d_gridfs_id (original); good for performance. Disk-local fallback is also honored.",
+    "ply_render._cargar_nube now has a plyfile fallback if open3d fails — this is what unlocked Torre Corporativa Demo's local-disk PLYs that were not rendering before.",
+    "reporte_ejecutivo.py is ~937 lines; consider splitting into modules per section (info, avance, modelo3d, volumetria, presupuesto, whatsapp) for maintainability. Not blocking.",
+    "The 300MB skip limit was removed as claimed; render_vistas_ply sub-samples to MAX_RENDER_POINTS=300000 so large PLYs still render in reasonable time (~10-20s observed)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_reporte_ejecutivo_pdf.py (new)"
+  ],
+  "success_rate": {
+    "backend": "100% (4/4 pytest cases passed)",
+    "frontend": "not tested (backend only per review request)"
+  },
+  "test_credentials": "endpoint is public GET, no auth required",
+  "seed_data_creation": "none — read-only tests against existing preview projects",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "The 4 tests cover: 3 projects WITH 3D models (Hotel Marriott GDL, Proyecto E2E 3 Fases Test, Torre Corporativa Demo) and 1 without (Torre Mezquitan). Each request takes ~5-8s. Total test suite runs in ~25s. Uses pypdf to extract text and count embedded images per page. Endpoint is public, no auth. Base URL from REACT_APP_BACKEND_URL env var.",
+  "rca_of_the_issue": "User's original bug ('no veo las imágenes del modelo 3D en el PDF de Acuarela') CANNOT be reproduced in preview because Acuarela is a production-only project. Validation with the 3 preview projects that DO have 3D models confirms the fix works: (a) removal of the 300MB silent-skip limit in _obtener_bytes_modelo, (b) fallback iteration through all avances with modelos in reverse chronological order, and (c) plyfile fallback in _cargar_nube when open3d fails on non-standard PLY headers — together these ensure the PDF now embeds the 3 model views whenever ANY avance has a renderable PLY. If Acuarela in production still fails, the likely cause is a corrupt PLY or a header open3d cannot parse; in that case check backend logs for '[ply_render] plyfile también falló' — that would indicate a truly unparseable file rather than the previous silent-skip bug."
+}
