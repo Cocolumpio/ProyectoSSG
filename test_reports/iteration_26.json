@@ -1,0 +1,21 @@
+{
+  "summary": "Verified changes to 'AVANCE FÍSICO POR CATEGORÍA' section in ejecutivo PDF. Created new test file with 7 test cases (all passing) covering: elimination of horizontal chart, new title/description with semana_corte, 5-column table, fecha_inicio fallback for Torre Mezquitan, and regression for projects without programa_semanal.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_reporte_ejecutivo_avance_categoria.py",
+    "/app/test_reports/pytest/avance_categoria.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Chart title 'Avance Físico a Semana N: Esperado vs Real por Categoría' is rendered inside the matplotlib PNG so it is NOT text-extractable via pypdf; tests validate the equivalent descriptive text ('Comparativa hasta la semana N (semana del corte)') and table header 'Esperado a sem. N' with the same N — both fully confirm the feature.",
+    "Hotel Marriott: semana_corte=6 (from avances). Torre Mezquitan: semana_corte=8 (fallback via fecha_inicio - matches problem statement). E2E 3 Fases Test: PDF generates cleanly (regression OK).",
+    "The horizontal chart title 'Progreso de Obra por Categoría' is absent in all 3 tested projects — confirmed removed."
+  ],
+  "updated_files": ["/app/backend/tests/test_reporte_ejecutivo_avance_categoria.py"],
+  "success_rate": {"backend": "100%", "frontend": "N/A"},
+  "seed_data_creation": "None. Used existing preview projects.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Section header text is 'AVANCE FÍSICO POR CATEGORÍA'. Descriptive text 'Comparativa hasta la semana N (semana del corte)' and header 'Esperado a sem. N' are extractable via pypdf. The matplotlib chart title is embedded in PNG and NOT extractable — do not assert on it. Test file: /app/backend/tests/test_reporte_ejecutivo_avance_categoria.py."
+}

@@ -634,16 +634,57 @@ async def generar_reporte_ejecutivo(proyecto_id: str):
 
     if categorias_fisicas:
         story.append(Paragraph("🏗️ AVANCE FÍSICO POR CATEGORÍA", section_style))
+
+        # Determinar semana del corte: última semana con avance registrado.
+        # Fallback: semanas transcurridas desde fecha_inicio del proyecto.
+        semana_corte = max((int(a.get("semana") or 0) for a in avances), default=0)
+        if semana_corte == 0:
+            try:
+                from datetime import date
+                fi_str = proyecto.get("fecha_inicio")
+                if fi_str:
+                    fi = date.fromisoformat(fi_str[:10])
+                    dias = (date.today() - fi).days
+                    semana_corte = max(1, (dias // 7) + 1) if dias >= 0 else 1
+            except Exception:
+                semana_corte = 1
+        # Mapa de programa por semana para calcular acumulados esperados
+        programa_por_semana = {int(s.get("semana") or 0): s for s in (proyecto.get("programa_semanal") or [])}
+
+        # Claves del programa_semanal que corresponden a cada categoría
+        clave_programa_por_categoria = {
+            "Excavación": "excavacion_m3",
+            "Pilas": "pilas",
+            "Anclas": "anclas",
+            "Muros": "muros_m2",
+        }
+
+        # Calcular esperado acumulado hasta la semana del corte para cada categoría
+        for c in categorias_fisicas:
+            key_p = clave_programa_por_categoria.get(c["nombre"])
+            acum_esperado = 0.0
+            if key_p and semana_corte > 0:
+                for w in range(1, semana_corte + 1):
+                    sem = programa_por_semana.get(w) or {}
+                    try:
+                        acum_esperado += float(sem.get(key_p) or 0)
+                    except (TypeError, ValueError):
+                        pass
+            total_planeado = float(c.get("planeado") or 0)
+            c["esperado_hasta_corte"] = acum_esperado
+            c["esperado_hasta_corte_pct"] = (acum_esperado / total_planeado * 100) if total_planeado > 0 else 0.0
+
         story.append(Paragraph(
-            "Comparativa de lo planeado vs lo ejecutado en obra medido por dron.",
+            f"Comparativa hasta la <b>semana {semana_corte}</b> (semana del corte): "
+            "porcentaje del total que se debería llevar acumulado según el programa vs porcentaje real medido por dron.",
             normal_style
         ))
         story.append(Spacer(1, 8))
 
-        # Gráfica 1: Barras agrupadas Planeado vs Real (cantidades absolutas, normalizadas a 100% por categoría)
+        # Gráfica única: Barras agrupadas Esperado (a la semana de corte) vs Real, en % del total
         try:
             nombres = [c["nombre"] for c in categorias_fisicas]
-            planeados_pct = [100.0] * len(nombres)  # Planeado siempre 100% (meta)
+            esperados_pct = [min(c.get("esperado_hasta_corte_pct", 0), 100) for c in categorias_fisicas]
             reales_pct = [min(c["pct"], 100) for c in categorias_fisicas]
             colors_real = [c["color"] for c in categorias_fisicas]
 
@@ -651,28 +692,33 @@ async def generar_reporte_ejecutivo(proyecto_id: str):
             width = 0.38
 
             fig, ax = plt.subplots(figsize=(8, 4.2), facecolor='white')
-            ax.bar(x - width/2, planeados_pct, width, label='Planeado (meta)',
-                   color='#CBD5E1', edgecolor='#94A3B8', linewidth=0.8)
+            bars_p = ax.bar(x - width/2, esperados_pct, width,
+                            label=f'Esperado a semana {semana_corte}',
+                            color='#CBD5E1', edgecolor='#94A3B8', linewidth=0.8)
             bars_r = ax.bar(x + width/2, reales_pct, width, label='Real ejecutado',
                             color=colors_real, edgecolor='black', linewidth=0.5)
 
-            ax.set_ylabel('% de avance', fontsize=9)
-            ax.set_title('Avance Físico: Planeado vs Real por Categoría',
+            ax.set_ylabel('% del total planeado', fontsize=9)
+            ax.set_title(f'Avance Físico a Semana {semana_corte}: Esperado vs Real por Categoría',
                          fontsize=11, fontweight='bold')
             ax.set_xticks(x)
             ax.set_xticklabels(nombres, fontsize=9)
-            ax.set_ylim(0, 110)
+            y_max = max(esperados_pct + reales_pct + [10])
+            ax.set_ylim(0, min(max(y_max * 1.2, 20), 110))
             ax.legend(loc='upper right', fontsize=8)
             ax.grid(axis='y', alpha=0.2, linestyle='--')
             ax.spines['top'].set_visible(False)
             ax.spines['right'].set_visible(False)
+            # Etiquetas encima de cada barra
+            for bar, val in zip(bars_p, esperados_pct):
+                ax.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 1,
+                        f'{val:.1f}%', ha='center', va='bottom', fontsize=8,
+                        color='#475569', fontweight='bold')
             for bar, cat in zip(bars_r, categorias_fisicas):
                 h = bar.get_height()
-                if h >= 0:
-                    ax.text(bar.get_x() + bar.get_width()/2., h + 2,
-                            f'{cat["pct"]:.1f}%',
-                            ha='center', va='bottom', fontsize=8, color='#0F172A',
-                            fontweight='bold')
+                ax.text(bar.get_x() + bar.get_width()/2., h + 1,
+                        f'{cat["pct"]:.1f}%', ha='center', va='bottom', fontsize=8,
+                        color='#0F172A', fontweight='bold')
 
             plt.tight_layout()
             chart_buf = io.BytesIO()
@@ -684,52 +730,21 @@ async def generar_reporte_ejecutivo(proyecto_id: str):
         except Exception as e:
             story.append(Paragraph(f"<i>No se pudo generar la gráfica de avance físico: {e}</i>", normal_style))
 
-        # Gráfica 2: Barras horizontales con % por categoría
-        try:
-            nombres = [c["nombre"] for c in categorias_fisicas]
-            porcentajes = [min(c["pct"], 100) for c in categorias_fisicas]
-            cat_colors = [c["color"] for c in categorias_fisicas]
-
-            fig2, ax2 = plt.subplots(figsize=(8, 3.5), facecolor='white')
-            y = np.arange(len(nombres))
-            bars = ax2.barh(y, porcentajes, color=cat_colors, edgecolor='#475569', linewidth=0.5)
-            ax2.barh(y, [100 - p for p in porcentajes], left=porcentajes,
-                     color='#E2E8F0', edgecolor='#CBD5E1', linewidth=0.3)
-            ax2.set_yticks(y)
-            ax2.set_yticklabels(nombres, fontsize=10)
-            ax2.set_xlim(0, 100)
-            ax2.set_xlabel('% de avance', fontsize=9)
-            ax2.set_title('Progreso de Obra por Categoría',
-                          fontsize=11, fontweight='bold')
-            ax2.spines['top'].set_visible(False)
-            ax2.spines['right'].set_visible(False)
-            ax2.invert_yaxis()
-            for bar, pct in zip(bars, porcentajes):
-                ax2.text(bar.get_width() + 1.5, bar.get_y() + bar.get_height()/2.,
-                         f'{pct:.1f}%', va='center', fontsize=9,
-                         color='#0F172A', fontweight='bold')
-
-            plt.tight_layout()
-            chart_buf2 = io.BytesIO()
-            plt.savefig(chart_buf2, format='png', dpi=130, bbox_inches='tight', facecolor='white')
-            plt.close(fig2)
-            chart_buf2.seek(0)
-            story.append(RLImage(chart_buf2, width=480, height=220))
-            story.append(Spacer(1, 10))
-        except Exception as e:
-            story.append(Paragraph(f"<i>No se pudo generar la gráfica horizontal: {e}</i>", normal_style))
-
         # Tabla detallada por categoría
-        fis_headers = ["Categoría", "Planeado", "Real ejecutado", "% Avance"]
+        fis_headers = ["Categoría", "Planeado total", f"Esperado a sem. {semana_corte}", "Real ejecutado", "% vs Esperado"]
         fis_data = [fis_headers]
         for c in categorias_fisicas:
+            esperado = c.get("esperado_hasta_corte", 0)
+            real = c.get("real", 0)
+            pct_vs_esperado = (real / esperado * 100) if esperado > 0 else 0
             fis_data.append([
                 c["nombre"],
                 f"{c['planeado']:,.2f} {c['unidad']}",
-                f"{c['real']:,.2f} {c['unidad']}",
-                f"{c['pct']:.1f}%",
+                f"{esperado:,.2f} {c['unidad']}",
+                f"{real:,.2f} {c['unidad']}",
+                f"{pct_vs_esperado:.1f}%" if esperado > 0 else "—",
             ])
-        fis_table = Table(fis_data, colWidths=[110, 130, 130, 90])
+        fis_table = Table(fis_data, colWidths=[90, 105, 105, 105, 75])
         fis_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#475569')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
