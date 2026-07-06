@@ -1,0 +1,21 @@
+{
+  "summary": "E2E frontend validation of DrON Topografía landing redesign. All 11 requested checks PASS. Header/footer logos render with correct src=/logo-dron-dark.png; Emergent badge hidden (display:none); '78% clientes' text removed and replaced with 'Recomendado para obras medianas'; 'CONSTRUCTORAS QUE CONFÍAN' removed and replaced with trust bar (SCT/AFAC · seguro civil · LFPDPPP); hero subtitle mentions 'avance físico y financiero' + 'lo que se puede cobrar'; dashboard mockup shows both progress bars (63.4% físico, 58.1% financiero) and '$8.7M ejecutado · $15M estimado'; landing-financiero-section renders with title 'No solo medimos concreto y acero' and all 4 mini-cards; landing-caso-exito-section shows Torre Corporativa · Guadalajara, 18 semanas, 224,000 m³, +8.4%, $1.4M; landing-certificaciones-section shows all 3 required cards; FAQ contains all 7 new technical questions with expected terms; regressions intact: 3 pricing plans (Esencial/Profesional/Enterprise), 6 service cards, contact form functional, nav includes new 'Financiero' link. Section ordering correct: caso-exito < precios < certificaciones < contacto.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "The Precios section uses id='precios' but no data-testid='precios' (still queryable via #precios; not a blocker).",
+    "FAQ items use native <details>/<summary> — content is present in DOM but not in innerText until expanded; if future tests rely on visible text, they must expand accordions first."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (not requested)", "frontend": "100%"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Landing redesign fully verified against all 11 acceptance criteria. Preview URL: https://dron-topografia-dash.preview.emergentagent.com. Key data-testids validated: landing-logo, landing-clientes-section (trust bar variant), landing-financiero-section, landing-caso-exito-section, landing-certificaciones-section, landing-contact-form. FAQ uses <details> accordions – use innerHTML to inspect answers programmatically."
+}

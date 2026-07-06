@@ -5,6 +5,7 @@ import {
   ArrowRight, Plane, Brain, BarChart3, Bell, FileText, Layers,
   Wrench, ShieldCheck, Camera, MapPin, Mail, Phone, Check,
   ChevronRight, Zap, Eye, Cpu, Sparkles, ArrowUpRight,
+  DollarSign, TrendingUp, AlertTriangle, Award, Lock, FileCheck,
 } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -146,13 +147,14 @@ export function LandingPage() {
             <img
               src="/logo-dron-dark.png"
               alt="DrON Topografía"
-              className="h-24 sm:h-32 w-auto"
+              className="h-10 sm:h-12 w-auto"
               style={{ filter: 'brightness(0) invert(1)' }}
             />
           </a>
 
           <div className="hidden md:flex items-center gap-7 text-sm text-white/70">
             <a href="#servicios" className="hover:text-white transition-colors">Servicios</a>
+            <a href="#financiero" className="hover:text-white transition-colors">Financiero</a>
             <a href="#tecnologia" className="hover:text-white transition-colors">Tecnología</a>
             <a href="#proceso" className="hover:text-white transition-colors">Proceso</a>
             <a href="#precios" className="hover:text-white transition-colors">Precios</a>
@@ -213,7 +215,7 @@ export function LandingPage() {
 
             <Reveal delay={180}>
               <p className="mt-8 text-lg sm:text-xl text-white/60 max-w-2xl leading-relaxed">
-                Vuelos de dron semanales, modelos 3D, conteo automático de pilas y anclas con IA, y un dashboard que tu director financiero podrá entender en 10 segundos.
+                Vuelos de dron semanales, modelos 3D y conteo automático de pilas y anclas con IA. Compara avance físico y financiero, semana a semana: lo ejecutado vs. lo programado, y lo ejecutado vs. lo que se puede cobrar.
               </p>
             </Reveal>
 
@@ -278,11 +280,24 @@ export function LandingPage() {
 
                     <div className="bg-white/[0.03] rounded-lg p-3 border border-white/5">
                       <div className="flex justify-between text-xs text-white/50 mb-2">
-                        <span>Avance general</span>
+                        <span>Avance físico general</span>
                         <span className="text-white font-medium">63.4%</span>
                       </div>
                       <div className="h-2 bg-white/5 rounded-full overflow-hidden">
                         <div className="h-full bg-gradient-to-r from-[#994B49] to-[#E07A5F] rounded-full animate-pulse" style={{ width: '63.4%' }} />
+                      </div>
+                    </div>
+
+                    <div className="bg-white/[0.03] rounded-lg p-3 border border-emerald-400/10">
+                      <div className="flex justify-between text-xs text-white/50 mb-2">
+                        <span>Avance financiero autorizado</span>
+                        <span className="text-emerald-400 font-medium">58.1%</span>
+                      </div>
+                      <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full" style={{ width: '58.1%' }} />
+                      </div>
+                      <div className="text-[10px] text-white/40 mt-1.5 font-mono">
+                        $8.7M ejecutado · $15M estimado
                       </div>
                     </div>
 
@@ -339,37 +354,52 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ============================== LOGOS ============================== */}
+      {/* ============================== LOGOS / TRUST ============================== */}
       <section className="border-y border-white/5 py-14" data-testid="landing-clientes-section">
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
-          <p className="text-center text-xs uppercase tracking-[0.3em] text-white/30 mb-8">
-            Constructoras que confían en nosotros
-          </p>
           {constructoras.length === 0 ? (
-            <div className="text-center text-white/25 text-sm italic">
-              Próximamente publicaremos a nuestros clientes.
+            <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 text-white/40 text-sm">
+              <span className="inline-flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-[#E07A5F]" />
+                Piloto certificado SCT · AFAC
+              </span>
+              <span className="hidden sm:inline text-white/10">·</span>
+              <span className="inline-flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-[#E07A5F]" />
+                Seguro de responsabilidad civil por vuelo
+              </span>
+              <span className="hidden sm:inline text-white/10">·</span>
+              <span className="inline-flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-[#E07A5F]" />
+                Cumplimiento LFPDPPP
+              </span>
             </div>
           ) : (
-            <div
-              className="flex flex-wrap items-center justify-center gap-x-14 gap-y-8"
-              data-testid="landing-clientes-logos"
-            >
-              {constructoras.map((c) => (
-                <div
-                  key={c.id}
-                  className="group flex items-center justify-center"
-                  title={c.nombre}
-                >
-                  <img
-                    src={`${process.env.REACT_APP_BACKEND_URL}${c.logo_url}`}
-                    alt={c.nombre}
-                    loading="lazy"
-                    className="h-12 sm:h-14 w-auto max-w-[180px] object-contain grayscale opacity-70 hover:opacity-100 hover:grayscale-0 transition-all duration-300"
-                    data-testid={`landing-cliente-logo-${c.id}`}
-                  />
-                </div>
-              ))}
-            </div>
+            <>
+              <p className="text-center text-xs uppercase tracking-[0.3em] text-white/30 mb-8">
+                Constructoras que confían en nosotros
+              </p>
+              <div
+                className="flex flex-wrap items-center justify-center gap-x-14 gap-y-8"
+                data-testid="landing-clientes-logos"
+              >
+                {constructoras.map((c) => (
+                  <div
+                    key={c.id}
+                    className="group flex items-center justify-center"
+                    title={c.nombre}
+                  >
+                    <img
+                      src={`${process.env.REACT_APP_BACKEND_URL}${c.logo_url}`}
+                      alt={c.nombre}
+                      loading="lazy"
+                      className="h-12 sm:h-14 w-auto max-w-[180px] object-contain grayscale opacity-70 hover:opacity-100 hover:grayscale-0 transition-all duration-300"
+                      data-testid={`landing-cliente-logo-${c.id}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </section>
@@ -410,6 +440,61 @@ export function LandingPage() {
               </Reveal>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ============================== SEGUIMIENTO FINANCIERO ============================== */}
+      <section id="financiero" className="py-32 px-6 lg:px-10 bg-gradient-to-b from-transparent via-emerald-500/[0.02] to-transparent" data-testid="landing-financiero-section">
+        <div className="max-w-7xl mx-auto">
+          <Reveal>
+            <div className="grid lg:grid-cols-12 gap-12 items-start">
+              <div className="lg:col-span-5">
+                <span className="text-xs uppercase tracking-[0.3em] text-emerald-400 mb-4 block">— Enfoque financiero</span>
+                <h2 className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.05]">
+                  No solo medimos<br />
+                  <span className="text-white/40">concreto y acero.</span>
+                </h2>
+                <p className="text-white/60 leading-relaxed text-lg mt-8">
+                  Comparamos avance físico certificado contra avance financiero autorizado, obra por obra, semana por semana. Sabrás exactamente qué se puede facturar en cada estimación, y detectarás desviaciones de costo antes de que se conviertan en un problema.
+                </p>
+              </div>
+
+              <div className="lg:col-span-7 grid sm:grid-cols-2 gap-4">
+                {[
+                  {
+                    icon: BarChart3,
+                    title: 'Físico vs. financiero autorizado',
+                    desc: 'Contrastamos cada m³, pila o m² certificado por dron contra el monto autorizado en tu presupuesto de obra.',
+                  },
+                  {
+                    icon: TrendingUp,
+                    title: 'Ejecutado vs. programado',
+                    desc: 'Comparativas semanales, quincenales o mensuales del avance real contra el cronograma financiero pactado.',
+                  },
+                  {
+                    icon: AlertTriangle,
+                    title: 'Alertas de desviación presupuestal',
+                    desc: 'Cuando una fase se aleja >10% de lo autorizado, tu residente y tu director financiero reciben la notificación al instante.',
+                  },
+                  {
+                    icon: FileCheck,
+                    title: 'Reportes listos para inversionistas',
+                    desc: 'PDFs ejecutivos con estimaciones, curvas planeado vs. ejecutado y justificaciones de retraso — listos para dirección.',
+                  },
+                ].map((c, i) => (
+                  <Reveal key={i} delay={i * 90}>
+                    <div className="h-full bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 hover:border-emerald-400/40 rounded-2xl p-6 transition-all duration-500">
+                      <div className="w-11 h-11 rounded-xl bg-emerald-500/10 grid place-items-center mb-4">
+                        <c.icon className="h-5 w-5 text-emerald-400" />
+                      </div>
+                      <h3 className="text-base font-semibold mb-2 tracking-tight">{c.title}</h3>
+                      <p className="text-sm text-white/50 leading-relaxed">{c.desc}</p>
+                    </div>
+                  </Reveal>
+                ))}
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
@@ -589,6 +674,86 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* ============================== CASO DE ÉXITO ============================== */}
+      <section id="caso-exito" className="py-32 px-6 lg:px-10" data-testid="landing-caso-exito-section">
+        <div className="max-w-7xl mx-auto">
+          <Reveal>
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <span className="text-xs uppercase tracking-[0.3em] text-[#E07A5F] mb-4 block">— Caso de éxito</span>
+              <h2 className="text-4xl sm:text-5xl font-bold tracking-tight">
+                Datos reales, <span className="text-white/40">obra real.</span>
+              </h2>
+            </div>
+          </Reveal>
+
+          <Reveal delay={120}>
+            <div className="grid lg:grid-cols-12 gap-8 bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/10 rounded-3xl p-8 sm:p-12">
+              <div className="lg:col-span-5 flex flex-col justify-between">
+                <div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 text-xs text-emerald-300 mb-6">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                    </span>
+                    Caso anonimizado
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                    Torre Corporativa · Guadalajara
+                  </h3>
+                  <p className="text-white/50 text-sm mt-3 leading-relaxed">
+                    Edificio de oficinas de 24 niveles con excavación profunda para 3 sótanos, muros anclados y cimentación con pilas.
+                  </p>
+                </div>
+
+                <div className="mt-8 space-y-3">
+                  <div className="flex items-center gap-3 text-sm text-white/70">
+                    <div className="w-8 h-8 rounded-lg bg-[#994B49]/20 grid place-items-center">
+                      <Camera className="h-4 w-4 text-[#E07A5F]" />
+                    </div>
+                    <span><b className="text-white">18 semanas</b> de seguimiento con dron</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-white/70">
+                    <div className="w-8 h-8 rounded-lg bg-[#994B49]/20 grid place-items-center">
+                      <Layers className="h-4 w-4 text-[#E07A5F]" />
+                    </div>
+                    <span><b className="text-white">Excavación, pilas, anclas y muros</b> auditados</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-white/70">
+                    <div className="w-8 h-8 rounded-lg bg-[#994B49]/20 grid place-items-center">
+                      <FileText className="h-4 w-4 text-[#E07A5F]" />
+                    </div>
+                    <span><b className="text-white">Reportes ejecutivos</b> semanales a dirección</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="lg:col-span-7 grid grid-cols-2 gap-4">
+                <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-6">
+                  <div className="text-xs uppercase tracking-wide text-white/40">Volumen certificado</div>
+                  <div className="text-4xl font-bold mt-2 text-white">224,000<span className="text-lg text-white/40 font-normal ml-1">m³</span></div>
+                  <div className="text-xs text-white/50 mt-2 leading-relaxed">de corte neto medidos con precisión ±1-2 cm</div>
+                </div>
+                <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-6">
+                  <div className="text-xs uppercase tracking-wide text-white/40">Desviación detectada</div>
+                  <div className="text-4xl font-bold mt-2 text-amber-400">+8.4%</div>
+                  <div className="text-xs text-white/50 mt-2 leading-relaxed">en anclas colocadas vs. reporte de residente (semana 11)</div>
+                </div>
+                <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-6">
+                  <div className="text-xs uppercase tracking-wide text-white/40">Ahorro identificado</div>
+                  <div className="text-4xl font-bold mt-2 text-emerald-400">$1.4M</div>
+                  <div className="text-xs text-white/50 mt-2 leading-relaxed">en estimaciones antes de facturación indebida</div>
+                </div>
+                <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-6">
+                  <div className="text-xs uppercase tracking-wide text-white/40">Tiempo dashboard</div>
+                  <div className="text-4xl font-bold mt-2 text-[#E07A5F]">&lt;10<span className="text-lg text-white/40 font-normal ml-1">seg</span></div>
+                  <div className="text-xs text-white/50 mt-2 leading-relaxed">para que dirección entienda el estado global</div>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
       {/* ============================== PRECIOS ============================== */}
       <section id="precios" className="py-32 px-6 lg:px-10">
         <div className="max-w-7xl mx-auto">
@@ -617,7 +782,7 @@ export function LandingPage() {
                 name: 'Profesional',
                 price: 'Desde $35,000',
                 period: 'MXN / mes',
-                desc: 'El plan elegido por el 78% de nuestros clientes.',
+                desc: 'Recomendado para obras medianas con seguimiento semanal.',
                 features: ['1 vuelo semanal', 'Hasta 30 ha', 'IA conteo + análisis fotos', 'Alertas automáticas', 'Comparación PDF residente', 'Modelos 3D navegables', 'Usuarios ilimitados'],
                 cta: 'Empezar',
                 highlight: true,
@@ -689,12 +854,34 @@ export function LandingPage() {
 
           <div className="space-y-3">
             {[
-              { q: '¿Qué tan precisa es la medición con dron?', a: 'Para volumetrías obtenemos precisiones de ±1-2 cm en condiciones normales, gracias a fotogrametría con puntos de control terrestre (GCPs) y procesamiento Pix4D. Para conteo de elementos con IA, la confianza típica es ALTA (>90%) en obras visibles desde el aire.' },
-              { q: '¿En qué ciudades operan?', a: 'Base en Guadalajara con cobertura en CDMX, Monterrey, Querétaro, León y Puerto Vallarta. Para obras fuera de estas zonas evaluamos viajes con costo logístico aparte.' },
-              { q: '¿Necesito instalar algún software?', a: 'No. Todo corre en tu navegador. Los modelos 3D se ven con Three.js directamente. Sólo necesitas internet y un correo.' },
-              { q: '¿Es legal volar drones en mi obra?', a: 'Sí. Operamos bajo la regulación AFAC (antes DGAC) con pilotos certificados y dron registrado. Gestionamos permisos de vuelo en zonas restringidas cuando aplica.' },
-              { q: '¿Cómo manejan datos sensibles?', a: 'Tus modelos y reportes están aislados por proyecto y por permiso. Cada cliente sólo ve los proyectos asignados a su cuenta. Hosting cifrado en infraestructura mexicana.' },
-              { q: '¿Cuánto tarda en empezar?', a: 'Primera reunión y propuesta en 48 hrs. Primer vuelo de demostración en menos de una semana desde la firma del acuerdo.' },
+              {
+                q: '¿Qué tan precisa es la medición con dron y cómo se logra?',
+                a: 'Precisión volumétrica de ±1-2 cm en condiciones normales. La logramos con vuelos fotogramétricos DJI de resolución alta, procesados con Pix4D y puntos de control terrestre (GCPs) georreferenciados con GPS-RTK sobre el sitio. Cada nube de puntos PLY se filtra y densifica antes del cálculo, y el DEM final se genera con celdas de 5-10 cm. Para conteo de elementos (pilas, anclas, muros) usamos Gemini Vision con confianza ALTA/MEDIA/BAJA por elemento; sobre obras visibles desde el aire la confianza típica es >90%.',
+              },
+              {
+                q: '¿En qué ciudades y zonas operan?',
+                a: 'Base operativa en Guadalajara (Zona Metropolitana). Cobertura recurrente sin costo logístico en CDMX, Monterrey, Querétaro, León y Puerto Vallarta. Para obras fuera de estas plazas evaluamos por proyecto: se cotiza el costo de traslado del piloto + equipo (drones DJI Mavic 3 Enterprise / Phantom 4 RTK, GCPs, estación total).',
+              },
+              {
+                q: '¿Necesito instalar algún software o hardware?',
+                a: 'No. Toda la plataforma corre en el navegador (Chrome, Safari, Edge, Firefox recientes). Los modelos 3D PLY se visualizan con Three.js directamente, incluso desde celular o tablet. Solo requieres internet y un correo. Nosotros ponemos el hardware de captura (drones, GCPs, GPS-RTK) y el procesamiento (Pix4D en servidor).',
+              },
+              {
+                q: '¿Es legal volar drones sobre mi obra en México?',
+                a: 'Sí. Operamos bajo la normativa AFAC (antes DGCA) con: (1) piloto certificado con licencia vigente de la Agencia Federal de Aviación Civil, (2) drones registrados en el padrón de AFAC, (3) plan de vuelo dentro de RPAS (aeronaves pilotadas remotamente) categoría B o C según el peso. En zonas restringidas (aeropuertos, helipuertos, instalaciones estratégicas) gestionamos el permiso especial de vuelo AFAC-RPAS antes de operar. Toda la documentación queda archivada en tu proyecto.',
+              },
+              {
+                q: '¿Cómo manejan la seguridad y privacidad de los datos sensibles?',
+                a: 'Cumplimos con la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP). Cada proyecto se aísla por permisos: el cliente solo ve los proyectos asignados a su cuenta. Hosting cifrado (TLS 1.3 en tránsito, AES-256 en reposo) en infraestructura mexicana. Modelos 3D y reportes se almacenan en MongoDB GridFS con acceso restringido por rol (admin/cliente). No compartimos ni vendemos datos a terceros; firmamos NDA a petición del cliente para obras confidenciales.',
+              },
+              {
+                q: '¿En cuánto tiempo puedo arrancar con DrON?',
+                a: 'Primera reunión y propuesta técnica-económica: 48 hrs desde tu solicitud. Firma de acuerdo y programación del primer vuelo demostrativo: 3-5 días. Onboarding del equipo del cliente en la plataforma: 1 sesión de 45 min (Google Meet o presencial). Total desde el primer contacto hasta ver tu primer modelo 3D en el dashboard: menos de una semana.',
+              },
+              {
+                q: '¿Qué pasa si mi residente reporta cifras que no coinciden con el dron?',
+                a: 'La plataforma automáticamente compara los PDF del residente vs. los datos del dron y marca la discrepancia en el dashboard. Adicionalmente, integramos el chat de WhatsApp de la obra (con permiso) para que la IA genere un resumen semanal con las justificaciones de retraso reportadas por el equipo en campo. Todo queda documentado en el reporte ejecutivo semanal.',
+              },
             ].map((item, i) => (
               <Reveal key={i} delay={i * 60}>
                 <details className="group bg-white/[0.02] border border-white/5 rounded-xl overflow-hidden hover:border-white/10 transition-colors">
@@ -706,6 +893,53 @@ export function LandingPage() {
                     {item.a}
                   </div>
                 </details>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================== CERTIFICACIONES / RESPALDO ============================== */}
+      <section className="py-20 px-6 lg:px-10 border-t border-white/5" data-testid="landing-certificaciones-section">
+        <div className="max-w-6xl mx-auto">
+          <Reveal>
+            <div className="text-center mb-12">
+              <span className="text-xs uppercase tracking-[0.3em] text-[#E07A5F] mb-4 block">— Respaldo normativo</span>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+                Volamos legal. <span className="text-white/40">Volamos seguros.</span>
+              </h2>
+              <p className="text-white/50 mt-4 max-w-2xl mx-auto">
+                Antes de autorizarnos un vuelo sobre tu obra, verifica que cumplimos con todo lo que una constructora seria necesita.
+              </p>
+            </div>
+          </Reveal>
+
+          <div className="grid sm:grid-cols-3 gap-4">
+            {[
+              {
+                icon: Award,
+                title: 'Licencia de piloto SCT / AFAC',
+                desc: 'Piloto RPAS certificado vigente por la Agencia Federal de Aviación Civil (SCT). Drones registrados en el padrón oficial.',
+              },
+              {
+                icon: ShieldCheck,
+                title: 'Seguro de responsabilidad civil',
+                desc: 'Cobertura vigente para daños a terceros y bienes durante cada vuelo sobre obra en México. Póliza a disposición del cliente.',
+              },
+              {
+                icon: Lock,
+                title: 'Cumplimiento LFPDPPP',
+                desc: 'Manejo de datos sensibles conforme a la Ley Federal de Protección de Datos Personales. Cifrado en tránsito y en reposo. NDA disponible.',
+              },
+            ].map((c, i) => (
+              <Reveal key={i} delay={i * 100}>
+                <div className="h-full bg-white/[0.02] border border-white/10 rounded-2xl p-6 hover:border-[#994B49]/40 transition-all">
+                  <div className="w-11 h-11 rounded-xl bg-[#994B49]/10 grid place-items-center mb-4">
+                    <c.icon className="h-5 w-5 text-[#E07A5F]" />
+                  </div>
+                  <h3 className="text-base font-semibold mb-2 tracking-tight">{c.title}</h3>
+                  <p className="text-sm text-white/50 leading-relaxed">{c.desc}</p>
+                </div>
               </Reveal>
             ))}
           </div>
@@ -858,17 +1092,18 @@ export function LandingPage() {
             <img
               src="/logo-dron-dark.png"
               alt="DrON Topografía"
-              className="h-12 w-auto opacity-80"
+              className="h-9 sm:h-10 w-auto opacity-80"
               style={{ filter: 'brightness(0) invert(1)' }}
             />
-            <span className="text-white/30 text-xs ml-2">© 2026</span>
+            <span className="text-white/30 text-xs ml-2">© 2026 DrON Topografía</span>
           </div>
-          <div className="flex items-center gap-6 text-xs text-white/40">
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-white/40">
             <a href="#servicios" className="hover:text-white">Servicios</a>
+            <a href="#financiero" className="hover:text-white">Financiero</a>
             <a href="#precios" className="hover:text-white">Precios</a>
             <a href="#faq" className="hover:text-white">FAQ</a>
             <Link to="/app" className="hover:text-white">Iniciar sesión</Link>
-            <span className="flex items-center gap-1.5"><ShieldCheck className="h-3 w-3" /> Datos protegidos</span>
+            <span className="flex items-center gap-1.5"><ShieldCheck className="h-3 w-3" /> LFPDPPP</span>
           </div>
         </div>
       </footer>
